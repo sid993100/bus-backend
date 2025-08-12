@@ -59,4 +59,50 @@ export const addCountry= async (req,res) => {
         message:"Server Error"
          })
   }
-}
+};
+export const updateCountry = async (req, res) => {
+  try {
+    const { id } = req.params; // BusStop ID from URL
+    const { countryCode,name } = req.body;
+
+    // Validate ID
+    if (!id) {
+      return res.status(400).json({
+        message: "BusStop ID is required",
+      });
+    }
+
+    // Require at least one field to update
+    if (!countryCode && !name) {
+      return res.status(400).json({
+        message: "At least one field is required to update",
+      });
+    }
+
+    // Perform the update
+    const country = await Country.findByIdAndUpdate(
+      id,
+      {
+        ...(countryCode && { countryCode }),
+        ...(name && { country:name }),
+      },
+      { new: true } // return updated document
+    );
+
+    if (!country) {
+      return res.status(404).json({
+        message: "BusStop not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "BusStop updated successfully",
+      data: country,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Server Error",
+    });
+  }
+};

@@ -30,7 +30,7 @@ export const addDepartment =async (req,res) => {
   const user=req.user
   const {name}=req.body
 
-     if(name){
+     if(!name){
        return res.status(404).json({
             message:"All details Required"
          })
@@ -43,7 +43,7 @@ export const addDepartment =async (req,res) => {
       
       if(!department){
          res.status(500).json({
-                 message:"Somthing went Wrong while Creating A Plan "
+                 message:"Somthing went Wrong while Creating A Department "
              })
       }
       res.status(201).json({

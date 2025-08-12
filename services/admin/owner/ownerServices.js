@@ -62,3 +62,52 @@ export const addOwnerType=async (req,res) => {
          })
      }
 }
+export const updateOwnerType = async (req, res) => {
+  try {
+  
+    const { id } = req.params; // OwnerType ID from URL
+    const { ownerType, description } = req.body;
+    
+    // Validate ID
+    if (!id) {
+      return res.status(400).json({
+        message: "OwnerType ID is required",
+      });
+    }
+
+    // Require at least one field to update
+    if (!ownerType && !description) {
+      return res.status(400).json({
+        message: "At least one field is required to update",
+      });
+    }
+
+    // Perform the update
+    const updatedOwnerType = await OwnerType.findByIdAndUpdate(
+      id,
+      {
+        ...(ownerType && { ownerType }),
+        ...(description && { description }),
+      },
+      { new: true } // return updated document
+    );
+
+    if (!updatedOwnerType) {
+      return res.status(404).json({
+        message: "OwnerType not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "OwnerType updated successfully",
+      data: updatedOwnerType,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Server Error",
+    });
+  }
+};
+
+

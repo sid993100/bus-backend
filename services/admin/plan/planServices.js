@@ -1,4 +1,5 @@
 
+import mongoose from "mongoose";
 import Plan from "../../../models/planModel.js";
 
 export const getPlan=async (req,res) => {
@@ -65,3 +66,55 @@ export const addPlan =async (req,res) => {
          })
      }
 }
+export const updatePlan = async (req, res) => {
+  try {
+    const { id } = req.params; // Plan ID from URL
+    const { planName, vltdManufacturer, durationDays } = req.body;
+
+    // Validate ID
+    if (!id) {
+      return res.status(400).json({
+        message: "Plan ID is required",
+      });
+    }
+
+    // Require at least one field to update
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid Plan ID format" });
+    }
+
+      if (
+      planName === undefined &&
+      vltdManufacturer === undefined &&
+      durationDays === undefined
+    ) {
+      return res.status(400).json({
+        message: "At least one field is required to update",
+      });
+    }
+
+    // Update Plan
+      const updateData = {};
+    if (planName !== undefined) updateData.planName = planName;
+    if (vltdManufacturer !== undefined) updateData.vltdManufacturer = vltdManufacturer;
+    if (durationDays !== undefined) updateData.durationDays = durationDays;
+
+    const updatedPlan = await Plan.findByIdAndUpdate(id, updateData, { new: true });
+
+    if (!updatedPlan) {
+      return res.status(404).json({
+        message: "Plan not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "Plan updated successfully",
+      data: updatedPlan,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Server Error",
+    });
+  }
+};

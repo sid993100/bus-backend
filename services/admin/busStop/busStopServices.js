@@ -57,3 +57,49 @@ export const addBusStop=async (req,res) => {
          })
   }
 }
+export const updateBusStop = async (req, res) => {
+  try {
+    const { id } = req.params; // BusStop ID from URL
+    const { gradeName, geoFence } = req.body;
+
+    // Validate ID
+    if (!id) {
+      return res.status(400).json({
+        message: "BusStop ID is required",
+      });
+    }
+
+    // Require at least one field to update
+    if (!gradeName && !geoFence) {
+      return res.status(400).json({
+        message: "At least one field (gradeName or geoFence) is required to update",
+      });
+    }
+
+    // Perform the update
+    const updatedBusStop = await BusStop.findByIdAndUpdate(
+      id,
+      {
+        ...(gradeName && { stopGradeName: gradeName }),
+        ...(geoFence && { geoFence }),
+      },
+      { new: true } // return updated document
+    );
+
+    if (!updatedBusStop) {
+      return res.status(404).json({
+        message: "BusStop not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "BusStop updated successfully",
+      data: updatedBusStop,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Server Error",
+    });
+  }
+};

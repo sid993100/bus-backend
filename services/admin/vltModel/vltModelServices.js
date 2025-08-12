@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import VltdModel from "../../../models/vltdModelModel.js";
 
 export const getVltModel=async (req,res) => {
@@ -60,3 +61,50 @@ export const addVltModel=async (req,res) => {
          })
      }
 }
+
+export const updateVltModel = async (req, res) => {
+  try {
+ 
+    const { id } = req.params;
+    const { name, modelName } = req.body;
+
+    // Validate MongoDB ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        message: "Invalid VltModel ID format"
+      });
+    }
+
+    // Require at least one field to update
+    if (name === undefined && modelName === undefined) {
+      return res.status(400).json({
+        message: "At least one field (name or modelName) is required to update"
+      });
+    }
+
+    // Build update data
+    const updateData = {};
+    if (name !== undefined) updateData.manufacturerName = name;
+    if (modelName !== undefined) updateData.modelName = modelName;
+
+    // Perform update
+    const updatedVltModel = await VltdModel.findByIdAndUpdate(id, updateData, { new: true });
+
+    if (!updatedVltModel) {
+      return res.status(404).json({
+        message: "VltModel not found"
+      });
+    }
+
+    res.status(200).json({
+      message: "VltModel updated successfully",
+      data: updatedVltModel
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: error.message || "Server Error"
+    });
+  }
+};

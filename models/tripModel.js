@@ -43,7 +43,8 @@ const tripSchema = new Schema({
     type: String,
     required: true,
     uppercase: true,
-    enum: ['APPROVED', 'PENDING', 'CANCELLED']
+    enum: ['APPROVED', 'PENDING', 'CANCELLED'],
+    default:"PENDING"
   }
 }, {
   timestamps: true

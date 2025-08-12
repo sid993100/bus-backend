@@ -1,4 +1,5 @@
 import Account from "../../../models/accountModel.js";
+import responseManager from "../../../utils/responseManager.js";
 
 
 export const addAccount=async (req,res) => {
@@ -7,9 +8,7 @@ export const addAccount=async (req,res) => {
   console.log(accountCode,name,description);
   
   if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
+return responseManager.unauthorized(res,"not admin")
      }
      if(!accountCode||!name){
        return res.status(404).json({
@@ -64,4 +63,52 @@ export const getAccount = async (req, res) => {
         message:"Backend Error"
     })
  }
+};
+export const updateAccount = async (req, res) => {
+  try {
+    const { id } = req.params; // account ID from URL
+    console.log(id);
+    
+    const { accountCode, name, description } = req.body;
+
+    // Validation
+    if (!id) {
+      return res.status(400).json({
+        message: "Account ID is required",
+      });
+    }
+
+    if (!accountCode && !name && !description) {
+      return res.status(400).json({
+        message: "At least one field is required to update",
+      });
+    }
+
+    // Find and update
+    const updatedAccount = await Account.findByIdAndUpdate(
+      id,
+      {
+        ...(accountCode && { accountCode }),
+        ...(name && { account: name }),
+        ...(description && { description }),
+      },
+      { new: true } // return updated document
+    );
+
+    if (!updatedAccount) {
+      return res.status(404).json({
+        message: "Account not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "Account updated successfully",
+      data: updatedAccount,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Server Error",
+    });
+  }
 };

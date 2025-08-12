@@ -2,33 +2,36 @@ import { Router } from "express";
 import { isLogin } from "../middleWares/isLogin.js";
 import { addArea, getArea } from "../services/admin/area/areaServices.js";
 import { getAllUsers } from "../services/admin/user/userServices.js";
-import { addAccount, getAccount } from "../services/admin/accounts/accountServices.js";
-import { addTollType, getTollType } from "../services/admin/tollyType/tollTypeServices.js";
-import { addServiceCategory, getServiceCategory } from "../services/admin/serviceCategory/serviceCategoryServices.js";
-import { addVltDevices, getVltDevices } from "../services/admin/vltDevices/vltDevicesServices.js";
+import { addAccount, getAccount, updateAccount } from "../services/admin/accounts/accountServices.js";
+import { addTollType, getTollType, updateTollType } from "../services/admin/tollyType/tollTypeServices.js";
+import { addServiceCategory, getServiceCategory, updateServiceCategory } from "../services/admin/serviceCategory/serviceCategoryServices.js";
+import { addVltDevices, getVltDevices, updateVltDevices } from "../services/admin/vltDevices/vltDevicesServices.js";
 import { addState, getState } from "../services/admin/state/stateServices.js";
-import { addCountry, getCountry } from "../services/admin/country/countryServices.js";
+import { addCountry, getCountry, updateCountry } from "../services/admin/country/countryServices.js";
 import { getBusStop } from "../services/admin/busStop/busStopServices.js";
 import { addPisReg, getpisReg } from "../services/admin/pisReg/pisRegService.js";
 import { addDuty, getDuty } from "../services/admin/duty/dutyServices.js";
-import { addServiceType, getServiceType } from "../services/admin/serviceType/serviceTypeServices.js";
+import { addServiceType, getServiceType, updateServiceType } from "../services/admin/serviceType/serviceTypeServices.js";
 import { addStopGrade, getStopGrade } from "../services/admin/stopGrade/stopGradeServices.js";
-import { addSeatLayout, getSeatLayout } from "../services/admin/seatLayout/seatLayoutServices.js";
-import { addVehicleManufacturer, getVehicleManufacturer } from "../services/admin/vehicleManufacturer/vehicleManufacturerServices.js";
-import { addSim, getSim } from "../services/admin/sim/simServices.js";
-import { addPlan, getPlan } from "../services/admin/plan/planServices.js";
-import { addVltdManufacturer, getVltdManufacturer } from "../services/admin/vltManufacturer/vltManufacturerServices.js";
-import { addVltModel, getVltModel } from "../services/admin/vltModel/vltModelServices.js";
-import { addOwnerType, getOwnerType } from "../services/admin/owner/ownerServices.js";
-import { getVehicle } from "../services/admin/vehicle/vehicleServices.js";
+import { addSeatLayout, getSeatLayout, updateSeatLayout } from "../services/admin/seatLayout/seatLayoutServices.js";
+import { addVehicleManufacturer, getVehicleManufacturer, updateVehicleManufacturer } from "../services/admin/vehicleManufacturer/vehicleManufacturerServices.js";
+import { addSim, getSim, updateSim } from "../services/admin/sim/simServices.js";
+import { addPlan, getPlan, updatePlan } from "../services/admin/plan/planServices.js";
+import { addVltdManufacturer, getVltdManufacturer, updateVltdManufacturer } from "../services/admin/vltManufacturer/vltManufacturerServices.js";
+import { addVltModel, getVltModel, updateVltModel } from "../services/admin/vltModel/vltModelServices.js";
+import { addOwnerType, getOwnerType, updateOwnerType } from "../services/admin/owner/ownerServices.js";
+import { addVehicle, getVehicle, updateVehicle } from "../services/admin/vehicle/vehicleServices.js";
 import { roleBaseAuth } from "../middleWares/rolebaseAuth.js";
 import { addDepartment, getDepartment } from "../services/admin/department/departmentServices.js";
+import { addRoute, getRoute } from "../services/admin/route/routeService.js";
+import { addSubscription, getSubscription } from "../services/subscription/subscriptionServices.js";
+import { addTrip, getTrip, updateTrip } from "../services/admin/trip/tripServices.js";
 
 const router = Router();
 
 router.get("/users", isLogin, getAllUsers);
 router.get("/accounts", isLogin, getAccount);
-router.get("/tolltype", isLogin, getTollType);
+router.get("/tolltypes", isLogin, getTollType);
 router.get("/servicecategory", isLogin, getServiceCategory);
 router.get("/state", isLogin, getState);
 router.get("/busstop", isLogin, getBusStop);
@@ -48,6 +51,12 @@ router.get("/vltmodel",isLogin,getVltModel)
 router.get("/ownertype",isLogin,getOwnerType)
 router.get("/vehicle",isLogin,getVehicle)
 router.get("/department",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),getDepartment)
+router.get("/route",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),getRoute)
+router.get("/subscription",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),getSubscription)
+router.get("/trip",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),getTrip)
+
+
+
 
 router.post("/addaccount", isLogin, addAccount);
 router.post("/addtolltype", isLogin, addTollType);
@@ -67,7 +76,29 @@ router.post("/addplan",isLogin,addPlan)
 router.post("/addvltdmanufacturer",isLogin,addVltdManufacturer)
 router.post("/addvltmodel",isLogin,addVltModel)
 router.post("/ownerType",isLogin,addOwnerType)
-router.post("/department",isLogin,roleBaseAuth("SUPERADMIN"),addDepartment)
+router.post("/department",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),addDepartment)
+router.post("/route",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),addRoute)
+router.post("/subscription",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),addSubscription)
+router.post("/trip",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),addTrip)
+router.post("/vehicle",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),addVehicle)
+
+
+
+router.put("/account/:id",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),updateAccount)
+router.put("/tolltypes/:id",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), updateTollType);
+router.put("/country/:id",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), updateCountry);
+router.put("/ownertype/:id",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), updateOwnerType);
+router.put("/plan/:id",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), updatePlan);
+router.put("/seatlayout/:id",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), updateSeatLayout);
+router.put("/servicecategory/:id",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), updateServiceCategory);
+router.put("/servicetype/:id",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), updateServiceType);
+router.put("/sim/:id",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), updateSim);
+router.put("/trip/:id",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), updateTrip);
+router.put("/vehicle/:id",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), updateVehicle);
+router.put("/vehiclemanufacturer/:id",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), updateVehicleManufacturer);
+router.put("/vltdevice/:id",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), updateVltDevices);
+router.put("/vltmanufacturer/:id",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), updateVltdManufacturer);
+router.put("/vltmodel/:id",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), updateVltModel); 
 
 
 

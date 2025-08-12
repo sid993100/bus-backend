@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import ServiceCategory from "../../../models/serviceCategoryModel.js";
 
 export const getServiceCategory= async (req,res)=>{
@@ -60,5 +61,55 @@ export const addServiceCategory=async (req,res) => {
     return res.status(500).json({
         message:"Server Error"
          })
+  }
+};
+
+export const updateServiceCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description } = req.body;
+
+    // Validate MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        message: "Invalid ServiceCategory ID format",
+      });
+    }
+
+    // Require at least one field
+    if (name === undefined && description === undefined) {
+      return res.status(400).json({
+        message: "At least one field is required to update",
+      });
+    }
+
+    // Build update data
+    const updateData = {};
+    if (name !== undefined) updateData.serviceCategory = name;
+    if (description !== undefined) updateData.description = description;
+
+    // Update in DB
+    const updatedServiceCategory = await ServiceCategory.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true }
+    );
+
+    if (!updatedServiceCategory) {
+      return res.status(404).json({
+        message: "ServiceCategory not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "ServiceCategory updated successfully",
+      data: updatedServiceCategory,
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: error.message || "Server Error",
+    });
   }
 };

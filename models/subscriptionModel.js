@@ -1,10 +1,10 @@
-import { Schema } from "mongoose";
+import { model, Schema } from "mongoose";
 
 const subscriptionSchema=new Schema({
     vehicleNumber:{
        type: String,
     required: true,
-    uppercase: true
+    
     },
     vltdDevice:{
         type:Number,
@@ -14,8 +14,16 @@ const subscriptionSchema=new Schema({
         type:Schema.Types.ObjectId,
         ref:"Plan"
     },
+    activePlan:{
+         type: Date,
+    required: true,
+    },
+    expiry:{
+        type: Date,
+    required: true,
+    }
 },{timestamps:true})
 
-const Subscription = module("Subscriptionc",subscriptionSchema)
+const Subscription = model("Subscriptionc",subscriptionSchema)
 
 export default Subscription

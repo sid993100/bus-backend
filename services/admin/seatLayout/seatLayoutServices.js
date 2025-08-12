@@ -66,3 +66,62 @@ export const addSeatLayout=async (req,res) => {
          })
      }
 }
+import mongoose from "mongoose";
+
+export const updateSeatLayout = async (req, res) => {
+  try {
+    const { id } = req.params; // seat layout ID from URL
+    const { layoutName, seatCapacity, department, servicesLinked, fci } = req.body;
+
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        message: "Invalid SeatLayout ID format",
+      });
+    }
+
+    // Require at least one field to update
+    if (
+      layoutName === undefined &&
+      seatCapacity === undefined &&
+      department === undefined &&
+      servicesLinked === undefined &&
+      fci === undefined
+    ) {
+      return res.status(400).json({
+        message: "At least one field is required to update",
+      });
+    }
+
+    // Build update object dynamically
+    const updateData = {};
+    if (layoutName !== undefined) updateData.layoutName = layoutName;
+    if (seatCapacity !== undefined) updateData.seatCapacity = seatCapacity;
+    if (department !== undefined) updateData.department = department;
+    if (servicesLinked !== undefined) updateData.servicesLinked = servicesLinked;
+    if (fci !== undefined) updateData.fci = fci;
+
+    // Perform the update
+    const updatedSeatLayout = await SeatLayout.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true }
+    );
+
+    if (!updatedSeatLayout) {
+      return res.status(404).json({
+        message: "SeatLayout not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "SeatLayout updated successfully",
+      data: updatedSeatLayout,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: error.message || "Server Error",
+    });
+  }
+};
