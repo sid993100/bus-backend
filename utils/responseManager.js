@@ -66,4 +66,4 @@ const responseManager = {
     },
   };
   
-  module.exports = responseManager;
+  export default  responseManager;

@@ -29,4 +29,4 @@ class ConsoleManager {
     }
 }
 
-module.exports = new ConsoleManager();
+export default new ConsoleManager();

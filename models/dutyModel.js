@@ -1,9 +1,10 @@
-import { model, Schema } from "mongoose";
+import mongoose, { model, Schema } from "mongoose";
 
 const dutySchema = new Schema({
   dutyDate: {
     type: Date,
-    required: true
+    required: true,
+    default: Date.now
   },
   vehicleNumber: {
     type: String,
@@ -11,17 +12,20 @@ const dutySchema = new Schema({
     uppercase: true
   },
   conductorName: {
-    type: String,
+    type: Schema.Types.ObjectId,
+    ref:"Conductor",
     required: true,
     uppercase: true
   },
   driverName: {
-    type: String,
+    type: Schema.Types.ObjectId,
+    ref:"Driver",
     required: true,
     uppercase: true
   },
   supportDriver: {
-    type: String,
+     type: Schema.Types.ObjectId,
+    ref:"Driver",
     uppercase: true
   },
   dutyType: {

@@ -63,12 +63,12 @@ io.on("connection", (socket) => {
 
   socket.on("trackBus", (busId) => {
     socket.join(`bus_${busId}`)
-    console.log(`Client ${socket.id} tracking bus ${busId}`)
+    consoleManager.log(`Client ${socket.id} tracking bus ${busId}`)
   })
 
   socket.on("stopTracking", (busId) => {
     socket.leave(`bus_${busId}`)
-    console.log(`Client ${socket.id} stopped tracking bus ${busId}`)
+    consoleManager.log(`Client ${socket.id} stopped tracking bus ${busId}`)
   })
 
   socket.on("disconnect", () => {

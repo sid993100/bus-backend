@@ -15,7 +15,8 @@ const busStopSchema = new Schema({
   },
   fareStage: {
     type: Boolean,
-    required: true
+    required: true,
+    uppercase: true
   },
   stopArea: {
     type: Schema.Types.ObjectId,
@@ -24,7 +25,8 @@ const busStopSchema = new Schema({
   },
   border: {
     type: Boolean,
-    required: true
+    required: true,
+    uppercase: true
   },
   country: {
     type: Schema.Types.ObjectId,

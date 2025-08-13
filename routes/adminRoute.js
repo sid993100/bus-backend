@@ -8,8 +8,8 @@ import { addServiceCategory, getServiceCategory, updateServiceCategory } from ".
 import { addVltDevices, getVltDevices, updateVltDevices } from "../services/admin/vltDevices/vltDevicesServices.js";
 import { addState, getState } from "../services/admin/state/stateServices.js";
 import { addCountry, getCountry, updateCountry } from "../services/admin/country/countryServices.js";
-import { getBusStop } from "../services/admin/busStop/busStopServices.js";
-import { addPisReg, getpisReg } from "../services/admin/pisReg/pisRegService.js";
+import { addBusStop, getBusStop, updateBusStop } from "../services/admin/busStop/busStopServices.js";
+import { addPisRegistration, getpisReg, updatePisRegistration } from "../services/admin/pisReg/pisRegService.js";
 import { addDuty, getDuty } from "../services/admin/duty/dutyServices.js";
 import { addServiceType, getServiceType, updateServiceType } from "../services/admin/serviceType/serviceTypeServices.js";
 import { addStopGrade, getStopGrade } from "../services/admin/stopGrade/stopGradeServices.js";
@@ -24,8 +24,11 @@ import { addVehicle, getVehicle, updateVehicle } from "../services/admin/vehicle
 import { roleBaseAuth } from "../middleWares/rolebaseAuth.js";
 import { addDepartment, getDepartment } from "../services/admin/department/departmentServices.js";
 import { addRoute, getRoute } from "../services/admin/route/routeService.js";
-import { addSubscription, getSubscription } from "../services/subscription/subscriptionServices.js";
 import { addTrip, getTrip, updateTrip } from "../services/admin/trip/tripServices.js";
+import { addSubscription, getSubscription } from "../services/admin/subscription/subscriptionServices.js";
+import { addDriver, getAllDrivers, updateDriver } from "../services/admin/driver/driverService.js";
+import { addConductor, getConductor, updateConductor } from "../services/admin/conductor/conductorService.js";
+import { addRole, getRoles } from "../services/admin/role/roleServer.js";
 
 const router = Router();
 
@@ -54,6 +57,9 @@ router.get("/department",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),getDepartmen
 router.get("/route",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),getRoute)
 router.get("/subscription",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),getSubscription)
 router.get("/trip",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),getTrip)
+router.get("/driver",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),getAllDrivers)
+router.get("/conductor",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),getConductor)
+router.get("/role",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),getRoles)
 
 
 
@@ -69,7 +75,7 @@ router.post("/addstoparea",isLogin,addArea);
 router.post("/addduty",isLogin,addDuty);
 router.post("/addseatlayout",isLogin,addSeatLayout);
 router.post("/addvehiclemanufacturer",isLogin,addVehicleManufacturer);
-// router.post("/addpisreg",isLogin,addPisReg);
+router.post("/pisreg",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),addPisRegistration);
 router.post("/addvltdevice",isLogin,addVltDevices);
 router.post("/addsim",isLogin,addSim);
 router.post("/addplan",isLogin,addPlan)
@@ -81,6 +87,12 @@ router.post("/route",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),addRoute)
 router.post("/subscription",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),addSubscription)
 router.post("/trip",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),addTrip)
 router.post("/vehicle",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),addVehicle)
+router.post('/driver',isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), addDriver)
+router.post('/conductor',isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), addConductor)
+router.post('/busstop',isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), addBusStop)
+router.post('/role',isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), addRole)
+
+
 
 
 
@@ -99,7 +111,10 @@ router.put("/vehiclemanufacturer/:id",isLogin,roleBaseAuth("SUPERADMIN","ADMIN")
 router.put("/vltdevice/:id",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), updateVltDevices);
 router.put("/vltmanufacturer/:id",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), updateVltdManufacturer);
 router.put("/vltmodel/:id",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), updateVltModel); 
-
+router.put('/driver/:id', isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),updateDriver)
+router.put('/conductor/:id', isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),updateConductor)
+router.put('/pisreg/:id', isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),updatePisRegistration)
+router.put('/busstop/:id', isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),updateBusStop)
 
 
 

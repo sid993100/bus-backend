@@ -1,8 +1,10 @@
+
 import { model, Schema } from "mongoose";
 
 const pisRegistrationSchema = new Schema({
   stopName: {
-    type: String,
+   type:Schema.Types.ObjectId,
+      ref:"BusStop",
     required: true,
     uppercase: true
   },
