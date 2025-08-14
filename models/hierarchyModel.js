@@ -1,10 +1,12 @@
-const roleSchema = new Schema({
-  roleName: {
+import { model, Schema } from "mongoose";
+
+const hierarchySchma = new Schema({
+  hierarchyName: {
     type: String,
     required: true,
     unique: true,
     uppercase: true,
-    enum: ['SUPERADMIN', 'ADMIN', 'MANAGER', 'OPERATOR', 'VIEWER']
+    enum: ['SUPERADMIN', 'ADMIN', "DEPOT","REGION"]
   },
   description: {
     type: String,
@@ -14,5 +16,5 @@ const roleSchema = new Schema({
   timestamps: true
 });
 
-const Role = model("Role", roleSchema);
-export default Role;
+const Hierarchy = model("Hierarchy", hierarchySchma);
+export default Hierarchy;

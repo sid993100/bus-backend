@@ -21,7 +21,7 @@ export const getConductor = async (req, res) => {
       });
     }
 
-    return res.status(200).json({
+     res.status(200).json({
       message: "Conductors retrieved successfully",
       data: conductors
     });

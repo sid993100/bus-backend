@@ -15,7 +15,7 @@ export const getSim=async (req,res) => {
             message: "Sim Not Found",
             });
       }
-       return res.status(200).json({
+        res.status(200).json({
         message:sim,
         log:"ok"
        })

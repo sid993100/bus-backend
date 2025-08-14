@@ -1,28 +1,67 @@
-import { Schema } from "mongoose";
+import { model, Schema } from "mongoose";
+
+const permissionSchema = new Schema({
+    create: { type: Boolean, default: false },
+    read: { type: Boolean, default: false },
+    update: { type: Boolean, default: false },
+    delete: { type: Boolean, default: false }
+}, { _id: false });
+
+// Default permission object for each resource
+const defaultPermission = {
+    create: false,
+    read: false,
+    update: false,
+    delete: false
+};
 
 const roleSchema = new Schema({
-  role: {
-    type: String,
-    required: true,
-    unique: true,
-    uppercase: true,
-  },
-  account:{
-    type:Schema.Types.ObjectId,
-    ref:"Account",
-    required:true
-  },
-  description: {
-    type: String,
-    trim: true
-  },
-  permissions: [permissionSchema],
-//   isActive: {
-//     type: Boolean,
-//     default: true
-//   }
+    role: {
+        type: String,
+        required: true,
+        unique: true,
+        uppercase: true,
+    },
+    department: {
+        type: Schema.Types.ObjectId,
+        ref: "Department"
+    },
+    permissions: {
+        account: { type: permissionSchema, default: defaultPermission },
+        busStop: { type: permissionSchema, default: defaultPermission },
+        conductor: { type: permissionSchema, default: defaultPermission },
+        country: { type: permissionSchema, default: defaultPermission },
+        tollType: { type: permissionSchema, default: defaultPermission },
+        department: { type: permissionSchema, default: defaultPermission },
+        duty: { type: permissionSchema, default: defaultPermission },
+        driver: { type: permissionSchema, default: defaultPermission },
+        owner: { type: permissionSchema, default: defaultPermission },
+        pisReg: { type: permissionSchema, default: defaultPermission },
+        plan: { type: permissionSchema, default: defaultPermission },
+        route: { type: permissionSchema, default: defaultPermission },
+        seatLayout: { type: permissionSchema, default: defaultPermission },
+        serviceCategory: { type: permissionSchema, default: defaultPermission },
+        serviceType: { type: permissionSchema, default: defaultPermission },
+        sim: { type: permissionSchema, default: defaultPermission },
+        state: { type: permissionSchema, default: defaultPermission },
+        stopeGrade: { type: permissionSchema, default: defaultPermission },
+        subscription: { type: permissionSchema, default: defaultPermission },
+        trip: { type: permissionSchema, default: defaultPermission },
+        user: { type: permissionSchema, default: defaultPermission },
+        vehicle: { type: permissionSchema, default: defaultPermission },
+        vehicleM: { type: permissionSchema, default: defaultPermission },
+        vltDevice: { type: permissionSchema, default: defaultPermission },
+        viltM: { type: permissionSchema, default: defaultPermission },
+        vltModel: { type: permissionSchema, default: defaultPermission }
+    },
+    hierarchy: {
+        type: String,
+        uppercase: true
+        // type: Schema.Types.ObjectId,
+        // ref: "Hierarchy",
+    }
 }, {
-  timestamps: true
+    timestamps: true
 });
 
 const Role = model("Role", roleSchema);

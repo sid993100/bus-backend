@@ -2,12 +2,6 @@ import mongoose from "mongoose";
 import ServiceType from "../../../models/serviceTypeModel.js";
 
 export const getServiceType=async (req,res) => {
-  const user = req.user;
-     if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
      try {
       const serviceType= await ServiceType.find({})
       if(!serviceType){

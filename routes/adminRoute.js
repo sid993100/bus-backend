@@ -28,7 +28,8 @@ import { addTrip, getTrip, updateTrip } from "../services/admin/trip/tripService
 import { addSubscription, getSubscription } from "../services/admin/subscription/subscriptionServices.js";
 import { addDriver, getAllDrivers, updateDriver } from "../services/admin/driver/driverService.js";
 import { addConductor, getConductor, updateConductor } from "../services/admin/conductor/conductorService.js";
-import { addRole, getRoles } from "../services/admin/role/roleServer.js";
+import { checkPermission } from "../middleWares/checkPermission.js";
+
 
 const router = Router();
 
@@ -59,7 +60,7 @@ router.get("/subscription",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),getSubscri
 router.get("/trip",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),getTrip)
 router.get("/driver",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),getAllDrivers)
 router.get("/conductor",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),getConductor)
-router.get("/role",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),getRoles)
+// router.get("/role",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),getRoles)
 
 
 
@@ -90,14 +91,14 @@ router.post("/vehicle",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),addVehicle)
 router.post('/driver',isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), addDriver)
 router.post('/conductor',isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), addConductor)
 router.post('/busstop',isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), addBusStop)
-router.post('/role',isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), addRole)
+// router.post('/role',isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), addRole)
 
 
 
 
 
 router.put("/account/:id",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),updateAccount)
-router.put("/tolltypes/:id",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), updateTollType);
+router.put("/tolltypes/:id",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"),checkPermission("tollType", "update"), updateTollType);
 router.put("/country/:id",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), updateCountry);
 router.put("/ownertype/:id",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), updateOwnerType);
 router.put("/plan/:id",isLogin,roleBaseAuth("SUPERADMIN","ADMIN"), updatePlan);

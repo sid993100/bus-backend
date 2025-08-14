@@ -6,7 +6,7 @@ import passwordCheck from "../utils/passwordCheck.js";
 export const signin=async (req,res)=>{
    
     
-    const {name,email,phone,password,region,role}=req.body
+    const {name,email,phone,password,}=req.body
     if(!name||!email||!phone||!password){
         return res.status(404).json({
                  message:"All details Required"

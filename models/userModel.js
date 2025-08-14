@@ -24,19 +24,27 @@ const UserSchema = new Schema({
         unique:true
     },
     hierarchy:{
-        type:String,
-        enum:["SUPERADMIN","ADMIN","CUSTOMER"],
-        default:"CUSTOMER"
-
+    type:String,
+    enum:["SUPERADMIN","ADMIN","DEPORT","REGION"],
+    default:"REGION"
     },
     region:{
         type:String,
         uppercase: true
     },
-    role:{
-        type:String,
-        enum:["DEIVER","CONDUCTOR"]
+    account:{
+    type:Schema.Types.ObjectId,
+    ref:"Account"
+    },
+    
+    roleName:{
+     type:Schema.Types.ObjectId,
+     ref:"Role"
     }
+    // role:{
+    //     type:String,
+    //     enum:["DEIVER","CONDUCTOR"]
+    // }
 },{timestamps:true})
 
 UserSchema.pre("save",async function(next){
