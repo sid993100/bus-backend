@@ -8,26 +8,10 @@ const depotCustomerSchema = new Schema({
     unique: true
   },
   region: {
-    type: String,
+    type: Schema.Types.ObjectId,
+    ref: "Region",
     required: true,
-    uppercase: true
   },
-  communicationAddress: {
-    type: String,
-    uppercase: true
-  },
-  location: {
-    type: {
-      type: String,
-      enum: ['Point'],
-      default: 'Point'
-    },
-    coordinates: {
-      type: [Number],
-      required: true,
-      index: '2dsphere'
-    }
-  }
 }, {
   timestamps: true
 });

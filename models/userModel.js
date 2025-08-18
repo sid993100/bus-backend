@@ -25,8 +25,8 @@ const UserSchema = new Schema({
     },
     hierarchy:{
     type:String,
-    enum:["SUPERADMIN","ADMIN","DEPORT","REGION"],
-    default:"REGION"
+    enum:["SUPERADMIN","ADMIN","DEPORT","CUSTOMER"],
+    default:"CUSTOMER"
     },
     region:{
         type:String,

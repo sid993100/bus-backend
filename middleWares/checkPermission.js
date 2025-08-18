@@ -1,8 +1,6 @@
 import Role from "../models/roleModel.js";
 import User from "../models/userModel.js";
 
-// resource = name in role.permissions (e.g., "tollType")
-// action = "create" | "read" | "update" | "delete"
 export const checkPermission = (resource, action) => {
   return async (req, res, next) => {
     try {

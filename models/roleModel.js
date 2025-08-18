@@ -35,7 +35,7 @@ const roleSchema = new Schema({
         department: { type: permissionSchema, default: defaultPermission },
         duty: { type: permissionSchema, default: defaultPermission },
         driver: { type: permissionSchema, default: defaultPermission },
-        owner: { type: permissionSchema, default: defaultPermission },
+        ownerType: { type: permissionSchema, default: defaultPermission },
         pisReg: { type: permissionSchema, default: defaultPermission },
         plan: { type: permissionSchema, default: defaultPermission },
         route: { type: permissionSchema, default: defaultPermission },
@@ -50,9 +50,12 @@ const roleSchema = new Schema({
         user: { type: permissionSchema, default: defaultPermission },
         vehicle: { type: permissionSchema, default: defaultPermission },
         vehicleM: { type: permissionSchema, default: defaultPermission },
+        vehicleType: { type: permissionSchema, default: defaultPermission },
         vltDevice: { type: permissionSchema, default: defaultPermission },
         viltM: { type: permissionSchema, default: defaultPermission },
-        vltModel: { type: permissionSchema, default: defaultPermission }
+        vltModel: { type: permissionSchema, default: defaultPermission },
+        depot: { type: permissionSchema, default: defaultPermission },
+        zone: { type: permissionSchema, default: defaultPermission },
     },
     hierarchy: {
         type: String,

@@ -1,7 +1,7 @@
 import { model, Schema } from "mongoose";
 
 const zoneRegionSchema = new Schema({
-  region: {
+  name: {
     type: String,
     required: true,
     uppercase: true,
@@ -12,10 +12,17 @@ const zoneRegionSchema = new Schema({
     required: true,
     uppercase: true
   },
-  location: {
+ location: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point'
+    },
+    coordinates: {
       type: [Number],
       required: true,
       index: '2dsphere'
+    }
   }
 }, {
   timestamps: true
