@@ -1,22 +1,22 @@
 import express from "express"
 import http from "http"
-import socketIo from "socket.io"
+import {Server} from "socket.io"
 import cors from "cors"
 import axios from "axios"
 import { Kafka } from "kafkajs"
-import consoleManager from "../utils/consoleManager"
+import consoleManager from "../utils/consoleManager.js"
 
 const app = express()
 const server = http.createServer(app)
-const io = socketIo(server, {
+const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
   },
 })
+console.log("socket.io server running on port 3001");
 
-const PORT = process.env.PORT || 3001
-const DATABASE_SERVICE_URL = process.env.DATABASE_SERVICE_URL || "http://localhost:3003"
+const DATABASE_SERVICE_URL = process.env.DATABASE_SERVICE_URL || "http://localhost:4000"
 const KAFKA_BROKER = process.env.KAFKA_BROKER || "localhost:9092"
 
 // Kafka setup
@@ -38,22 +38,27 @@ async function connectKafka() {
   await consumer.connect()
 
   // Subscribe to topics
-  await consumer.subscribe({ topic: "busLocationUpdates", fromBeginning: false })
-  await consumer.subscribe({ topic: "busAlerts", fromBeginning: false })
+  await consumer.subscribe({ topic: "test", fromBeginning: false })
+  await consumer.subscribe({ topic: "test", fromBeginning: false })
 
   // Handle incoming Kafka messages
   await consumer.run({
     eachMessage: async ({ topic, message }) => {
       const data = JSON.parse(message.value.toString())
+consoleManager.log(`Received message from topic ${topic}:`, data);
 
-      if (topic === "busLocationUpdates") {
+      if (topic === "test") {
         io.emit("locationUpdate", data)
-      } else if (topic === "busAlerts") {
+        console.log(data);
+        
+      } else if (topic === "test") {
         io.emit("busAlert", data)
+        console.log(data);
       }
     },
   })
 }
+
 
 connectKafka().catch(console.error)
 
@@ -76,21 +81,22 @@ io.on("connection", (socket) => {
   })
 })
 
+
 // API endpoint to update location
 app.post("/api/tracking/update", async (req, res) => {
   try {
     const { busId, location, speed, heading, nextStop, eta, delay } = req.body
 
-    // Save to DB service
-    await axios.post(`${DATABASE_SERVICE_URL}/api/tracking`, {
-      busId,
-      location,
-      speed,
-      heading,
-      nextStop,
-      eta,
-      delay,
-    })
+    // // Save to DB service
+    // await axios.post(`${DATABASE_SERVICE_URL}/api/track`, {
+    //   busId,
+    //   location,
+    //   speed,
+    //   heading,
+    //   nextStop,
+    //   eta,
+    //   delay,
+    // })
 
     const updateData = {
       busId,
@@ -209,6 +215,8 @@ app.post("/api/tracking/simulate/:busId/stop", (req, res) => {
   }
 })
 
-server.listen(PORT, () => {
-  console.log(`Tracking service running on port ${PORT}`)
-})
+
+
+
+
+export { app,server} 

@@ -11,10 +11,12 @@ import incident from "./routes/incident/incidentRoute.js"
 import master from "./routes/master/master.js"
 import userManegementRoute from "./routes/userManagement/userManagementRoute.js";
 import operationRoute from "./routes/operation/operationRoute.js";
+import {app,server} from "./tracking-Services/tracking.js"
+
 
 dotenv.config()
-const app=express()
-const port = process.env.PORT
+
+const port = process.env.PORT||3001
 
 app.use(cors({
     origin:"http://localhost:5173",
@@ -32,11 +34,11 @@ app.use("/api/incident",incident)
 app.use("/api/master",master)
 app.use("/api/usermanagement",userManegementRoute)
 app.use("/api/operation",operationRoute);
-// app.use("/api/share",linkRouter);
+// app.use("/api/track",linkRouter);
 
 
 
-app.listen(port,()=>{
+server.listen(port,()=>{
 console.log(`Server Running On Port ${port}`);
 dbConnection()
 })

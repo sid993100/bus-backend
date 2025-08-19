@@ -1,4 +1,5 @@
-import VehicleType from "../../../models/vehicleTypeModel.js";
+import VehicleType from "../../models/vehicleTypeModel.js";
+
 
 // GET ALL VEHICLE TYPES
 export const getVehicleTypes = async (req, res) => {

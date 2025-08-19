@@ -17,6 +17,8 @@ import { updatePlan } from "../../services/admin/plan/planServices.js";
 import { updateOwnerType } from "../../services/admin/owner/ownerServices.js";
 import { addRegion, getRegions, updateRegion } from "../../services/master/zoneRegionService.js";
 import { addDepotCustomer, getDepotCustomer, getDepotCustomers, updateDepotCustomer } from "../../services/master/depotService.js";
+import { checkPermission } from "../../middleWares/checkPermission.js";
+
 
 
 const router=Router()

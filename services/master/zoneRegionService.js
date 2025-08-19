@@ -1,4 +1,5 @@
-import Region from "../../../models/regionModel.js";
+import Region from "../../models/regionModel.js";
+
 
 // GET all regions
 export const getRegions = async (req, res) => {

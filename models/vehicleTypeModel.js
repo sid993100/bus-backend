@@ -1,4 +1,4 @@
-import { Schema } from "mongoose";
+import { model, Schema } from "mongoose";
 
 const vehicleTypeSchema = new Schema({
   make: {
@@ -15,5 +15,5 @@ const vehicleTypeSchema = new Schema({
   timestamps: true
 });
 
-const VehicleType= module("vehicleType",vehicleTypeSchema)
+const VehicleType= model("VehicleType",vehicleTypeSchema)
 export default VehicleType

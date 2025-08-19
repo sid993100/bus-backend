@@ -1,5 +1,6 @@
-import DepotCustomer from "../../../models/depotCustomerModel.js";
-import Region from "../../../models/regionModel.js";
+
+import Region from "../../models/regionModel.js";
+import DepotCustomer from "../../models/depotCustomerModel.js";
 
 // GET ALL DEPOT/CUSTOMERS
 export const getDepotCustomers = async (req, res) => {

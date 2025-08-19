@@ -1,6 +1,6 @@
-import Account from "../../../models/accountModel";
-import Role from "../../../models/roleModel";
-import User from "../../../models/userModel";
+import Account from "../../../models/accountModel.js";
+import Role from "../../../models/roleModel.js";
+import User from "../../../models/userModel.js";
 
 
 

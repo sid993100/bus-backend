@@ -4,6 +4,7 @@ import { addConductor, getConductor, updateConductor } from "../../services/admi
 import { isLogin } from "../../middleWares/isLogin.js";
 import { roleBaseAuth } from "../../middleWares/rolebaseAuth.js";
 import { addUser, getUsers, updateUser } from "../../services/admin/user/userServices.js";
+import { checkPermission } from "../../middleWares/checkPermission.js";
 const router = Router();
 
 router.get("/driver",isLogin,roleBaseAuth("ADMIN"),checkPermission("drive","read"),getAllDrivers)
