@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Deploy Backend via SSH using Docker
+      - name: Deploy Backend via SSH using Docker Compose
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
@@ -21,6 +21,7 @@ jobs:
           script: |
             set -e
 
+            echo "Navigating to project directory..."
             cd /var/www/bus-backend
 
             echo "Resetting Git..."
@@ -28,20 +29,11 @@ jobs:
             git clean -fd
             git pull origin main
 
-            echo "Stopping and removing old container..."
-            docker stop bus-backend-app || true
-            docker rm bus-backend-app || true
+            echo "Stopping all running containers..."
+            docker compose down --remove-orphans
 
-            echo "Removing dangling images..."
-            docker image prune -f
+            echo "Rebuilding containers..."
+            docker compose build --no-cache
 
-            echo "Building Docker image..."
-            docker build -t bus-backend-app .
-
-            echo "Running Docker container..."
-            docker run -d \
-              --name bus-backend-app \
-              -p 3000:3000 \
-              --restart always \
-              --env-file .env \
-              bus-backend-app
+            echo "Starting containers..."
+            docker compose up -d
