@@ -1,3 +1,4 @@
+import dotenv from "dotenv";
 import express from "express"
 import http from "http"
 import {Server} from "socket.io"
@@ -5,6 +6,8 @@ import cors from "cors"
 import axios from "axios"
 import { Kafka } from "kafkajs"
 import consoleManager from "../utils/consoleManager.js"
+dotenv.config();
+
 
 const app = express()
 const server = http.createServer(app)
@@ -17,7 +20,8 @@ const io = new Server(server, {
 consoleManager.log("socket.io server running on port 3001");
 
 const DATABASE_SERVICE_URL = process.env.DATABASE_SERVICE_URL || "http://localhost:4000"
-const KAFKA_BROKER = process.env.KAFKA_BROKER || "localhost:9092"
+const KAFKA_BROKER = process.env.KAFKA_BROKER 
+
 
 // Kafka setup
 const kafka = new Kafka({
@@ -38,15 +42,15 @@ async function connectKafka() {
   await consumer.connect()
 
   // Subscribe to topics
-  await consumer.subscribe({ topic: "busTrack", fromBeginning: true })
-  await consumer.subscribe({ topic: "test", fromBeginning: true })
+  await consumer.subscribe({ topic: "busTrack", fromBeginning: false })
+  await consumer.subscribe({ topic: "test", fromBeginning: false })
 
   // Handle incoming Kafka messages
   await consumer.run({
     eachMessage: async ({ topic, message }) => {
       // const data = JSON.parse(message.value.toString())
       const data=message.value.toString();
-consoleManager.log(`Received message from topic ${topic}:`, data);
+consoleManager.log(`Received message from topic ${topic}:`, message.value);
 
       if (topic === "busTrack") {
         io.emit("locationUpdate", data)
