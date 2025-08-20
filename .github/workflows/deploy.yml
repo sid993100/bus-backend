@@ -1,33 +1,40 @@
-name: Deploy to VPS
+name: Backend Deploy Main
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
-  deploy:
+  deploy-backend:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Copy Files to VPS
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USER }}
-        key: ${{ secrets.VPS_SSH_KEY }}
-        source: "."
-        target: "/var/www/bus-backend"
+      - name: Deploy Backend via SSH using Docker
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /var/www/bus-backend
 
-    - name: Run SSH Commands
-      uses: appleboy/ssh-action@v0.1.8
-      with:
-        host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USER }}
-        key: ${{ secrets.VPS_SSH_KEY }}
-        script: |
-          cd /var/www/bus-backend
-          docker-compose down
-          docker-compose up -d --build
+            echo "Resetting Git..."
+            git reset --hard
+            git clean -fd
+            git pull origin main
+
+            echo "Building Docker image..."
+            docker stop bus-backend-app || true
+            docker rm bus-backend-app || true
+            docker build -t bus-backend-app .
+
+            echo "Running Docker container..."
+            docker run -d \
+              --name bus-backend-app \
+              -p 3000:3000 \
+              --restart always \
+              --env-file .env \
+              bus-backend
