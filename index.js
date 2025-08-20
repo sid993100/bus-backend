@@ -19,7 +19,7 @@ const port = process.env.PORT || 3001;
 
 // ✅ Add Welcome Route First
 app.get("/", (req, res) => {
-  res.send("Welcome to API server of Bus Track");
+  res.send("Welcome to API server of Bus Track Application");
 });
 
 app.use(
