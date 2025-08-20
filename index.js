@@ -23,12 +23,7 @@ app.get("/", (req, res) => {
   res.send("Welcome to API server of Bus Track Application");
 });
 
-app.use(
-  cors({
-    origin: ["http://localhost:3000", "http://31.97.235.221:3000"],
-    credentials: true,
-  })
-);
+app.use( cors({ origin: "http://localhost:3000", credentials: true, }) );
 
 app.use(cookieParser());
 app.use(express.json());
