@@ -19,6 +19,8 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            set -e
+
             cd /var/www/bus-backend
 
             echo "Resetting Git..."
@@ -26,9 +28,14 @@ jobs:
             git clean -fd
             git pull origin main
 
-            echo "Building Docker image..."
+            echo "Stopping and removing old container..."
             docker stop bus-backend-app || true
             docker rm bus-backend-app || true
+
+            echo "Removing dangling images..."
+            docker image prune -f
+
+            echo "Building Docker image..."
             docker build -t bus-backend-app .
 
             echo "Running Docker container..."
