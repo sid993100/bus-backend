@@ -42,12 +42,6 @@ return responseManager.unauthorized(res,"not admin")
 }
 export const getAccount = async (req, res) => {
  try {
-     const user = req.user;
-     if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
       const accounts = await Account.find({});
       if (!accounts) {
         return res.status(404).json({

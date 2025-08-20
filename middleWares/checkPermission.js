@@ -4,6 +4,9 @@ import User from "../models/userModel.js";
 export const checkPermission = (resource, action) => {
   return async (req, res, next) => {
     try {
+      if(req.user.hierarchy === "SUPERADMIN"){
+            return next()
+        }
       // req.user._id should be set by your JWT auth middleware
       const user = await User.findById(req.user._id).populate("roleName");
 

@@ -18,13 +18,15 @@ import { updateOwnerType } from "../../services/admin/owner/ownerServices.js";
 import { addRegion, getRegions, updateRegion } from "../../services/master/zoneRegionService.js";
 import { addDepotCustomer, getDepotCustomer, getDepotCustomers, updateDepotCustomer } from "../../services/master/depotService.js";
 import { checkPermission } from "../../middleWares/checkPermission.js";
+import { addToll, getToll, updateToll } from "../../services/master/toll/tollService.js";
 
 
 
 const router=Router()
 
-router.get("/accounts", isLogin, getAccount);
+router.get("/accounts", isLogin,roleBaseAuth("ADMIN"), getAccount);
 router.get("/tolltypes", isLogin, getTollType);
+router.get("/toll",isLogin,roleBaseAuth("ADMIN"),checkPermission("toll","read"),getToll);
 router.get("/servicecategory", isLogin, getServiceCategory);
 router.get("/state", isLogin, getState);
 router.get("/busstop", isLogin, getBusStop);
@@ -43,6 +45,7 @@ router.get("/depot",isLogin,roleBaseAuth( "ADMIN"),checkPermission("depot","read
 
 router.post("/account", isLogin, addAccount);
 router.post("/tolltype", isLogin, addTollType);
+router.post("/toll", isLogin, roleBaseAuth("ADMIN"), checkPermission("toll", "create"), addToll);
 router.post("/servicecategory", isLogin, addServiceCategory);
 router.post("/state",isLogin,addState);
 router.post("/servicetype", isLogin, addServiceType);
@@ -61,6 +64,7 @@ router.post("/depot",isLogin,roleBaseAuth( "ADMIN"),checkPermission("depot","cre
 
 router.put("/account/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("account","update"),updateAccount)
 router.put("/tolltypes/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("tollType", "update"), updateTollType);
+router.put("/toll/:id", isLogin, roleBaseAuth("ADMIN"), checkPermission("toll", "update"), updateToll);
 router.put("/country/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("country","update"), updateCountry);
 router.put("/ownertype/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("ownerType","update"), updateOwnerType);
 router.put("/plan/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("plan","update"), updatePlan);

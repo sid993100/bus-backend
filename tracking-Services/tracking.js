@@ -10,8 +10,8 @@ const app = express()
 const server = http.createServer(app)
 const io = new Server(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   },
 })
 console.log("socket.io server running on port 3001");
@@ -38,22 +38,23 @@ async function connectKafka() {
   await consumer.connect()
 
   // Subscribe to topics
-  await consumer.subscribe({ topic: "test", fromBeginning: false })
-  await consumer.subscribe({ topic: "test", fromBeginning: false })
+  await consumer.subscribe({ topic: "busTrack", fromBeginning: true })
+  await consumer.subscribe({ topic: "test", fromBeginning: true })
 
   // Handle incoming Kafka messages
   await consumer.run({
     eachMessage: async ({ topic, message }) => {
-      const data = JSON.parse(message.value.toString())
+      // const data = JSON.parse(message.value.toString())
+      const data=message.value.toString();
 consoleManager.log(`Received message from topic ${topic}:`, data);
 
-      if (topic === "test") {
+      if (topic === "busTrack") {
         io.emit("locationUpdate", data)
-        console.log(data);
+        console.log("log ",data);
         
       } else if (topic === "test") {
         io.emit("busAlert", data)
-        console.log(data);
+        console.log("log ",data);
       }
     },
   })
@@ -87,16 +88,16 @@ app.post("/api/tracking/update", async (req, res) => {
   try {
     const { busId, location, speed, heading, nextStop, eta, delay } = req.body
 
-    // // Save to DB service
-    // await axios.post(`${DATABASE_SERVICE_URL}/api/track`, {
-    //   busId,
-    //   location,
-    //   speed,
-    //   heading,
-    //   nextStop,
-    //   eta,
-    //   delay,
-    // })
+    // Save to DB service
+    await axios.post(`${DATABASE_SERVICE_URL}/api/track`, {
+      busId,
+      location,
+      speed,
+      heading,
+      nextStop,
+      eta,
+      delay,
+    })
 
     const updateData = {
       busId,
@@ -111,7 +112,7 @@ app.post("/api/tracking/update", async (req, res) => {
 
     // Publish to Kafka topic
     await producer.send({
-      topic: "busLocationUpdates",
+      topic: "busTrack",
       messages: [{ value: JSON.stringify(updateData) }],
     })
 
@@ -141,7 +142,7 @@ app.post("/api/tracking/alert", async (req, res) => {
     // Publish to Kafka
     await producer.send({
       topic: "busAlerts",
-      messages: [{ value: JSON.stringify(alertData) }],
+      // messages: [{ value: JSON.stringify(alertData) }],
     })
 
     io.emit("busAlert", alertData)
