@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import VltDevice from "../../../models/vltDeviceModel.js";
+import consoleManager from "../../../utils/consoleManager.js";
 
 export const getVltDevices=async (req,res) => {
   const user = req.user;
@@ -64,7 +65,7 @@ export const addVltDevices=async (req,res) => {
         data:vltDevice
       }) 
      } catch (error) {
-      console.log(error);
+      consoleManager.log(error);
       
        return res.status(500).json({
         message:"Server Error"

@@ -1,4 +1,5 @@
 import User from "../models/userModel.js";
+import consoleManager from "../utils/consoleManager.js";
 import generateToken from "../utils/generateToken.js";
 import passwordCheck from "../utils/passwordCheck.js";
 
@@ -15,7 +16,7 @@ export const signin=async (req,res)=>{
 try {
     
         const existingUser=await User.findOne({email})
-        console.log(existingUser);
+        consoleManager.log(existingUser);
         
         if(existingUser){
              return res.status(404).json({
@@ -53,7 +54,7 @@ try {
              message:"User Created"
          })
 } catch (error) {
-    console.log(error +" signin");
+    consoleManager.log(error +" signin");
     res.status(500).json({
         message:"Backend Error"
     })
@@ -93,7 +94,7 @@ export const login= async(req,res)=>{
             message:"login"
         })
     } catch (error) {
-        console.log("login problem");
+        consoleManager.log("login problem");
         res.status(500).json({
             message:"Backend Error"
         })
@@ -121,7 +122,7 @@ export const check=async(req,res)=>{
             user:req.user
         })
     } catch (error) {
-        console.log(error +' check problem');
+        consoleManager.log(error +' check problem');
         
         res.status(500)
         .json({

@@ -1,4 +1,5 @@
 import Subscription from "../../../models/subscriptionModel.js";
+import consoleManager from "../../../utils/consoleManager.js";
 
 export const getSubscription=async (req,res) => {
   
@@ -48,7 +49,7 @@ export const addSubscription =async (req,res) => {
         data:subscription
       }) 
      } catch (error) {
-      console.log(error);
+      consoleManager.log(error);
       
         res.status(500).json({
         message:error.errmsg

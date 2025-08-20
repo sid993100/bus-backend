@@ -1,15 +1,16 @@
 
 import mongoose from "mongoose";
+import consoleManager from "../utils/consoleManager.js";
 
 const uri=process.env.DATABASE_URI
 const dbConnection= async()=>{
 
   try {
    await mongoose.connect(process.env.DATABASE_URI)
-    console.log("data base connected");
+    consoleManager.log("data base connected");
     
 } catch (error) {
-   console.log(uri);
+   consoleManager.log(uri);
     
     throw new Error("data base not connected");
     

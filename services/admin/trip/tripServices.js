@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import Trip from "../../../models/tripModel.js";
+import consoleManager from "../../../utils/consoleManager.js";
 
 export const getTrip = async (req, res) => {
   try {
@@ -66,7 +67,7 @@ export const addTrip = async (req, res) => {
       data: trip,
     });
   } catch (error) {
-    console.log(error);
+    consoleManager.log(error);
 
     res.status(500).json({
       message: error.errmsg,

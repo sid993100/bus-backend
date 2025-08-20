@@ -1,10 +1,11 @@
 import Toll from "../../../models/tollModel.js";
+import consoleManager from "../../../utils/consoleManager.js";
 import responseManager from "../../../utils/responseManager.js";
 
 export const addToll = async (req, res) => {
   const user = req.user;
   const { code, tollName, typeA, typeB, state, country, coordinates } = req.body;
-  console.log(code, tollName, typeA, typeB, state, country);
+  consoleManager.log(code, tollName, typeA, typeB, state, country);
   
   if (user.hierarchy !== "ADMIN") {
     return responseManager.unauthorized(res, "not admin");
@@ -38,7 +39,7 @@ export const addToll = async (req, res) => {
       data: toll
     });
   } catch (error) {
-    console.log(error);
+    consoleManager.log(error);
     
     if (error.code === 11000) {
       return res.status(409).json({
@@ -74,7 +75,7 @@ export const getToll = async (req, res) => {
 export const updateToll = async (req, res) => {
   try {
     const { id } = req.params; // toll ID from URL
-    console.log(id);
+    consoleManager.log(id);
     
     const { code, tollName, typeA, typeB, state, country, coordinates } = req.body;
 
@@ -134,7 +135,7 @@ export const updateToll = async (req, res) => {
 export const deleteToll = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(id);
+    consoleManager.log(id);
 
     if (!id) {
       return res.status(400).json({
@@ -170,7 +171,7 @@ export const deleteToll = async (req, res) => {
 export const getTollById = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(id);
+  
 
     if (!id) {
       return res.status(400).json({
@@ -205,7 +206,7 @@ export const getTollById = async (req, res) => {
 export const getTollsByState = async (req, res) => {
   try {
     const { state } = req.params;
-    console.log(state);
+    consoleManager.log(state);
 
     if (!state) {
       return res.status(400).json({
@@ -238,7 +239,7 @@ export const getTollsByState = async (req, res) => {
 export const bulkAddTolls = async (req, res) => {
   const user = req.user;
   const { tolls } = req.body;
-  console.log("Bulk adding tolls:", tolls?.length);
+  consoleManager.log("Bulk adding tolls:", tolls?.length);
 
   if (user.hierarchy !== "ADMIN") {
     return responseManager.unauthorized(res, "not admin");
@@ -258,7 +259,7 @@ export const bulkAddTolls = async (req, res) => {
       data: createdTolls
     });
   } catch (error) {
-    console.log(error);
+    consoleManager.log(error);
     
     return res.status(500).json({
       message: "Server Error",

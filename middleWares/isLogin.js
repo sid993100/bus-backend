@@ -30,7 +30,7 @@ export const isLogin=async(req,res,next)=>{
         next()
 
     } catch (error) {
-        console.log(error);
+        consoleManager.log(error);
         res.status(500).clearCookie("token").json({message:"islogin error"})
     }
 

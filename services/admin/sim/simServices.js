@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import SimService from "../../../models/simServiceModel.js";
+import consoleManager from "../../../utils/consoleManager.js";
 
 export const getSim=async (req,res) => {
   const user = req.user;
@@ -57,7 +58,7 @@ export const addSim=async (req,res) => {
         data:sim
       }) 
      } catch (error) {
-      console.log(error);
+      consoleManager.log(error);
       
        return res.status(500).json({
         message:"Server Error"

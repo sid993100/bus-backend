@@ -1,5 +1,6 @@
 
 import Department from "../../../models/departmentModel.js";
+import consoleManager from "../../../utils/consoleManager.js";
 
 export const getDepartment=async (req,res) => {
   const user = req.user;
@@ -51,7 +52,7 @@ export const addDepartment =async (req,res) => {
         data:department
       }) 
      } catch (error) {
-      console.log(error);
+      consoleManager.log(error);
       
         res.status(500).json({
         message:error.errmsg

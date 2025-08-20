@@ -12,10 +12,11 @@ import master from "./routes/master/master.js";
 import userManegementRoute from "./routes/userManagement/userManagementRoute.js";
 import operationRoute from "./routes/operation/operationRoute.js";
 import { app, server } from "./tracking-Services/tracking.js";
+import consoleManager from "./utils/consoleManager.js";
 
 dotenv.config();
 
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 3000;
 
 // ✅ Add Welcome Route First
 app.get("/", (req, res) => {
@@ -24,7 +25,7 @@ app.get("/", (req, res) => {
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "http://localhost:3000",
     credentials: true,
   })
 );
@@ -44,6 +45,6 @@ app.use("/api/operation", operationRoute);
 
 // ✅ Start Server
 server.listen(port, () => {
-  console.log(`Server Running On Port ${port}`);
+  consoleManager.log(`Server Running On Port ${port}`);
   dbConnection();
 });

@@ -1,6 +1,7 @@
 
 import mongoose from "mongoose";
 import Plan from "../../../models/planModel.js";
+import consoleManager from "../../../utils/consoleManager.js";
 
 export const getPlan=async (req,res) => {
   const user = req.user;
@@ -59,7 +60,7 @@ export const addPlan =async (req,res) => {
         data:plan
       }) 
      } catch (error) {
-      console.log(error);
+      consoleManager.log(error);
       
         res.status(500).json({
         message:error.errmsg

@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import ServiceType from "../../../models/serviceTypeModel.js";
+import consoleManager from "../../../utils/consoleManager.js";
 
 export const getServiceType=async (req,res) => {
      try {
@@ -53,14 +54,14 @@ export const addServiceType=async (req,res) => {
                  message:"Somthing went Wrong while Creating A Account "
              })
       }
-console.log(serviceType);
+consoleManager.log(serviceType);
 
      return res.status(201).json({
         message:"created",
         data:serviceType
       })
      } catch (error) {
-      console.log(error);
+      consoleManager.log(error);
       
        return res.status(500).json({
         message:"Server Error"

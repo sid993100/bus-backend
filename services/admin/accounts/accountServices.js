@@ -1,11 +1,12 @@
 import Account from "../../../models/accountModel.js";
+import consoleManager from "../../../utils/consoleManager.js";
 import responseManager from "../../../utils/responseManager.js";
 
 
 export const addAccount=async (req,res) => {
   const user=req.user
   const {accountCode,name,description}=req.body
-  console.log(accountCode,name,description);
+  consoleManager.log(accountCode,name,description);
   
   if (user.hierarchy !== "ADMIN") {
 return responseManager.unauthorized(res,"not admin")
@@ -33,7 +34,7 @@ return responseManager.unauthorized(res,"not admin")
         data:account
       }) 
      } catch (error) {
-      console.log(error);
+      consoleManager.log(error);
       
        return res.status(500).json({
         message:"Server Error"
@@ -61,7 +62,7 @@ export const getAccount = async (req, res) => {
 export const updateAccount = async (req, res) => {
   try {
     const { id } = req.params; // account ID from URL
-    console.log(id);
+    consoleManager.log(id);
     
     const { accountCode, name, description } = req.body;
 

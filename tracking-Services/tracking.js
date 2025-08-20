@@ -14,7 +14,7 @@ const io = new Server(server, {
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   },
 })
-console.log("socket.io server running on port 3001");
+consoleManager.log("socket.io server running on port 3001");
 
 const DATABASE_SERVICE_URL = process.env.DATABASE_SERVICE_URL || "http://localhost:4000"
 const KAFKA_BROKER = process.env.KAFKA_BROKER || "localhost:9092"
@@ -50,11 +50,11 @@ consoleManager.log(`Received message from topic ${topic}:`, data);
 
       if (topic === "busTrack") {
         io.emit("locationUpdate", data)
-        console.log("log ",data);
+        consoleManager.log("log ",data);
         
       } else if (topic === "test") {
         io.emit("busAlert", data)
-        console.log("log ",data);
+        consoleManager.log("log ",data);
       }
     },
   })
@@ -78,7 +78,7 @@ io.on("connection", (socket) => {
   })
 
   socket.on("disconnect", () => {
-    console.log("Client disconnected:", socket.id)
+    consoleManager.log("Client disconnected:", socket.id)
   })
 })
 

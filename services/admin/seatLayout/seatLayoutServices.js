@@ -59,7 +59,7 @@ export const addSeatLayout=async (req,res) => {
       })
 
      } catch (error) {
-      console.log(error);
+      consoleManager.log(error);
       
          res.status(500).json({
         message:error.errmsg
@@ -67,6 +67,7 @@ export const addSeatLayout=async (req,res) => {
      }
 }
 import mongoose from "mongoose";
+import consoleManager from "../../../utils/consoleManager.js";
 
 export const updateSeatLayout = async (req, res) => {
   try {
