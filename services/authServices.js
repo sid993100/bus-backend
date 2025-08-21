@@ -156,7 +156,6 @@ export const forgotPassword = async (req, res) => {
     // Save code and expiration (10 minutes)
     user.resetCode = resetCode;
     user.resetCodeExpires = new Date(Date.now() + 10 * 60 * 1000);
-    
     await user.save();
     
     const emailSent = await sendResetEmail(email, resetCode);
@@ -179,6 +178,7 @@ export const forgotPassword = async (req, res) => {
 export const resetPassword = async (req, res) => {
   try {
     const { email, resetCode, newPassword } = req.body;
+console.log(req.body);
 
 
     if (!email || !resetCode || !newPassword) {
@@ -190,7 +190,7 @@ export const resetPassword = async (req, res) => {
       resetCode,
       resetCodeExpires: { $gt: new Date() }
     });
-    
+
     if (!user) {
       return res.status(400).json({ message: "Invalid or expired code" });
     }
