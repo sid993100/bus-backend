@@ -3,6 +3,7 @@ import consoleManager from "../utils/consoleManager.js";
 import generateToken from "../utils/generateToken.js";
 import passwordCheck from "../utils/passwordCheck.js";
 
+import { sendResetEmail } from "../utils/sendResetEmail.js";
 
 export const signin=async (req,res)=>{
    
@@ -130,3 +131,80 @@ export const check=async(req,res)=>{
         })
     }
 }
+
+// Generate 6-digit code
+const generateResetCode = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email required" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Generate 6-digit code
+    const resetCode = generateResetCode();
+    
+    // Save code and expiration (10 minutes)
+    user.resetCode = resetCode;
+    user.resetCodeExpires = new Date(Date.now() + 10 * 60 * 1000);
+    
+    await user.save();
+    
+    const emailSent = await sendResetEmail(email, resetCode);
+    
+
+
+    
+    if (!emailSent) {
+      return res.status(500).json({ message: "Failed to send email" });
+    }
+
+    res.status(200).json({ message: "Reset code sent to your email" });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { email, resetCode, newPassword } = req.body;
+
+
+    if (!email || !resetCode || !newPassword) {
+      return res.status(400).json({ message: "All fields required" });
+    }
+
+    const user = await User.findOne({
+      email,
+      resetCode,
+      resetCodeExpires: { $gt: new Date() }
+    });
+    
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired code" });
+    }
+
+    // Update password and clear reset code
+    user.password = newPassword;
+    user.resetCode = null;
+    user.resetCodeExpires = null;
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successful" });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

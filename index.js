@@ -16,6 +16,8 @@ import consoleManager from "./utils/consoleManager.js";
 
 dotenv.config();
 
+dbConnection();
+
 const port = process.env.PORT || 5000;
 
 // ✅ Add Welcome Route First
@@ -59,5 +61,4 @@ app.use("/api/operation", operationRoute);
 // ✅ Start Server
 server.listen(port, () => {
   consoleManager.log(`Server Running On Port ${port}`);
-  dbConnection();
 });
