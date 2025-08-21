@@ -29,6 +29,9 @@ jobs:
             git clean -fd
             git pull origin main
 
+            echo "Installing new dependencies..."
+            npm install
+
             echo "Stopping all running containers..."
             docker compose down --remove-orphans
 
