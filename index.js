@@ -16,7 +16,7 @@ import consoleManager from "./utils/consoleManager.js";
 
 dotenv.config();
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5000;
 
 // ✅ Add Welcome Route First
 app.get("/", (req, res) => {

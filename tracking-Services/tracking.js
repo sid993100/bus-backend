@@ -50,7 +50,7 @@ async function connectKafka() {
     eachMessage: async ({ topic, message }) => {
       // const data = JSON.parse(message.value.toString())
       const data=message.value.toString();
-consoleManager.log(`Received message from topic ${topic}:`, message.value);
+consoleManager.log(`Received message from topic ${topic}:`, data);
 
       if (topic === "busTrack") {
         io.emit("locationUpdate", data)
