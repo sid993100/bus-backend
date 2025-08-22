@@ -3,11 +3,7 @@ import Vehicle from "../../../models/vehicleModel.js";
 
 export const getVehicle=async (req,res) => {
   const user = req.user;
-     if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
+     
      try {
       const vehicles= await Vehicle.find({})
       if (!vehicles||vehicles.length===0) {

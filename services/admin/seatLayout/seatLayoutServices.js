@@ -26,11 +26,7 @@ export const addSeatLayout=async (req,res) => {
          const user=req.user
   const {layoutName,seatCapacity,department,servicesLinked,fci}=req.body
   
-  if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
+  
      if(!layoutName||!seatCapacity||!department||!servicesLinked||!fci){
        return res.status(404).json({
             message:"All details Required"

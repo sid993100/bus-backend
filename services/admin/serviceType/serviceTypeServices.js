@@ -25,11 +25,7 @@ export const addServiceType=async (req,res) => {
    const user=req.user
   const {code,name,tollType,sleeperCharges,resCharge,reservationCharges,childDiscount,perKmFare,account,fare,category}=req.body
   
-  if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
+  
      if(!code||!name||!tollType||!sleeperCharges||!resCharge||!reservationCharges||!childDiscount||!perKmFare||!account||!fare||!category){
        return res.status(404).json({
             message:"All details Required"

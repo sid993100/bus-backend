@@ -3,11 +3,7 @@ import VehicleManufacturer from "../../../models/vehiclemanufacturerModel.js";
 
 export const getVehicleManufacturer=async (req,res) => {
   const user = req.user;
-     if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
+     
      try {
       const vehicleManufacturer= await VehicleManufacturer.find({})
       if (!vehicleManufacturer) {
@@ -30,11 +26,7 @@ export const addVehicleManufacturer =async (req,res) => {
   const user=req.user
   const {make,shortName}=req.body
 
-  if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
+  
      if(!make){
        return res.status(404).json({
             message:"All details Required"

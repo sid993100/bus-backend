@@ -5,7 +5,7 @@ export const getCountry = async (req,res) => {
     const user = req.user;
      try {
         const country= await Country.find({})
-        if (!country) {
+        if (!country||country.length===0) {
              return res.status(404).json({
             message: "Bus Stop Not Found",
             });

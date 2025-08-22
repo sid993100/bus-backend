@@ -32,12 +32,7 @@ export const getDepotCustomers = async (req, res) => {
 export const getDepotCustomer = async (req, res) => {
     const user = req.user;
     const { id } = req.params;
-    
-    if (user.hierarchy !== "ADMIN") {
-        return res.status(403).json({
-            message: "Not Admin",
-        });
-    }
+
     
     try {
         const depotCustomer = await DepotCustomer.findById(id)
@@ -65,11 +60,7 @@ export const addDepotCustomer = async (req, res) => {
     const user = req.user;
     const { depotCustomer, region } = req.body;
     
-    if (user.hierarchy !== "ADMIN") {
-        return res.status(403).json({
-            message: "Not Admin",
-        });
-    }
+       
     
     if (!depotCustomer || !region) {
         return res.status(400).json({
@@ -133,11 +124,7 @@ export const updateDepotCustomer = async (req, res) => {
     const { id } = req.params;
     const { depotCustomer, region } = req.body;
     
-    if (user.hierarchy !== "ADMIN") {
-        return res.status(403).json({
-            message: "Not Admin",
-        });
-    }
+       
     
     if (!depotCustomer || !region) {
         return res.status(400).json({
@@ -199,11 +186,7 @@ export const deleteDepotCustomer = async (req, res) => {
     const user = req.user;
     const { id } = req.params;
     
-    if (user.hierarchy !== "ADMIN") {
-        return res.status(403).json({
-            message: "Not Admin",
-        });
-    }
+       
     
     try {
         const depotCustomer = await DepotCustomer.findByIdAndDelete(id)
@@ -231,11 +214,7 @@ export const getDepotCustomersByRegion = async (req, res) => {
     const user = req.user;
     const { regionId } = req.params;
     
-    if (user.hierarchy !== "ADMIN") {
-        return res.status(403).json({
-            message: "Not Admin",
-        });
-    }
+       
     
     try {
         // Verify that the region exists
@@ -272,11 +251,7 @@ export const getDepotCustomersByRegion = async (req, res) => {
 export const getDepotCustomerStats = async (req, res) => {
     const user = req.user;
     
-    if (user.hierarchy !== "ADMIN") {
-        return res.status(403).json({
-            message: "Not Admin",
-        });
-    }
+       
     
     try {
         const totalDepotCustomers = await DepotCustomer.countDocuments();

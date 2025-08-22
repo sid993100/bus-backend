@@ -64,9 +64,6 @@ export const addTrackingPacket = async (req, res) => {
   
   console.log("Tracking packet data:", { header, vendorID, vehicleRegNo, imei, packetType });
   
-  if (user.hierarchy !== "ADMIN" && user.hierarchy !== "OPERATOR") {
-    return responseManager.unauthorized(res, "not authorized");
-  }
   
   if (!header || !vendorID || !vehicleRegNo || !imei || !packetType || !messageID || 
       !date || !time || !latitude || !longitude || !checksum) {

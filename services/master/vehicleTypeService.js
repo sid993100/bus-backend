@@ -100,12 +100,7 @@ export const updateVehicleType = async (req, res) => {
     const user = req.user;
     const { id } = req.params;
     const { make, vehicleType } = req.body;
-    
-    if (user.hierarchy !== "ADMIN") {
-        return res.status(403).json({
-            message: "Not Admin",
-        });
-    }
+   
     
     if (!make || !vehicleType) {
         return res.status(400).json({
@@ -154,13 +149,7 @@ export const updateVehicleType = async (req, res) => {
 export const deleteVehicleType = async (req, res) => {
     const user = req.user;
     const { id } = req.params;
-    
-    if (user.hierarchy !== "ADMIN") {
-        return res.status(403).json({
-            message: "Not Admin",
-        });
-    }
-    
+   
     try {
         const vehicleType = await VehicleType.findByIdAndDelete(id);
         
@@ -185,12 +174,6 @@ export const deleteVehicleType = async (req, res) => {
 export const getVehicleTypesByMake = async (req, res) => {
     const user = req.user;
     const { make } = req.params;
-    
-    if (user.hierarchy !== "ADMIN") {
-        return res.status(403).json({
-            message: "Not Admin",
-        });
-    }
     
     try {
         const vehicleTypes = await VehicleType.find({ 
@@ -218,12 +201,6 @@ export const getVehicleTypesByMake = async (req, res) => {
 // GET ALL UNIQUE MAKES
 export const getUniqueMakes = async (req, res) => {
     const user = req.user;
-    
-    if (user.hierarchy !== "ADMIN") {
-        return res.status(403).json({
-            message: "Not Admin",
-        });
-    }
     
     try {
         const makes = await VehicleType.distinct("make");

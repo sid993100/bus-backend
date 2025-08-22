@@ -4,11 +4,7 @@ import consoleManager from "../../../utils/consoleManager.js";
 
 export const getVltDevices=async (req,res) => {
   const user = req.user;
-     if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
+     
      try {
       const vltDevice= await VltDevice.find({})
       if (!vltDevice||vltDevice.length===0) {
@@ -35,11 +31,7 @@ export const addVltDevices=async (req,res) => {
         region,
     customer}=req.body
 
-  if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
+  
      if(!vlt||!imeiNumber||!iccid||!region||!customer){
        return res.status(404).json({
             message:"All details Required"

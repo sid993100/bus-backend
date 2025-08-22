@@ -54,3 +54,90 @@ export const addDepartment =async (req,res) => {
          })
      }
 }
+
+export const updateDepartment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name } = req.body;
+
+    // Validate MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        message: "Invalid Department ID format",
+      });
+    }
+
+    // Check if name field is provided
+    if (!name) {
+      return res.status(400).json({
+        message: "Name field is required to update",
+      });
+    }
+
+    // Update the department
+    const updatedDepartment = await Department.findByIdAndUpdate(
+      id, 
+      { name }, 
+      { new: true } // Return the updated document
+    );
+
+    if (!updatedDepartment) {
+      return res.status(404).json({
+        message: "Department not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "Department updated successfully",
+      data: updatedDepartment,
+    });
+
+  } catch (error) {
+    consoleManager.log(error);
+    res.status(500).json({
+      message: error.message || "Server Error",
+    });
+  }
+};
+
+export const updateDepartmentByName = async (req, res) => {
+  try {
+    const { departmentName } = req.params;
+    const { name } = req.body;
+
+    if (!departmentName) {
+      return res.status(400).json({
+        message: "Department name is required",
+      });
+    }
+
+    if (!name) {
+      return res.status(400).json({
+        message: "Name field is required to update",
+      });
+    }
+
+    const updatedDepartment = await Department.findOneAndUpdate(
+      { name: departmentName },
+      { name },
+      { new: true }
+    );
+
+    if (!updatedDepartment) {
+      return res.status(404).json({
+        message: "Department not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "Department updated successfully",
+      data: updatedDepartment,
+    });
+
+  } catch (error) {
+    consoleManager.log(error);
+    res.status(500).json({
+      message: error.message || "Server Error",
+    });
+  }
+};

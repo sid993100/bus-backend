@@ -23,11 +23,7 @@ export const addState =async (req,res) => {
     const user=req.user
   const {stateCode,state,stateType,country}=req.body
   
-  if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
+  
      if(!stateCode||!state||!country){
        return res.status(404).json({
             message:"All details Required"

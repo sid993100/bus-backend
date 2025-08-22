@@ -3,11 +3,7 @@ import VltdModel from "../../../models/vltdModelModel.js";
 
 export const getVltModel=async (req,res) => {
   const user = req.user;
-     if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
+     
      try {
       const vltModel= await VltdModel.find({})
       if (!vltModel||vltModel.length===0) {
@@ -29,11 +25,7 @@ export const addVltModel=async (req,res) => {
   const user=req.user
   const {name,modelName}=req.body
 
-  if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
+  
      if(!name||!modelName){
        return res.status(404).json({
             message:"All details Required"

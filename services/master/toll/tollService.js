@@ -7,9 +7,7 @@ export const addToll = async (req, res) => {
   const { code, tollName, typeA, typeB, state, country, coordinates } = req.body;
   consoleManager.log(code, tollName, typeA, typeB, state, country);
   
-  if (user.hierarchy !== "ADMIN") {
-    return responseManager.unauthorized(res, "not admin");
-  }
+      
   
   if (!code || !tollName || !typeA || !typeB || !state) {
     return res.status(404).json({
@@ -241,9 +239,6 @@ export const bulkAddTolls = async (req, res) => {
   const { tolls } = req.body;
   consoleManager.log("Bulk adding tolls:", tolls?.length);
 
-  if (user.hierarchy !== "ADMIN") {
-    return responseManager.unauthorized(res, "not admin");
-  }
 
   if (!tolls || !Array.isArray(tolls) || tolls.length === 0) {
     return res.status(400).json({

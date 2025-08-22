@@ -7,7 +7,7 @@ import { addBusStop, getBusStop, updateBusStop } from "../../services/admin/busS
 import { addCountry, getCountry, updateCountry } from "../../services/admin/country/countryServices.js";
 import { addServiceType, getServiceType, updateServiceType } from "../../services/admin/serviceType/serviceTypeServices.js";
 import { addStopGrade, getStopGrade } from "../../services/admin/stopGrade/stopGradeServices.js";
-import { addArea, getArea } from "../../services/admin/area/areaServices.js";
+import { addArea, getArea, updateArea, updateAreaByName } from "../../services/admin/area/areaServices.js";
 import { addVehicle, getVehicle, updateVehicle } from "../../services/admin/vehicle/vehicleServices.js";
 import { addVehicleManufacturer, getVehicleManufacturer, updateVehicleManufacturer } from "../../services/admin/vehicleManufacturer/vehicleManufacturerServices.js";
 import { isLogin } from "../../middleWares/isLogin.js";
@@ -19,6 +19,7 @@ import { addRegion, getRegions, updateRegion } from "../../services/master/zoneR
 import { addDepotCustomer, getDepotCustomer, getDepotCustomers, updateDepotCustomer } from "../../services/master/depotService.js";
 import { checkPermission } from "../../middleWares/checkPermission.js";
 import { addToll, getToll, updateToll } from "../../services/master/toll/tollService.js";
+import { updateDepartment, updateDepartmentByName } from "../../services/admin/department/departmentServices.js";
 
 
 
@@ -75,5 +76,9 @@ router.put('/zone/:id', isLogin,roleBaseAuth( "ADMIN"),checkPermission("zone","u
 router.put('/depot/:id', isLogin,roleBaseAuth( "ADMIN"),checkPermission("depot","update"),updateDepotCustomer)
 router.put("/vehicle/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicle","update"), updateVehicle);
 router.put("/vehiclemanufacturer/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleM","update"), updateVehicleManufacturer);
+router.put('/department/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("department","update"), updateDepartment);
+router.put('/department/name/:departmentName',isLogin,roleBaseAuth( "ADMIN"),checkPermission("department","update"), updateDepartmentByName);
+router.put('/area/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("area","update"), updateArea);
+router.put('/area/name/:name',isLogin,roleBaseAuth( "ADMIN"),checkPermission("area","update"), updateAreaByName);
 
 export default router
