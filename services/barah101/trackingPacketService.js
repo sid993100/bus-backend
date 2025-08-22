@@ -1,8 +1,7 @@
-import TrackingPacket from "../../../models/trackingPacketModel.js";
-import responseManager from "../../../utils/responseManager.js";
+import TrackingPacket from "../../models/trackingPacketModel.js";
+
 
 export const addTrackingPacket = async (req, res) => {
-  const user = req.user;
   const {
     startCharacter,
     header,
@@ -362,41 +361,6 @@ export const getVehicleRoute = async (req, res) => {
     console.error(error);
     return res.status(500).json({
       message: "Backend Error"
-    });
-  }
-};
-
-export const bulkAddTrackingPackets = async (req, res) => {
-  const user = req.user;
-  const { trackingPackets } = req.body;
-  console.log("Bulk adding tracking packets:", trackingPackets?.length);
-  
-  if (user.hierarchy !== "ADMIN") {
-    return responseManager.unauthorized(res, "not admin");
-  }
-  
-  if (!trackingPackets || !Array.isArray(trackingPackets) || trackingPackets.length === 0) {
-    return res.status(400).json({
-      message: "Please provide an array of tracking packets"
-    });
-  }
-  
-  try {
-    const createdTrackingPackets = await TrackingPacket.insertMany(
-      trackingPackets, 
-      { ordered: false }
-    );
-    
-    res.status(201).json({
-      message: `${createdTrackingPackets.length} tracking packets created successfully`,
-      data: createdTrackingPackets
-    });
-  } catch (error) {
-    console.log(error);
-    
-    return res.status(500).json({
-      message: "Server Error",
-      details: error.writeErrors || []
     });
   }
 };

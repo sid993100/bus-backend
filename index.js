@@ -13,6 +13,7 @@ import userManegementRoute from "./routes/userManagement/userManagementRoute.js"
 import operationRoute from "./routes/operation/operationRoute.js";
 import { app, server } from "./tracking-Services/tracking.js";
 import consoleManager from "./utils/consoleManager.js";
+import trackingRoutes from "./routes/tracking/trackingRoutes.js";
 
 dotenv.config();
 
@@ -57,6 +58,7 @@ app.use("/api/incident", incident);
 app.use("/api/master", master);
 app.use("/api/usermanagement", userManegementRoute);
 app.use("/api/operation", operationRoute);
+app.use("/api/tracking", trackingRoutes); 
 
 // ✅ Start Server
 server.listen(port, () => {
