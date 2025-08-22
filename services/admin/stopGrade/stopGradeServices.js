@@ -4,11 +4,6 @@ export const addStopGrade= async (req,res) => {
      const user=req.user
   const {gradeName,geoFence}=req.body
   
-  if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
      if(!gradeName||!geoFence){
        return res.status(404).json({
             message:"All details Required"
@@ -36,11 +31,6 @@ export const addStopGrade= async (req,res) => {
 }
 export const getStopGrade=async (req,res) => {
     const user = req.user;
-     if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
      try {
         const stopGrade= await StopGrade.find({})
         if (!stopGrade) {

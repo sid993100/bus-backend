@@ -1,12 +1,7 @@
 import State from "../../../models/stateModel.js";
 
 export const getState = async(req,res)=>{
-     const user = req.user;
-     if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
+
      try {
         const state= await State.find({})
         if(!state){

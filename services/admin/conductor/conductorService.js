@@ -6,12 +6,7 @@ export const getConductor = async (req, res) => {
   try {
     const user = req.user;
 
-    // Admin-only check
-    if (user?.hierarchy !== "ADMIN") {
-      return res.status(403).json({
-        message: "Not Admin"
-      });
-    }
+   
 
     const conductors = await Conductor.find({});
 

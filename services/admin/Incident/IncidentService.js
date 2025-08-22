@@ -29,11 +29,6 @@ export const getIncident = async (req, res) => {
     const user = req.user;
     const { id } = req.params;
     
-    if (user.hierarchy !== "ADMIN") {
-        return res.status(403).json({
-            message: "Not Admin",
-        });
-    }
     
     try {
         const Incident = await Incident.findById(id);

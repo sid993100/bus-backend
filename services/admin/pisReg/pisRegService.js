@@ -3,11 +3,7 @@ import PisRegistration from "../../../models/pisRegisrationModel.js";
 
 export const getpisReg= async (req,res) => {
      const user = req.user;
-     if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
+       
      try {
         const pisReg= await PisRegistration.find({})
         if(!pisReg){

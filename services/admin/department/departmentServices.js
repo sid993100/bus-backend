@@ -3,12 +3,7 @@ import Department from "../../../models/departmentModel.js";
 import consoleManager from "../../../utils/consoleManager.js";
 
 export const getDepartment=async (req,res) => {
-  const user = req.user;
-     if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
+  
      try {
       const department= await Department.find({})
       if (!department||department.length==0) {
@@ -28,7 +23,7 @@ export const getDepartment=async (req,res) => {
      }
 }
 export const addDepartment =async (req,res) => {
-  const user=req.user
+  
   const {name}=req.body
 
      if(!name){

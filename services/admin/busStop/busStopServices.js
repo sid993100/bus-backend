@@ -3,11 +3,7 @@ import BusStop from "../../../models/busStopModel.js";
 
 export const getBusStop= async (req,res)=>{
      const user = req.user;
-     if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
+    
      try {
         const busStop= await BusStop.find({})
         if(!busStop){
@@ -28,14 +24,6 @@ export const getBusStop= async (req,res)=>{
 export const addBusStop = async (req, res) => {
   try {
     const user = req.user;
-
-    // Admin-only check
-    if (user?.hierarchy !== "ADMIN") {
-      return res.status(403).json({
-        message: "Not Admin"
-      });
-    }
-
     const {
       stopCode,
       stopName,

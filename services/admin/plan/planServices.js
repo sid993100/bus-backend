@@ -5,11 +5,7 @@ import consoleManager from "../../../utils/consoleManager.js";
 
 export const getPlan=async (req,res) => {
   const user = req.user;
-     if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
+       
      try {
       const plan= await Plan.find({})
       if (!plan) {
@@ -32,11 +28,7 @@ export const addPlan =async (req,res) => {
   const user=req.user
   const {planName,vltdManufacturer,durationDays}=req.body
 
-  if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
+    
      if(!planName||!vltdManufacturer||!durationDays){
        return res.status(404).json({
             message:"All details Required"

@@ -2,11 +2,7 @@ import SeatLayout from "../../../models/seatLayoutModel.js";
 
 export const getSeatLayout= async (req,res) => {
      const user = req.user;
-     if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: "Not Admin",
-       });
-     }
+     
      try {
         const seatLayout= await SeatLayout.find({})
         if(!seatLayout){

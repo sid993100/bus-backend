@@ -5,11 +5,6 @@ import Route from "../../../models/routemodel.js";
 export const getRoutes = async (req, res) => {
     const user = req.user;
     
-    if (user.hierarchy !== "ADMIN") {
-        return res.status(403).json({
-            message: "Not Admin",
-        });
-    }
     
     try {
         const routes = await Route.find({}).sort({ routeName: 1 });
@@ -36,13 +31,7 @@ export const getRoutes = async (req, res) => {
 export const getRoute = async (req, res) => {
     const user = req.user;
     const { id } = req.params;
-    
-    if (user.hierarchy !== "ADMIN") {
-        return res.status(403).json({
-            message: "Not Admin",
-        });
-    }
-    
+  
     try {
         const route = await Route.findById(id);
         
@@ -67,12 +56,7 @@ export const getRoute = async (req, res) => {
 export const addRoute = async (req, res) => {
     const user = req.user;
     const { source, destination, via, routeName, routeCode, routeLength } = req.body;
-    
-    if (user.hierarchy !== "ADMIN") {
-        return res.status(403).json({
-            message: "Not Admin",
-        });
-    }
+   
     
     if (!source || !destination || !via || !routeCode || !routeLength || !routeName) {
         return res.status(400).json({

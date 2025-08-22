@@ -3,11 +3,6 @@ import Country from "../../../models/countryModel.js";
 
 export const getCountry = async (req,res) => {
     const user = req.user;
-     if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
      try {
         const country= await Country.find({})
         if (!country) {
@@ -28,11 +23,6 @@ export const addCountry= async (req,res) => {
     const user=req.user
   const {code,name}=req.body
   
-  if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
      if(!name||!code){
        return res.status(404).json({
             message:"All details Required"

@@ -3,11 +3,6 @@ import TollType from "../../../models/tollTypeModel.js";
 
 export const getTollType= async(req,res)=>{
      const user = req.user;
-     if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
      try {
         const tollType=await TollType.find({})
         if (!tollType) {
@@ -28,11 +23,7 @@ export const addTollType=async (req,res) => {
   const user=req.user
   const {name,description}=req.body
   
-  if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
+ 
      if(!name){
        return res.status(404).json({
             message:"All details Required"

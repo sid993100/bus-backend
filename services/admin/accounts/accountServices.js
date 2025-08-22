@@ -8,9 +8,7 @@ export const addAccount=async (req,res) => {
   const {accountCode,name,description}=req.body
   consoleManager.log(accountCode,name,description);
   
-  if (user.hierarchy !== "ADMIN") {
-return responseManager.unauthorized(res,"not admin")
-     }
+
      if(!accountCode||!name){
        return res.status(404).json({
             message:"All details Required"

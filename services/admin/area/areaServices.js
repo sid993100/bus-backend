@@ -4,12 +4,7 @@ import Area from "../../../models/areaModel.js";
 export const addArea= async (req,res) => {
     const user=req.user
   const {area}=req.body
-  
-  if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
+
      if(!area){
        return res.status(404).json({
             message:"All details Required"
@@ -36,12 +31,7 @@ export const addArea= async (req,res) => {
 }
 export const getArea=async (req,res) => {
       const user=req.user
-  if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
-     
+   
   try {
       const stopArea=await Area.find({})
       if(!stopArea){

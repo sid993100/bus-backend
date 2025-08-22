@@ -2,11 +2,7 @@ import Duty from "../../../models/dutyModel.js";
 
 export const getDuty= async (req,res) => {
     const user = req.user;
-     if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
+    
      try {
         const duty=await Duty.find({})
         if(!duty){
@@ -41,11 +37,7 @@ export const addDuty=async (req,res) => {
         accountStatus,
         creationDate}=req.body
   
-  if (user.hierarchy !== "ADMIN") {
-       return res.status(403).json({
-         message: " Not Admin",
-       });
-     }
+  
      if(! dutyDate||
          !vehicleNumber||
          !conductorName||
