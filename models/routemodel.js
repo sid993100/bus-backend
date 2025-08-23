@@ -40,6 +40,9 @@ const routeSchema = new Schema({
     stop:{
       type:Schema.Types.ObjectId,
       ref:"BusStop"
+    },toll:{
+      type:Schema.Types.ObjectId,
+      ref:"Toll"
     }
   }]
 }, {

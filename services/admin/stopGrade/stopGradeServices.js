@@ -24,9 +24,15 @@ export const addStopGrade= async (req,res) => {
         data:stopeGrade
       })
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Already exists"
+      });
+    }
+    
     return res.status(500).json({
-        message:"Server Error"
-         })
+      message: "Server Error"
+    });
   }
 }
 export const getStopGrade=async (req,res) => {
@@ -46,4 +52,52 @@ export const getStopGrade=async (req,res) => {
         message:"Backend Error"
          })
      }
+}
+export const updateStopGrade = async (req, res) => {
+
+  const { id } = req.params;
+  const { gradeName, geoFence } = req.body || {};
+
+  // Reject empty updates
+  if (gradeName === undefined && geoFence === undefined) {
+    return res.status(400).json({
+      message: "Nothing to update. Provide at least one of: gradeName, geoFence",
+    });
+  }
+
+  // Build update object only with provided fields
+  const update = {};
+  if (gradeName !== undefined) update.stopGradeName = gradeName;
+  if (geoFence !== undefined) update.geoFence = geoFence;
+
+  try {
+    const updated = await StopGrade.findByIdAndUpdate(id, update, { new: true });
+
+    if (!updated) {
+      return res.status(404).json({
+        message: "Stop grade not found",
+      });
+    }
+
+    return res.status(200).json({
+      message: "updated",
+      data: updated,
+    });
+  } catch (error) {
+    if (error && error.code === 11000) {
+      return res.status(409).json({
+        message: "Already exists",
+      });
+    }
+
+    if (error && error.name === 'CastError') {
+      return res.status(400).json({
+        message: "Invalid id",
+      });
+    }
+
+    return res.status(500).json({
+      message: "Server Error",
+    });
+  }
 }

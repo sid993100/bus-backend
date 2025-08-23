@@ -50,9 +50,14 @@ export const addSubscription =async (req,res) => {
       }) 
      } catch (error) {
       consoleManager.log(error);
-      
-        res.status(500).json({
-        message:error.errmsg
-         })
+       if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Already exists"
+      });
+    }
+    
+    return res.status(500).json({
+      message: "Server Error"
+    });
      }
 }

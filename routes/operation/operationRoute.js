@@ -10,11 +10,11 @@ import { addRoute, updateRoute } from "../../services/admin/route/routeService.j
 
 const router = Router();
 
-router.get("/route",isLogin,roleBaseAuth( "ADMIN"),getRoutes)
-router.get("/seatlayout",isLogin,roleBaseAuth( "ADMIN"),getSeatLayout)
-router.get("/trip",isLogin,roleBaseAuth( "ADMIN"),getTrip)
+router.get("/route",isLogin,roleBaseAuth( "ADMIN"),checkPermission("route","read"),getRoutes)
+router.get("/seatlayout",isLogin,roleBaseAuth( "ADMIN"),checkPermission("seatLayout","read"),getSeatLayout)
+router.get("/trip",isLogin,roleBaseAuth( "ADMIN"),checkPermission("trip","read"),getTrip)
 
-router.post("/seatlayout",isLogin,roleBaseAuth( "ADMIN"),checkPermission("conductor","create"),addSeatLayout);
+router.post("/seatlayout",isLogin,roleBaseAuth( "ADMIN"),checkPermission("seatLayout","create"),addSeatLayout);
 router.post("/route",isLogin,roleBaseAuth( "ADMIN"),checkPermission("route","create"),addRoute);
 router.post("/trip",isLogin,roleBaseAuth( "ADMIN"),checkPermission("trip","create"),addTrip)
 

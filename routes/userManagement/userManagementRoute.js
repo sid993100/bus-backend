@@ -9,7 +9,7 @@ const router = Router();
 
 router.get("/driver",isLogin,roleBaseAuth("ADMIN"),checkPermission("drive","read"),getAllDrivers)
 router.get("/conductor",isLogin,roleBaseAuth( "ADMIN"),checkPermission("drive","read"),getConductor)
-router.get("/users", isLogin, getUsers);
+router.get("/users", isLogin,roleBaseAuth("ADMIN"),checkPermission("user","read"), getUsers);
 
 
 

@@ -6,7 +6,7 @@ import { addState, getState } from "../../services/admin/state/stateServices.js"
 import { addBusStop, getBusStop, updateBusStop } from "../../services/admin/busStop/busStopServices.js";
 import { addCountry, getCountry, updateCountry } from "../../services/admin/country/countryServices.js";
 import { addServiceType, getServiceType, updateServiceType } from "../../services/admin/serviceType/serviceTypeServices.js";
-import { addStopGrade, getStopGrade } from "../../services/admin/stopGrade/stopGradeServices.js";
+import { addStopGrade, getStopGrade, updateStopGrade } from "../../services/admin/stopGrade/stopGradeServices.js";
 import { addArea, getArea, updateArea, updateAreaByName } from "../../services/admin/area/areaServices.js";
 import { addVehicle, getVehicle, updateVehicle } from "../../services/admin/vehicle/vehicleServices.js";
 import { addVehicleManufacturer, getVehicleManufacturer, updateVehicleManufacturer } from "../../services/admin/vehicleManufacturer/vehicleManufacturerServices.js";
@@ -25,34 +25,34 @@ import { updateDepartment, updateDepartmentByName } from "../../services/admin/d
 
 const router=Router()
 
-router.get("/accounts", isLogin,roleBaseAuth("ADMIN"), getAccount);
-router.get("/tolltypes", isLogin, getTollType);
-router.get("/toll",isLogin,roleBaseAuth("ADMIN"),checkPermission("toll","read"),getToll);
-router.get("/servicecategory", isLogin, getServiceCategory);
-router.get("/state", isLogin, getState);
-router.get("/busstop", isLogin, getBusStop);
-router.get("/country", isLogin, getCountry);
-router.get("/servicetype", isLogin, getServiceType);
-router.get("/stoparea",isLogin,getArea)
-router.get("/stopgrade",isLogin,getStopGrade)
-router.get("/vehicle",isLogin,getVehicle)
-router.get("/vehiclemanufacturer",isLogin,getVehicleManufacturer)
-router.get("/vehicletypes",isLogin,getVehicleTypes)
+router.get("/accounts", isLogin,roleBaseAuth( "ADMIN"),checkPermission("account","read"), getAccount);
+router.get("/tolltypes", isLogin,roleBaseAuth("ADMIN"), checkPermission("tollType", "read"), getTollType);
+router.get("/toll",isLogin,roleBaseAuth("ADMIN"), checkPermission("toll", "create"),getToll);
+router.get("/servicecategory", isLogin,roleBaseAuth("ADMIN"), checkPermission("servicecategory", "read"), getServiceCategory);
+router.get("/state", isLogin,roleBaseAuth("ADMIN"), checkPermission("state", "read"), getState);
+router.get("/busstop", isLogin,roleBaseAuth( "ADMIN"),checkPermission("busStop","read"), getBusStop);
+router.get("/country", isLogin,roleBaseAuth( "ADMIN"),checkPermission("country","read"), getCountry);
+router.get("/servicetype", isLogin,roleBaseAuth("ADMIN"), checkPermission("servicetype", "read"), getServiceType);
+router.get("/stoparea",isLogin,roleBaseAuth( "ADMIN"),checkPermission("stopArea","read"),getArea)
+router.get("/stopgrade",isLogin,roleBaseAuth( "ADMIN"),checkPermission("stopGrade","read"),getStopGrade)
+router.get("/vehicle",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicle","read"),getVehicle)
+router.get("/vehiclemanufacturer",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleM","read"),getVehicleManufacturer)
+router.get("/vehicletypes",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleType","read"),getVehicleTypes)
 router.get("/zone",isLogin,roleBaseAuth( "ADMIN"),checkPermission("zone","read"),getRegions)
 router.get("/depot",isLogin,roleBaseAuth( "ADMIN"),checkPermission("depot","read"),getDepotCustomers)
 
 
 
 
-router.post("/account", isLogin, addAccount);
-router.post("/tolltype", isLogin, addTollType);
+router.post("/account", isLogin,roleBaseAuth("ADMIN"), checkPermission("account", "create"), addAccount);
+router.post("/tolltype", isLogin,roleBaseAuth("ADMIN"), checkPermission("tollType", "create"), addTollType);
 router.post("/toll", isLogin, roleBaseAuth("ADMIN"), checkPermission("toll", "create"), addToll);
-router.post("/servicecategory", isLogin, addServiceCategory);
-router.post("/state",isLogin,addState);
-router.post("/servicetype", isLogin, addServiceType);
-router.post("/country", isLogin,addCountry);
-router.post("/stopgrade",isLogin,addStopGrade);
-router.post("/stoparea",isLogin,addArea);
+router.post("/servicecategory", isLogin,roleBaseAuth("ADMIN"), checkPermission("servicecategory", "create"), addServiceCategory);
+router.post("/state",isLogin,roleBaseAuth("ADMIN"), checkPermission("state", "create"),addState);
+router.post("/servicetype", isLogin,roleBaseAuth("ADMIN"), checkPermission("servicetype", "create"), addServiceType);
+router.post("/country", isLogin,roleBaseAuth( "ADMIN"),checkPermission("country","create"),addCountry);
+router.post("/stopgrade",isLogin,roleBaseAuth( "ADMIN"),checkPermission("stopGrade","create"),addStopGrade);
+router.post("/stoparea",isLogin,roleBaseAuth( "ADMIN"),checkPermission("stopArea","create"),addArea);
 router.post("/vehicle",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicle","create"),addVehicle)
 router.post('/busstop',isLogin,roleBaseAuth( "ADMIN"),checkPermission("busStop","create"), addBusStop)
 router.post("/vehiclemanufacturer",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleM","create"),addVehicleManufacturer);
@@ -64,6 +64,7 @@ router.post("/depot",isLogin,roleBaseAuth( "ADMIN"),checkPermission("depot","cre
 
 
 router.put("/account/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("account","update"),updateAccount)
+router.put("/stopgrade/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("stop","update"),updateStopGrade)
 router.put("/tolltypes/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("tollType", "update"), updateTollType);
 router.put("/toll/:id", isLogin, roleBaseAuth("ADMIN"), checkPermission("toll", "update"), updateToll);
 router.put("/country/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("country","update"), updateCountry);

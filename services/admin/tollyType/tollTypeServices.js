@@ -44,9 +44,15 @@ export const addTollType=async (req,res) => {
         data:tollType
       })
      } catch (error) {
-      return res.status(500).json({
-        message:"Server Error"
-         })
+      if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Toll Type already exists"
+      });
+    }
+    
+    return res.status(500).json({
+      message: "Server Error"
+    });
      }
 };
 export const updateTollType = async (req, res) => {

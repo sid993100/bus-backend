@@ -110,8 +110,14 @@ export const addBusStop = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({
-      message: error.message || "Server Error"
+   if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Bus Stop already exists"
+      });
+    }
+    
+    return res.status(500).json({
+      message: "Server Error"
     });
   }
 };

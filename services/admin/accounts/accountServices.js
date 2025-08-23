@@ -34,9 +34,15 @@ export const addAccount=async (req,res) => {
      } catch (error) {
       consoleManager.log(error);
       
-       return res.status(500).json({
-        message:"Server Error"
-         })
+       if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Account already exists"
+      });
+    }
+    
+    return res.status(500).json({
+      message: "Server Error"
+    });
      }
 }
 export const getAccount = async (req, res) => {

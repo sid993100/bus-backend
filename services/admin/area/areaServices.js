@@ -24,9 +24,15 @@ export const addArea= async (req,res) => {
         data:stopArea
       })
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Stop Area already exists"
+      });
+    }
+    
     return res.status(500).json({
-        message:"Server Error"
-         })
+      message: "Server Error"
+    });
   }
 }
 
