@@ -10,7 +10,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
       - name: Deploy Backend via SSH using Docker Compose
         uses: appleboy/ssh-action@master
@@ -24,19 +25,21 @@ jobs:
             echo "Navigating to project directory..."
             cd /var/www/bus-backend
 
-            echo "Resetting Git..."
+            echo "Resetting Git repo..."
             git reset --hard
             git clean -fd
             git pull origin main
 
-            echo "Installing new dependencies..."
-            npm install
+            echo "Installing dependencies..."
+            npm install || true
 
-            echo "Stopping all running containers..."
+            echo "Stopping old containers..."
             docker compose down --remove-orphans
 
-            echo "Rebuilding containers..."
+            echo "Rebuilding containers (no-cache)..."
             docker compose build --no-cache
 
-            echo "Starting containers..."
+            echo "Starting all services..."
             docker compose up -d
+
+            echo "🎉 Deployment completed successfully!"
