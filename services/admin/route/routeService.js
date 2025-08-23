@@ -3,11 +3,8 @@ import Route from "../../../models/routemodel.js";
 
 // GET ALL ROUTES
 export const getRoutes = async (req, res) => {
-    const user = req.user;
-    
-    
     try {
-        const routes = await Route.find({}).sort({ routeName: 1 });
+        const routes = await Route.find({}).populate('stops.stop', 'stopName').sort({ routeName: 1 });
         
         if (!routes || routes.length === 0) {
             return res.status(404).json({
@@ -29,11 +26,10 @@ export const getRoutes = async (req, res) => {
 
 // GET SINGLE ROUTE BY ID
 export const getRoute = async (req, res) => {
-    const user = req.user;
     const { id } = req.params;
-  
+    
     try {
-        const route = await Route.findById(id);
+        const route = await Route.findById(id).populate('stops.stop', 'stopName');
         
         if (!route) {
             return res.status(404).json({
@@ -52,69 +48,40 @@ export const getRoute = async (req, res) => {
     }
 };
 
-// ADD NEW ROUTE (Fixed version of your function)
+// ADD NEW ROUTE
 export const addRoute = async (req, res) => {
-    const user = req.user;
-    const { source, destination, via, routeName, routeCode, routeLength } = req.body;
-   
+    const { source, destination, via, routeName, routeCode, routeLength, stops } = req.body;
     
-    if (!source || !destination || !via || !routeCode || !routeLength || !routeName) {
+    if (!source || !destination || !routeCode || !routeLength || !routeName) {
         return res.status(400).json({
-            message: "All details Required"
+            message: "Required fields are missing: source, destination, routeCode, routeLength, routeName"
         });
     }
-    
-    // Validate route length
-    if (typeof routeLength !== 'number' || routeLength <= 0) {
-        return res.status(400).json({
-            message: "Route length must be a positive number"
-        });
-    }
-    
-    // Ensure via is an array
-    const viaArray = Array.isArray(via) ? via : [via];
     
     try {
-        // Check if route name already exists
-        const existingRouteName = await Route.findOne({
-            routeName: routeName.toUpperCase()
-        });
-        
-        if (existingRouteName) {
-            return res.status(409).json({
-                message: "Route with this name already exists"
-            });
-        }
-        
-        // Check if route code already exists
-        const existingRouteCode = await Route.findOne({
-            routeCode: routeCode.toUpperCase()
-        });
-        
-        if (existingRouteCode) {
-            return res.status(409).json({
-                message: "Route with this code already exists"
-            });
-        }
-        
-        const route = await Route.create({
+        const validStops = stops ? stops.filter(s => s.stop) : [];
+
+        let newRoute = await Route.create({
             source,
             destination,
-            via: viaArray,
+            via,
             routeCode,
             routeName,
-            routeLength
+            routeLength,
+            stops: validStops
         });
         
-        if (!route) {
+        if (!newRoute) {
             return res.status(500).json({
                 message: "Something went Wrong while Creating a Route"
             });
         }
         
+        newRoute = await newRoute.populate('stops.stop', 'stopName');
+        
         return res.status(201).json({
             message: "Route Created Successfully",
-            data: route
+            data: newRoute
         });
     } catch (error) {
         if (error.code === 11000) {
@@ -124,76 +91,39 @@ export const addRoute = async (req, res) => {
             });
         }
         return res.status(500).json({
-            message: "Server Error"
+            message: "Server Error",
+            error: error.message
         });
     }
 };
 
 // UPDATE ROUTE
 export const updateRoute = async (req, res) => {
-    const user = req.user;
     const { id } = req.params;
-    const { source, destination, via, routeName, routeCode, routeLength } = req.body;
+    const { source, destination, via, routeName, routeCode, routeLength, stops } = req.body;
     
-    if (user.hierarchy !== "ADMIN") {
-        return res.status(403).json({
-            message: "Not Admin",
-        });
-    }
-    
-    if (!source || !destination || !via || !routeCode || !routeLength || !routeName) {
+    if (!source || !destination || !routeCode || !routeLength || !routeName) {
         return res.status(400).json({
             message: "All details Required"
         });
     }
     
-    // Validate route length
-    if (typeof routeLength !== 'number' || routeLength <= 0) {
-        return res.status(400).json({
-            message: "Route length must be a positive number"
-        });
-    }
-    
-    // Ensure via is an array
-    const viaArray = Array.isArray(via) ? via : [via];
-    
     try {
-        // Check if route name already exists (excluding current record)
-        const existingRouteName = await Route.findOne({
-            _id: { $ne: id },
-            routeName: routeName.toUpperCase()
-        });
-        
-        if (existingRouteName) {
-            return res.status(409).json({
-                message: "Route with this name already exists"
-            });
-        }
-        
-        // Check if route code already exists (excluding current record)
-        const existingRouteCode = await Route.findOne({
-            _id: { $ne: id },
-            routeCode: routeCode.toUpperCase()
-        });
-        
-        if (existingRouteCode) {
-            return res.status(409).json({
-                message: "Route with this code already exists"
-            });
-        }
-        
+        const validStops = stops ? stops.filter(s => s.stop) : [];
+
         const updatedRoute = await Route.findByIdAndUpdate(
             id,
             {
                 source,
                 destination,
-                via: viaArray,
+                via,
                 routeName,
                 routeCode,
-                routeLength
+                routeLength,
+                stops: validStops
             },
             { new: true, runValidators: true }
-        );
+        ).populate('stops.stop', 'stopName');
         
         if (!updatedRoute) {
             return res.status(404).json({
