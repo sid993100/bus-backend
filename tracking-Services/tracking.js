@@ -33,7 +33,7 @@ const producer = kafka.producer()
 const consumer = kafka.consumer({ groupId: "tracking-consumers" })
 
 // Middleware
-app.use(cors())
+// app.use(cors())
 app.use(express.json())
 
 // Connect Kafka Producer & Consumer
