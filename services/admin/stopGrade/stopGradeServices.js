@@ -9,7 +9,14 @@ export const addStopGrade= async (req,res) => {
             message:"All details Required"
          })
      }
-  try {
+  try {const existsingGrade = await StopGrade.findOne({ stopGradeName: gradeName });
+      if (existsingGrade) { 
+        return res.status(409).json({
+          message: "Stop Grade with this name already exists"
+        });
+      }
+
+
       const stopeGrade=await StopGrade.create({
         stopGradeName:gradeName,
         geoFence
