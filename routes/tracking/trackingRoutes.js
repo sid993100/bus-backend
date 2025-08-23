@@ -1,29 +1,29 @@
 import { Router } from "express";
 import { isLogin } from "../../middleWares/isLogin.js";
-import { addLoginPacket, getLoginPacketById, getLoginPackets } from "../../services/barah101/loginPacketServer.js";
-import { addTrackingPacket, getTrackingPacketById, getTrackingPackets } from "../../services/barah101/trackingPacketService.js";
-import { addHealthPacket, getAllHealthPackets } from "../../services/barah101/healthMonitoringService.js";
-import { addEmergencyPacket, getAllEmergencyPackets, getEmergencyPacketById } from "../../services/barah101/emergencyPacketService.js";
+import { addLoginPacket, getLoginPacketById, getLoginPackets } from "../../services/bharat101/loginPacketServer.js";
+import { addTrackingPacket, getTrackingPacketById, getTrackingPackets } from "../../services/bharat101/trackingPacketService.js";
+import { addHealthPacket, getAllHealthPackets } from "../../services/bharat101/healthMonitoringService.js";
+import { addEmergencyPacket, getAllEmergencyPackets, getEmergencyPacketById } from "../../services/bharat101/emergencyPacketService.js";
 import { roleBaseAuth } from "../../middleWares/rolebaseAuth.js";
 
 const router = Router();
 
-router.get("/login",isLogin,getLoginPackets)
-router.get("/login/:id",isLogin,getLoginPacketById)
-router.get("/",isLogin,getTrackingPackets)
-router.get("/tack/:id",isLogin,getTrackingPacketById)
-router.get("/health",isLogin,getAllHealthPackets)
-router.get("/health/:id",isLogin,getAllHealthPackets)
+router.get("/login",isLogin,roleBaseAuth( "ADMIN"),getLoginPackets)
+router.get("/login/:id",isLogin,roleBaseAuth( "ADMIN"),getLoginPacketById)
+router.get("/",isLogin,roleBaseAuth( "ADMIN"),getTrackingPackets)
+router.get("/tack/:id",isLogin,roleBaseAuth( "ADMIN"),getTrackingPacketById)
+router.get("/health",isLogin,roleBaseAuth( "ADMIN"),getAllHealthPackets)
+router.get("/health/:id",isLogin,roleBaseAuth( "ADMIN"),getAllHealthPackets)
 router.get("/emergency",isLogin,roleBaseAuth( "ADMIN"),getAllEmergencyPackets)
-router.get("/emergency/:id",isLogin,getEmergencyPacketById)
+router.get("/emergency/:id",isLogin,roleBaseAuth( "ADMIN"),getEmergencyPacketById)
 
 
 
 
 
-router.post("/login",isLogin,addLoginPacket)
-router.post("/",isLogin,addTrackingPacket)
-router.post("/health",isLogin,addHealthPacket)
+router.post("/login",isLogin,roleBaseAuth( "ADMIN"),addLoginPacket)
+router.post("/",isLogin,roleBaseAuth( "ADMIN"),addTrackingPacket)
+router.post("/health",isLogin,roleBaseAuth( "ADMIN"),addHealthPacket)
 router.post("/emergency",isLogin,roleBaseAuth( "ADMIN"),addEmergencyPacket)
 
 
