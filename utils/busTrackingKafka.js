@@ -25,16 +25,12 @@ export default class BusTrackingKafkaProcessor {
     async initialize() {
         await this.consumer.connect();
         await this.producer.connect();
-        await this.producer.connect();
         
         await this.consumer.subscribe({ 
             topic: 'busTracking',
             fromBeginning: false 
         });
-        await this.consumer.subscribe({ 
-            topic: 'test',
-            fromBeginning: false 
-        });
+       
         console.log("......................................................",KAFKA_BROKER);
     }
 
@@ -48,17 +44,6 @@ export default class BusTrackingKafkaProcessor {
                     if (parsedData) {
                         // Send to appropriate topic based on packet type
                         const outputTopic = this.getOutputTopic(parsedData.packet_type);
-                        
-                        await this.producer.send({
-                            topic: outputTopic,
-                            messages: [{
-                                key: parsedData.parsed_data.device_info?.imei || 
-                                     parsedData.parsed_data.device_id ||
-                                     parsedData.parsed_data.imei,
-                                value: JSON.stringify(parsedData),
-                                timestamp: Date.now().toString()
-                            }]
-                        });
                         
                         console.log(`Processed ${parsedData.packet_type} packet from device: ${parsedData.parsed_data.device_info?.imei || 'unknown'}`);
                     }

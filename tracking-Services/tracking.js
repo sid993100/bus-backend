@@ -2,10 +2,12 @@ import dotenv from "dotenv";
 import express from "express"
 import http from "http"
 import {Server} from "socket.io"
-import cors from "cors"
-import axios from "axios"
 import { Kafka } from "kafkajs"
 import consoleManager from "../utils/consoleManager.js"
+import net from "net"; 
+
+
+
 
 dotenv.config();
 
@@ -19,9 +21,9 @@ const io = new Server(server, {
 })
 consoleManager.log("socket.io server running on port 5000");
 
-const DATABASE_SERVICE_URL = process.env.DATABASE_SERVICE_URL || "http://localhost:5000"
-const KAFKA_BROKER = process.env.KAFKA_BROKER 
 
+const KAFKA_BROKER = process.env.KAFKA_BROKER 
+const TCP_PORT = process.env.TCP_PORT || 5001;
 
 // Kafka setup
 const kafka = new Kafka({
@@ -87,141 +89,41 @@ io.on("connection", (socket) => {
 })
 
 
-// API endpoint to update location
-app.post("/api/tracking/update", async (req, res) => {
-  try {
-    const { busId, location, speed, heading, nextStop, eta, delay } = req.body
+///////////////////////////tcp////////////////////////////////
 
-    // Save to DB service
-    await axios.post(`${DATABASE_SERVICE_URL}/api/track`, {
-      busId,
-      location,
-      speed,
-      heading,
-      nextStop,
-      eta,
-      delay,
-    })
 
-    const updateData = {
-      busId,
-      location,
-      speed,
-      heading,
-      nextStop,
-      eta,
-      delay,
-      timestamp: new Date(),
+
+const tcpServer = net.createServer((socket) => {
+  consoleManager.log("📲 New GPS device connected");
+
+  socket.on("data", async (data) => {
+    const raw = data.toString().trim();
+  
+
+    // Kafka me push karo
+    try {
+      await producer.send({
+        topic: "busTrack",
+        messages: [{ value: raw }],
+      });
+      consoleManager.log("✅ Published GPS data to Kafka:", raw);
+    } catch (err) {
+      console.error("❌ Kafka error:", err);
     }
+  });
 
-    // Publish to Kafka topic
-    await producer.send({
-      topic: "busTrack",
-      messages: [{ value: JSON.stringify(updateData) }],
-    })
+  socket.on("end", () => consoleManager.log("❌ GPS connection closed"));
+  socket.on("error", (err) => console.error("⚠️ GPS socket error:", err));
+});
 
-    // Emit to specific bus room
-    io.to(`bus_${busId}`).emit("locationUpdate", updateData)
+tcpServer.listen(TCP_PORT, () => {
+  consoleManager.log(`🚀 GPS TCP server listening on port ${TCP_PORT}`);
+});
 
-    res.json({ success: true, message: "Location updated successfully" })
-  } catch (error) {
-    console.error("Error updating location:", error)
-    res.status(500).json({ error: "Failed to update location" })
-  }
-})
 
-// API endpoint to send alerts
-app.post("/api/tracking/alert", async (req, res) => {
-  try {
-    const { busId, type, message, severity } = req.body
-
-    const alertData = {
-      busId,
-      type,
-      message,
-      severity,
-      timestamp: new Date(),
-    }
-
-    // Publish to Kafka
-    await producer.send({
-      topic: "busAlerts",
-      // messages: [{ value: JSON.stringify(alertData) }],
-    })
-
-    io.emit("busAlert", alertData)
-
-    res.json({ success: true, message: "Alert sent successfully" })
-  } catch (error) {
-    console.error("Error sending alert:", error)
-    res.status(500).json({ error: "Failed to send alert" })
-  }
-})
-
-// Simulate GPS updates
-app.post("/api/tracking/simulate/:busId", async (req, res) => {
-  try {
-    const { busId } = req.params
-    const { routeId } = req.body
-
-    const routeResponse = await axios.get(`${DATABASE_SERVICE_URL}/api/routes/${routeId}`)
-    const route = routeResponse.data
-
-    if (!route?.stops?.length) {
-      return res.status(400).json({ error: "Invalid route data" })
-    }
-
-    let currentStopIndex = 0
-    const stops = route.stops
-
-    const simulateMovement = async () => {
-      if (currentStopIndex >= stops.length) currentStopIndex = 0
-
-      const currentStop = stops[currentStopIndex]
-      const nextStop = stops[currentStopIndex + 1] || stops[0]
-
-      const lat = currentStop.location.latitude + (Math.random() - 0.5) * 0.001
-      const lng = currentStop.location.longitude + (Math.random() - 0.5) * 0.001
-
-      const updateData = {
-        busId,
-        location: { latitude: lat, longitude: lng },
-        speed: Math.floor(Math.random() * 60) + 20,
-        heading: Math.floor(Math.random() * 360),
-        nextStop: nextStop.name,
-        eta: new Date(Date.now() + Math.random() * 600000),
-        delay: Math.floor(Math.random() * 10) - 5,
-      }
-
-      await axios.post("http://localhost:3001/api/tracking/update", updateData)
-      currentStopIndex++
-    }
-
-    const simulationInterval = setInterval(simulateMovement, 5000)
-    global.simulations = global.simulations || {}
-    global.simulations[busId] = simulationInterval
-
-    res.json({ success: true, message: "Simulation started" })
-  } catch (error) {
-    console.error("Simulation error:", error)
-    res.status(500).json({ error: "Failed to start simulation" })
-  }
-})
-
-app.post("/api/tracking/simulate/:busId/stop", (req, res) => {
-  const { busId } = req.params
-
-  if (global.simulations?.[busId]) {
-    clearInterval(global.simulations[busId])
-    delete global.simulations[busId]
-    res.json({ success: true, message: "Simulation stopped" })
-  } else {
-    res.status(404).json({ error: "No active simulation found" })
-  }
-})
+///////////////////////////////////////////////////////////
 
 
 
 
-
-export { app,server} 
+export { app,server,tcpServer} 
