@@ -22,24 +22,24 @@ jobs:
           script: |
             set -e
 
-            echo "Navigating to project directory..."
+            echo "📁 Navigating to project directory..."
             cd /var/www/bus-backend
 
-            echo "Resetting Git repo..."
+            echo "🔄 Pulling latest code from Git..."
             git reset --hard
             git clean -fd
             git pull origin main
 
-            echo "Installing dependencies..."
+            echo "📦 Installing Node.js dependencies..."
             npm install || true
 
-            echo "Stopping old containers..."
+            echo "🛑 Stopping existing Docker containers..."
             docker compose down --remove-orphans
 
-            echo "Rebuilding containers (no-cache)..."
+            echo "🔧 Rebuilding Docker containers (no-cache)..."
             docker compose build --no-cache
 
-            echo "Starting all services..."
+            echo "🚀 Starting containers..."
             docker compose up -d
 
-            echo "🎉 Deployment completed successfully!"
+            echo "✅ Deployment completed successfully!"
