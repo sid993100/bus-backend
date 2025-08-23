@@ -6,13 +6,15 @@ services:
     container_name: node-backend
     restart: unless-stopped
     ports:
-      - "5000:5000"
+      - "5000:5000"   # Express API
+      - "5055:5055"   # TCP Listener (GPS Devices)
     environment:
       - KAFKA_BROKER=kafka:9092
     depends_on:
       - kafka
     volumes:
       - .:/app
+    command: node index.js   # make sure this starts Express + TCP listener
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
