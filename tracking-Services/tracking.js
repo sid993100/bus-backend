@@ -23,7 +23,7 @@ consoleManager.log("socket.io server running on port 5000");
 
 
 const KAFKA_BROKER = process.env.KAFKA_BROKER 
-const TCP_PORT = process.env.TCP_PORT || 5001;
+const TCP_PORT = process.env.TCP_PORT || 5055;
 
 // Kafka setup
 const kafka = new Kafka({
