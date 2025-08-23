@@ -109,7 +109,7 @@ export const addBusStop = async (req, res) => {
       data: busStop
     });
   } catch (error) {
-    console.error(error);
+   
    if (error.code === 11000) {
       return res.status(409).json({
         message: "Bus Stop already exists"
