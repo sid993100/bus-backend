@@ -43,15 +43,17 @@ async function connectKafka() {
   await producer.connect();
   await consumer.connect();
 
-  // Subscribe to topics
   await consumer.subscribe({ topic: "busTrack", fromBeginning: false });
   await consumer.subscribe({ topic: "test", fromBeginning: false });
 
-  // Handle incoming Kafka messages
   await consumer.run({
     eachMessage: async ({ topic, message }) => {
       const data = message.value.toString();
-      const timestamp = new Date().toISOString(); // current time in ISO format
+
+      // Convert UTC → IST (Asia/Kolkata)
+      const timestamp = new Date().toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata"
+      });
 
       console.log(`[${timestamp}] Received message from topic ${topic}:`, data);
 
@@ -65,6 +67,7 @@ async function connectKafka() {
     },
   });
 }
+
 
 
 
