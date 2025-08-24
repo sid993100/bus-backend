@@ -40,31 +40,32 @@ app.use(express.json())
 
 // Connect Kafka Producer & Consumer
 async function connectKafka() {
-  await producer.connect()
-  await consumer.connect()
+  await producer.connect();
+  await consumer.connect();
 
   // Subscribe to topics
-  await consumer.subscribe({ topic: "busTrack", fromBeginning: false })
-  await consumer.subscribe({ topic: "test", fromBeginning: false })
+  await consumer.subscribe({ topic: "busTrack", fromBeginning: false });
+  await consumer.subscribe({ topic: "test", fromBeginning: false });
 
   // Handle incoming Kafka messages
   await consumer.run({
     eachMessage: async ({ topic, message }) => {
-      // const data = JSON.parse(message.value.toString())
-      const data=message.value.toString();
-console.log(`Received message from topic ${topic}:`, data);
+      const data = message.value.toString();
+      const timestamp = new Date().toISOString(); // current time in ISO format
+
+      console.log(`[${timestamp}] Received message from topic ${topic}:`, data);
 
       if (topic === "busTrack") {
-        io.emit("locationUpdate", data)
-        console.log("log ",data);
-        
+        io.emit("locationUpdate", data);
+        console.log(`[${timestamp}] busTrack log:`, data);
       } else if (topic === "test") {
-        io.emit("busAlert", data)
-        console.log("log ",data);
+        io.emit("busAlert", data);
+        console.log(`[${timestamp}] test log:`, data);
       }
     },
-  })
+  });
 }
+
 
 
 connectKafka().catch(console.error)
