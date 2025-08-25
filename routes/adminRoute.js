@@ -43,7 +43,6 @@ router.get("/incident",isLogin,roleBaseAuth( "ADMIN"),checkPermission("incident"
 
 
 router.post("/addduty",isLogin,addDuty);
-router.post("/addseatlayout",isLogin,addSeatLayout);
 router.post("/pisreg",isLogin,roleBaseAuth( "ADMIN"),addPisRegistration);
 router.post("/addvltdevice",isLogin,addVltDevices);
 router.post("/addsim",isLogin,addSim);
