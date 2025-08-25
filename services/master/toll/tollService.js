@@ -1,9 +1,7 @@
 import Toll from "../../../models/tollModel.js";
 import consoleManager from "../../../utils/consoleManager.js";
-import responseManager from "../../../utils/responseManager.js";
 
 export const addToll = async (req, res) => {
-  const user = req.user;
   const { code, tollName, typeA, typeB, state, country, coordinates } = req.body;
   consoleManager.log(code, tollName, typeA, typeB, state, country);
   

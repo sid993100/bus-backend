@@ -5,6 +5,8 @@ import {Server} from "socket.io"
 import { Kafka } from "kafkajs"
 import consoleManager from "../utils/consoleManager.js"
 import net from "net"; 
+import BharatDeviceParser from "../utils/BharatDeviceParser.js";
+
 
 
 
@@ -58,11 +60,12 @@ async function connectKafka() {
       console.log(`[${timestamp}] Received message from topic ${topic}:`, data);
 
       if (topic === "busTrack") {
-        io.emit("locationUpdate", data);
-        console.log(`[${timestamp}] busTrack log:`, data);
+        io.emit("locationUpdate", data)
+        console.log("log ",data);
+        
       } else if (topic === "test") {
-        io.emit("busAlert", data);
-        console.log(`[${timestamp}] test log:`, data);
+        io.emit("busAlert", data)
+        console.log("log ",data);
       }
     },
   });
@@ -97,20 +100,31 @@ io.on("connection", (socket) => {
 
 
 
+const parser = new BharatDeviceParser();
+
 const tcpServer = net.createServer((socket) => {
   consoleManager.log("📲 New GPS device connected");
 
   socket.on("data", async (data) => {
     const raw = data.toString().trim();
-  
+    consoleManager.log("📡 Raw GPS Data:", raw);
 
-    // Kafka me push karo
+    // 🔹 Parse
+    const parsed = parser.parseDeviceData(raw);
+    if (!parsed) {
+      consoleManager.log("⚠️ Could not parse GPS data:", raw);
+      return;
+    }
+
+    consoleManager.log("✅ Parsed GPS Data:", parsed);
+
+    // 🔹 Push parsed JSON to Kafka
     try {
       await producer.send({
         topic: "busTrack",
-        messages: [{ value: raw }],
+        messages: [{ value: JSON.stringify(parsed) }],
       });
-      consoleManager.log("✅ Published GPS data to Kafka:", raw);
+      consoleManager.log("🚀 Published parsed data to Kafka");
     } catch (err) {
       console.error("❌ Kafka error:", err);
     }
@@ -119,6 +133,7 @@ const tcpServer = net.createServer((socket) => {
   socket.on("end", () => consoleManager.log("❌ GPS connection closed"));
   socket.on("error", (err) => console.error("⚠️ GPS socket error:", err));
 });
+
 
 tcpServer.listen(TCP_PORT, () => {
   consoleManager.log(`🚀 GPS TCP server listening on port ${TCP_PORT}`);

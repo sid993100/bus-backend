@@ -61,7 +61,7 @@ export const getUser = async (req, res) => {
 
 // ADD NEW USER
 export const addUser = async (req, res) => {
-    const user = req.user;
+   
     const {
         username,
         email,
@@ -72,12 +72,7 @@ export const addUser = async (req, res) => {
         account,
         roleName
     } = req.body;
-    
-    if (user.hierarchy !== "ADMIN" && user.hierarchy !== "SUPERADMIN") {
-        return res.status(403).json({
-            message: "Not Authorized",
-        });
-    }
+   
     
     if (!username || !email || !password || !phone) {
         return res.status(400).json({
