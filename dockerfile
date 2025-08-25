@@ -7,7 +7,7 @@ WORKDIR /app
 # Copy package files first for better layer caching
 COPY package*.json ./
 
-# Install all dependencies (including dev dependencies, if needed for build)
+# Install all dependencies (including dev dependencies if needed for build)
 RUN npm install
 
 # Copy the rest of the source code
@@ -25,8 +25,8 @@ RUN npm install -g pm2
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app . .
 
-# Expose backend ports (Express API + TCP Listener)
-EXPOSE 5000 5055
+# Expose backend ports (Express API + TCP Listeners)
+EXPOSE 5000 5055 5056
 
-# Run the app with PM2 in production mode
+# Start the app with PM2 in production mode
 CMD ["pm2-runtime", "index.js"]
