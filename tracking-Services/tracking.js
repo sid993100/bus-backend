@@ -25,7 +25,8 @@ consoleManager.log("socket.io server running on port 5000");
 
 
 const KAFKA_BROKER = process.env.KAFKA_BROKER 
-const TCP_PORT = process.env.TCP_PORT || 5055;
+const BHARAT_TCP_PORT = process.env.TCP_PORT || 5055;
+const ACUTE_TCP_PORT = process.env.TCP_PORT || 5056;
 
 // Kafka setup
 const kafka = new Kafka({
@@ -59,13 +60,13 @@ async function connectKafka() {
 
       console.log(`[${timestamp}] Received message from topic ${topic}:`, data);
 
-      if (topic === "busTrack") {
-        io.emit("locationUpdate", data)
-        console.log("log ",data);
+      if (topic === "bharatBusTrack") {
+        io.emit("track", data)
+       
         
-      } else if (topic === "test") {
-        io.emit("busAlert", data)
-        console.log("log ",data);
+      } else if (topic === "acuteBusTrack") {
+        io.emit("track", data)
+        
       }
     },
   });
@@ -96,13 +97,13 @@ io.on("connection", (socket) => {
 })
 
 
-///////////////////////////tcp////////////////////////////////
+///////////////////////////bharat-Tcp////////////////////////////////
 
 
 
 const parser = new BharatDeviceParser();
 
-const tcpServer = net.createServer((socket) => {
+const bharatTcp = net.createServer((socket) => {
   consoleManager.log("📲 New GPS device connected");
 
   socket.on("data", async (data) => {
@@ -135,14 +136,45 @@ const tcpServer = net.createServer((socket) => {
 });
 
 
-tcpServer.listen(TCP_PORT, () => {
-  consoleManager.log(`🚀 GPS TCP server listening on port ${TCP_PORT}`);
+bharatTcp.listen(BHARAT_TCP_PORT, () => {
+  consoleManager.log(`🚀 GPS TCP server listening on port ${BHARAT_TCP_PORT}`);
 });
 
 
 ///////////////////////////////////////////////////////////
 
 
+////////////////////////////acute-Tcp////////////////////////////////
+
+const acuteTcp = net.createServer((socket) => {
+  consoleManager.log("📲 New GPS device connected");
+
+  socket.on("data", async (data) => {
+    const raw = data.toString().trim();
+    consoleManager.log("📡 Raw GPS Data:", raw);
+ 
+    try {
+      await producer.send({
+        topic: "busTrack",
+        messages: [{ value: JSON.stringify(raw) }],
+      });
+      consoleManager.log("🚀 Published parsed data to Kafka");
+    } catch (err) {
+      console.error("❌ Kafka error:", err);
+    }
+  });
+
+  socket.on("end", () => consoleManager.log("❌ GPS connection closed"));
+  socket.on("error", (err) => console.error("⚠️ GPS socket error:", err));
+});
 
 
-export { app,server,tcpServer} 
+acuteTcp.listen(ACUTE_TCP_PORT, () => {
+  consoleManager.log(`🚀 GPS TCP server listening on port ${ACUTE_TCP_PORT}`);
+});
+
+///////////////////////////////////////////////////////////
+
+
+
+export { app,server} 
