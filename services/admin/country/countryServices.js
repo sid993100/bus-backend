@@ -20,7 +20,6 @@ export const getCountry = async (req,res) => {
      }
 };
 export const addCountry= async (req,res) => {
-    const user=req.user
   const {code,name}=req.body
   
      if(!name||!code){

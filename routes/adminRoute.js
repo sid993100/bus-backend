@@ -24,7 +24,6 @@ const router = Router();
 
 
 router.get("/pisreg", isLogin, getpisReg);
-router.get("/duty", isLogin, getDuty);
 
 router.get("/vltdevice", isLogin, getVltDevices);
 
