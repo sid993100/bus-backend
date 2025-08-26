@@ -120,7 +120,7 @@ const bharatTcp = net.createServer((socket) => {
     try {
       await producer.send({
         topic: "busTrack",
-        messages: [{ value: JSON.stringify(raw) }],
+        messages: [{ value: raw }],
       });
       consoleManager.log("🚀 Published parsed data to Kafka");
     } catch (err) {
@@ -153,7 +153,7 @@ const acuteTcp = net.createServer((socket) => {
     try {
       await producer.send({
         topic: "busTrack",
-        messages: [{ value: JSON.stringify(raw) }],
+        messages: [{ value: raw }],
       });
       consoleManager.log("🚀 Published parsed data to Kafka");
     } catch (err) {
