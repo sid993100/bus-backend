@@ -46,9 +46,9 @@ export default class BharatDeviceParser {
     parseTrackingPacket(data) {
         const fields = data.split(',');
         
-        if (fields.length < 50) {
-            throw new Error('Invalid tracking packet length');
-        }
+        // if (fields.length < 50) {
+        //     throw new Error('Invalid tracking packet length');
+        // }
 
         return {
             packet_type: "tracking",
@@ -119,7 +119,7 @@ export default class BharatDeviceParser {
     }
 
     // Parse emergency packet
-    parseEmergencyPacket(data) {
+    parseEmergencyPacket(data) {    
         const fields = data.split(',');
         
         return {

@@ -53,11 +53,12 @@ async function connectKafka() {
   await consumer.run({
     eachMessage: async ({ topic, message }) => {
       const data = message.value.toString();
-
+      console.log("📩 Received message:", data);
+      
       // 🔹 Parse
     const parsed = parser.parseDeviceData(data);
  if (!parsed) {
-      consoleManager.log("⚠️ Could not parse GPS data:", raw);
+      consoleManager.log("⚠️ Could not parse GPS data:", data);
       return;
     }
       // Convert UTC → IST (Asia/Kolkata)

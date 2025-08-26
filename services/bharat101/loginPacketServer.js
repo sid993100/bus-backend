@@ -2,7 +2,6 @@ import LoginPacket from "../../models/loginPacketModel.js"
 
 
 export const addLoginPacket = async (req, res) => {
-  const user = req.user;
   const {
     startCharacter,
     header,
