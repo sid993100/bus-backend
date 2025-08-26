@@ -43,80 +43,89 @@ export default class BharatDeviceParser {
     }
 
     // Parse tracking packet (most common)
-    parseTrackingPacket(data) {
-        const fields = data.split(',');
-        
-        // if (fields.length < 50) {
-        //     throw new Error('Invalid tracking packet length');
-        // }
-
-        return {
-            packet_type: "tracking",
-            timestamp: new Date().toISOString(),
-            raw_data: data,
-            parsed_data: {
-                header: fields[1],
-                vendor_id: fields,
-                firmware_version: fields,
-                message_type: fields,
-                message_id: parseInt(fields),
-                message_description: this.alertMessages[parseInt(fields)] || "Unknown",
-                packet_status: fields, // L=Live, H=History
-                device_info: {
-                    imei: fields,
-                    vehicle_reg_no: fields
+   parseTrackingPacket(data) {
+    const fields = data.split(',');
+    
+    return {
+        packet_type: "tracking",
+        timestamp: new Date().toISOString(),
+        raw_data: data,
+        parsed_data: {
+            header: fields[0], // $Header
+            vendor_id: fields[1], // iTriangle
+            firmware_version: fields[2], // 1_36T02B0164MAIS_6
+            message_type: fields[3], // NR
+            message_id: parseInt(fields[4]), // 16
+            message_description: this.alertMessages[parseInt(fields[4])] || "Unknown",
+            packet_status: fields[5], // L=Live, H=History
+            device_info: {
+                imei: fields[6], // 864495034476850
+                vehicle_reg_no: fields[7] // KA01G1234
+            },
+            gps_info: {
+                fix_status: parseInt(fields[8]) === 1, // 1
+                date: fields[9], // 02022019 (DDMMYYYY)
+                time: fields[10], // 083507 (HHMMSS)
+                formatted_datetime: this.formatDateTime(fields[9], fields[10]),
+                latitude: parseFloat(fields[11]), // 12.975843
+                latitude_dir: fields[12], // N
+                longitude: parseFloat(fields[13]), // 77.549438
+                longitude_dir: fields[14], // E
+                speed_kmh: parseFloat(fields[15]), // 0.0
+                heading: parseInt(fields[16]), // 126
+                satellites: parseInt(fields[17]), // 5
+                altitude_m: parseFloat(fields[18]), // 799.0
+                pdop: parseFloat(fields[19]), // 0.00
+                hdop: parseFloat(fields[20]) // 1.59
+            },
+            location: {
+                latitude: parseFloat(fields[11]),
+                latitude_dir: fields[12],
+                longitude: parseFloat(fields[13]),
+                longitude_dir: fields[14],
+                speed_kmh: parseFloat(fields[15]),
+                heading: parseInt(fields[16]),
+                altitude_m: parseFloat(fields[18])
+            },
+            vehicle_status: {
+                mcc: parseInt(fields[21]), // 40486
+                ignition: parseInt(fields[22]) === 1, // 1
+                main_power: parseInt(fields[23]) === 1, // 1
+                main_voltage: parseFloat(fields[24]), // 12.4
+                battery_voltage: parseFloat(fields[25]), // 4.3
+                emergency_status: parseInt(fields[26]) === 1, // 1
+                tamper_alert: fields[27] // C=Closed, O=Opened
+            },
+            network_info: {
+                gsm_signal: parseInt(fields[28]), // 31
+                mcc: parseInt(fields[29]), // 404
+                mnc: parseInt(fields[30]), // 86
+                serving_cell: {
+                    lac: fields[31], // 7b73
+                    cell_id: fields[32] // b74a
                 },
-                gps_info: {
-                    fix_status: parseInt(fields) === 1,
-                    date: fields, // DDMMYYYY
-                    time: fields, // HHMMSS
-                    formatted_datetime: this.formatDateTime(fields, fields),
-                    satellites: parseInt(fields),
-                    pdop: parseFloat(fields),
-                    hdop: parseFloat(fields)
-                },
-                location: {
-                    latitude: parseFloat(fields),
-                    latitude_dir: fields,
-                    longitude: parseFloat(fields),
-                    longitude_dir: fields,
-                    speed_kmh: parseFloat(fields),
-                    heading: parseInt(fields),
-                    altitude_m: parseFloat(fields)
-                },
-                vehicle_status: {
-                    ignition: parseInt(fields) === 1,
-                    main_power: parseInt(fields) === 1,
-                    main_voltage: parseFloat(fields),
-                    battery_voltage: parseFloat(fields),
-                    emergency_status: parseInt(fields) === 1,
-                    tamper_alert: fields // C=Closed, O=Opened
-                },
-                network_info: {
-                    operator: fields,
-                    gsm_signal: parseInt(fields),
-                    mcc: parseInt(fields),
-                    mnc: parseInt(fields),
-                    serving_cell: {
-                        lac: fields,
-                        cell_id: fields
-                    },
-                    neighbor_cells: this.parseNeighborCells(fields.slice(34, 46))
-                },
-                io_status: {
-                    digital_inputs: fields, // 4 bits: DIN1,DIN2,DIN3,DIN4
-                    digital_outputs: fields, // 2 bits: DOUT1,DOUT2
-                    analog_input_1: parseFloat(fields),
-                    analog_input_2: parseFloat(fields)
-                },
-                additional_info: {
-                    frame_number: fields,
-                    delta_distance: parseInt(fields),
-                    ota_response: fields || null
-                }
+                neighbor_cells: this.parseNeighborCells([
+                    fields[33], fields[34], fields[35], // 55, 02a0, 7d0b
+                    fields[36], fields[37], fields[38], // 49, 4d0a, 7d0b
+                    fields[39], fields[40], fields[41], // 49, 1948, 7b73
+                    fields[42], fields[43], fields[44]  // 59, ffff, 0000
+                ])
+            },
+            io_status: {
+                digital_inputs: fields[45], // 0101
+                digital_outputs: fields[46], // 01
+                frame_number: fields[47], // 008273
+                analog_input_1: parseFloat(fields[48]), // 0.0
+                analog_input_2: parseFloat(fields[49]) // 0.0
+            },
+            additional_info: {
+                reserved_1: fields[50], // 0.0
+                reserved_2: fields[51] || null, // ()
+                checksum: fields[52] || null // *3E
             }
-        };
-    }
+        }
+    };
+}
 
     // Parse emergency packet
     parseEmergencyPacket(data) {    
