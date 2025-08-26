@@ -1,4 +1,5 @@
 import SeatLayout from "../../../models/seatLayoutModel.js";
+import mongoose from "mongoose";
 
 
 export const getSeatLayout= async (req,res) => {
