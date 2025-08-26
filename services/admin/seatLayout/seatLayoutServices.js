@@ -1,8 +1,8 @@
 import SeatLayout from "../../../models/seatLayoutModel.js";
-import consoleManager from "../../../utils/consoleManager.js";
+
 
 export const getSeatLayout= async (req,res) => {
-     const user = req.user;
+
      
      try {
         const seatLayout= await SeatLayout.find({})

@@ -9,7 +9,7 @@ import BharatDeviceParser from "../utils/BharatDeviceParser.js";
 
 
 
-
+const parser = new BharatDeviceParser();
 
 dotenv.config();
 
@@ -47,25 +47,32 @@ async function connectKafka() {
   await consumer.connect();
 
   await consumer.subscribe({ topic: "busTrack", fromBeginning: false });
-  await consumer.subscribe({ topic: "test", fromBeginning: false });
+  await consumer.subscribe({ topic: "acuteBusTrack", fromBeginning: false });
+  await consumer.subscribe({ topic: "bharatBusTrack", fromBeginning: false });
 
   await consumer.run({
     eachMessage: async ({ topic, message }) => {
       const data = message.value.toString();
 
+      // 🔹 Parse
+    const parsed = parser.parseDeviceData(data);
+ if (!parsed) {
+      consoleManager.log("⚠️ Could not parse GPS data:", raw);
+      return;
+    }
       // Convert UTC → IST (Asia/Kolkata)
       const timestamp = new Date().toLocaleString("en-IN", {
         timeZone: "Asia/Kolkata"
       });
 
-      console.log(`[${timestamp}] Received message from topic ${topic}:`, data);
+      console.log(`[${timestamp}] Received message from topic ${topic}:`, parsed);
 
       if (topic === "bharatBusTrack") {
-        io.emit("track", data)
+        io.emit("track", parsed)
        
         
       } else if (topic === "acuteBusTrack") {
-        io.emit("track", data)
+        io.emit("track", parsed)
         
       }
     },
@@ -101,8 +108,6 @@ io.on("connection", (socket) => {
 
 
 
-const parser = new BharatDeviceParser();
-
 const bharatTcp = net.createServer((socket) => {
   consoleManager.log("📲 New GPS device connected");
 
@@ -110,20 +115,11 @@ const bharatTcp = net.createServer((socket) => {
     const raw = data.toString().trim();
     consoleManager.log("📡 Raw GPS Data:", raw);
 
-    // 🔹 Parse
-    const parsed = parser.parseDeviceData(raw);
-    if (!parsed) {
-      consoleManager.log("⚠️ Could not parse GPS data:", raw);
-      return;
-    }
-
-    consoleManager.log("✅ Parsed GPS Data:", parsed);
-
     // 🔹 Push parsed JSON to Kafka
     try {
       await producer.send({
         topic: "busTrack",
-        messages: [{ value: JSON.stringify(parsed) }],
+        messages: [{ value: JSON.stringify(raw) }],
       });
       consoleManager.log("🚀 Published parsed data to Kafka");
     } catch (err) {
