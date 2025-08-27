@@ -38,7 +38,12 @@ export const addRoute = async (req, res) => {
     const { source, destination, via, routeName, routeLength, stops } = req.body;
     
     if (!source || !destination || !routeLength || !routeName) {
+
         return res.status(400).json({ message: "Required fields are missing: source, destination, routeLength, routeName" });
+
+        return res.status(400).json({
+            message: "Required fields are missing: source, destination, routeLength, routeName"
+        });
     }
     
     try {

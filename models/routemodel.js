@@ -3,7 +3,7 @@ import { model, Schema } from "mongoose";
 const routeSchema = new Schema({
   routeCode: {
     type: String,
-    unique: true,
+  unique: true,
     uppercase: true
   },
   routeName: {
@@ -49,51 +49,42 @@ const routeSchema = new Schema({
   timestamps: true
 });
 
-// Pre-save middleware to auto-generate routeCode
+// Simple counter schema for atomic sequence increments
+const counterSchema = new Schema({ _id: String, seq: { type: Number, default: 0 } });
+const Counter = model('Counter', counterSchema);
+
+// Pre-save middleware to auto-generate routeCode using a counter document
 routeSchema.pre('save', async function(next) {
   try {
-    // Only generate routeCode if it's not already set (for new documents)
-    if (!this.routeCode || this.isNew) {
-      // Find the highest existing routeCode
-      const lastRoute = await this.constructor.findOne(
-        {},
-        { routeCode: 1 },
-        { sort: { routeCode: -1 } }
+    // Only generate routeCode for new documents when not provided
+    if (this.isNew && !this.routeCode) {
+      const counterId = 'routeCode';
+      const updated = await Counter.findByIdAndUpdate(
+        counterId,
+        { $inc: { seq: 1 } },
+        { new: true, upsert: true }
       );
 
-      let nextNumber = 1;
-      
-      if (lastRoute && lastRoute.routeCode) {
-        // Extract number from routeCode (e.g., "0001" -> 1)
-        const lastNumber = parseInt(lastRoute.routeCode);
-        nextNumber = lastNumber + 1;
-      }
-
-      // Format as 4-digit string with leading zeros
-      this.routeCode = nextNumber.toString().padStart(4, '0');
+      const nextNumber = updated.seq || 1;
+      this.routeCode = String(nextNumber).padStart(4, '0');
     }
-    
     next();
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 });
 
 // Static method to get next route code (optional utility)
 routeSchema.statics.getNextRouteCode = async function() {
-  const lastRoute = await this.findOne(
-    {},
-    { routeCode: 1 },
-    { sort: { routeCode: -1 } }
-  );
-
-  let nextNumber = 1;
-  if (lastRoute && lastRoute.routeCode) {
-    const lastNumber = parseInt(lastRoute.routeCode);
-    nextNumber = lastNumber + 1;
-  }
-
-  return nextNumber.toString().padStart(4, '0');
+  // Read the counter document to determine the next route code without
+  // modifying the counter (so callers can preview). If counter doesn't exist,
+  // return '0001'.
+  const counterId = 'routeCode';
+  const CounterModel = Counter; // already defined above
+  const counterDoc = await CounterModel.findById(counterId).lean();
+  const seq = counterDoc && typeof counterDoc.seq === 'number' ? counterDoc.seq : 0;
+  const nextNumber = seq + 1;
+  return String(nextNumber).padStart(4, '0');
 };
 
 const Route = model("Route", routeSchema);
