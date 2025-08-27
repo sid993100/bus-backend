@@ -21,10 +21,10 @@ router.get("/emergency/:id",isLogin,roleBaseAuth( "ADMIN"),getEmergencyPacketByI
 
 
 
-router.post("/login",isLogin,roleBaseAuth( "ADMIN"),addLoginPacket)
-router.post("/",isLogin,roleBaseAuth( "ADMIN"),addTrackingPacket)
-router.post("/health",isLogin,roleBaseAuth( "ADMIN"),addHealthPacket)
-router.post("/emergency",isLogin,roleBaseAuth( "ADMIN"),addEmergencyPacket)
+router.post("/login",addLoginPacket)
+router.post("/track",addTrackingPacket)
+router.post("/health",addHealthPacket)
+router.post("/emergency",addEmergencyPacket)
 
 
 export default router;

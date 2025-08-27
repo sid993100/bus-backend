@@ -1,3 +1,5 @@
+import axios from "axios";
+
 export default class UnifiedDeviceParser {
     constructor() {
         // Alert messages for both protocols
@@ -103,81 +105,88 @@ export default class UnifiedDeviceParser {
         return null;
     }
 
-    parseBharatTrackingPacket(data) {
-        const fields = data.split(',');
+async parseBharatTrackingPacket(data) {
+    const fields = data.split(',');
+    
+    return {
+        protocol: "BHARAT_101",
+        packet_type: "tracking",
+        timestamp: new Date().toISOString(),
+        raw_data: data,
+            // Header fields
+            header: fields[0], // $Header
+            vendor_id: fields[1], // BHARTI
+            firmware_version: fields[2], // 1.0
+            message_type: fields[3], // 1
+            message_id: parseInt(fields[4]), // 7
+            message_description: this.bharatAlertMessages[parseInt(fields[4])] || "Unknown",
+            packet_status: fields[5], // L
+            
+            // Device information
+            imei: fields[6], // 867584032108765
+            vehicle_reg_no: fields[7], // KA01AB1234
+            
+            // GPS information
+            fix_status: parseInt(fields[8]) === 1, // 1
+            date: fields[9], // 15032024
+            time: fields[10], // 143052
+            formatted_datetime: this.formatDateTime(fields[9], fields[10]),
+            latitude: parseFloat(fields[11]), // 8
+            latitude_dir: fields[12], // 1.2
+            longitude: parseFloat(fields[13]), // 0.8
+            longitude_dir: fields[14], // 12.9876
+            speed_kmh: parseFloat(fields[15]), // N
+            heading: parseInt(fields[16]), // 77.5946
+            satellites: parseInt(fields[17]), // E
+            altitude_m: parseFloat(fields[18]), // 45.5
+            pdop: parseFloat(fields[19]), // 180
+            hdop: parseFloat(fields[20]), // 545.2
+            
+            // Vehicle status
+            operator_name: fields[21], // 1
+            ignition: parseInt(fields[22]) === 1, // 1
+            main_power: parseInt(fields[23]) === 1, // 12.8
+            main_voltage: parseFloat(fields[24]), // 4.2
+            battery_voltage: parseFloat(fields[25]), // 0
+            emergency_status: parseInt(fields[26]) === 1, // 0
+            tamper_alert: fields[27], // C
+            
+            // Network information
+            gsm_signal: parseInt(fields[28]), // Airtel
+            mcc: parseInt(fields[29]), // 404
+            mnc: parseInt(fields[30]), // 45
+            lac: fields[31], // 1A2B
+            cell_id: fields[32], // 3C4D
+            
+            // Neighbor cells (flattened)
+            neighbor_cell_1_signal: parseInt(fields[33]) || 0, // 20
+            neighbor_cell_1_lac: fields[34] || '', // 2E3F
+            neighbor_cell_1_cell_id: fields[35] || '', // 4G5H
+            neighbor_cell_2_signal: parseInt(fields[36]) || 0, // 18
+            neighbor_cell_2_lac: fields[37] || '', // 6I7J
+            neighbor_cell_2_cell_id: fields[38] || '', // 8K9L
+            neighbor_cell_3_signal: parseInt(fields[39]) || 0, // 15
+            neighbor_cell_3_lac: fields[40] || '', // AA1B
+            neighbor_cell_3_cell_id: fields[41] || '', // CC2D
+            neighbor_cell_4_signal: parseInt(fields[42]) || 0, // 1010
+            neighbor_cell_4_lac: fields[43] || '', // 1100
+            neighbor_cell_4_cell_id: fields[44] || '', // 5.2
+            
+            // IO status
+            digital_inputs: fields[45] || '0000', // 3.8
+            digital_outputs: fields[46] || '00', // 001
+            frame_number: fields[47] || '0', // 150
+            analog_input_1: parseFloat(fields[48]) || 0, // Handle NaN
+            analog_input_2: parseFloat(fields[49]) || 0, // Handle NaN
+            
+            // Additional information
+            delta_distance: fields[50] || '0', // Provide default
+            ota_response: fields[51] || null,
+            checksum: fields[52] || null
         
-        return {
-            protocol: "BHARAT_101",
-            packet_type: "tracking",
-            timestamp: new Date().toISOString(),
-            raw_data: data,
-            parsed_data: {
-                header: fields[0], // $Header
-                vendor_id: fields[1], // iTriangle
-                firmware_version: fields[2], // 1_36T02B0164MAIS_6
-                message_type: fields[3], // NR
-                message_id: parseInt(fields[4]), // 16
-                message_description: this.bharatAlertMessages[parseInt(fields[4])] || "Unknown",
-                packet_status: fields[5], // L=Live, H=History
-                device_info: {
-                    imei: fields[6], // 864495034476850
-                    vehicle_reg_no: fields[7] // KA01G1234
-                },
-                gps_info: {
-                    fix_status: parseInt(fields[8]) === 1, // 1
-                    date: fields[9], // 02022019 (DDMMYYYY)
-                    time: fields[10], // 083507 (HHMMSS)
-                    formatted_datetime: this.formatDateTime(fields[9], fields[10]),
-                    latitude: parseFloat(fields[11]), // 12.975843
-                    latitude_dir: fields[12], // N
-                    longitude: parseFloat(fields[13]), // 77.549438
-                    longitude_dir: fields[14], // E
-                    speed_kmh: parseFloat(fields[15]), // 0.0
-                    heading: parseInt(fields[16]), // 126
-                    satellites: parseInt(fields[17]), // 5
-                    altitude_m: parseFloat(fields[18]), // 799.0
-                    pdop: parseFloat(fields[19]), // 0.00
-                    hdop: parseFloat(fields[20]) // 1.59
-                },
-                vehicle_status: {
-                    operator_name: fields[21], // 40486 (Network operator)
-                    ignition: parseInt(fields[22]) === 1, // 1
-                    main_power: parseInt(fields[23]) === 1, // 1
-                    main_voltage: parseFloat(fields[24]), // 12.4
-                    battery_voltage: parseFloat(fields[25]), // 4.3
-                    emergency_status: parseInt(fields[26]) === 1, // 1
-                    tamper_alert: fields[27] // C=Closed, O=Opened
-                },
-                network_info: {
-                    gsm_signal: parseInt(fields[28]), // 31
-                    mcc: parseInt(fields[29]), // 404
-                    mnc: parseInt(fields[30]), // 86
-                    serving_cell: {
-                        lac: fields[31], // 7b73
-                        cell_id: fields[32] // b74a
-                    },
-                    neighbor_cells: this.parseNeighborCells([
-                        fields[33], fields[34], fields[35], // 55, 02a0, 7d0b
-                        fields[36], fields[37], fields[38], // 49, 4d0a, 7d0b
-                        fields[39], fields[40], fields[41], // 49, 1948, 7b73
-                        fields[42], fields[43], fields[44]  // 59, ffff, 0000
-                    ])
-                },
-                io_status: {
-                    digital_inputs: fields[45], // 0101
-                    digital_outputs: fields[46], // 01
-                    frame_number: fields[47], // 008273
-                    analog_input_1: parseFloat(fields[48]), // 0.0
-                    analog_input_2: parseFloat(fields[49]) // 0.0
-                },
-                additional_info: {
-                    delta_distance: fields[50], // 0
-                    ota_response: fields[51] || null, // ()
-                    checksum: fields[52] || null // *3E
-                }
-            }
-        };
-    }
+    };
+}
+
 
     parseBharatEmergencyPacket(data) {    
         const fields = data.split(',');

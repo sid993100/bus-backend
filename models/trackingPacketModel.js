@@ -1,373 +1,208 @@
 import { Schema, model } from 'mongoose';
 
 const trackingPacketSchema = new Schema({
-  startCharacter: {
+  // Top-level fields
+  protocol: {
     type: String,
-    required: true,
-    maxlength: 1,
-    default: '$'
+    default: 'BHARAT_101'
   },
-  header: {
+  packet_type: {
     type: String,
-    required: true,
-    uppercase: true,
-    trim: true
+    default: 'tracking'
   },
-  vendorID: {
-    type: String,
-    required: true,
-    uppercase: true,
-    trim: true
+  timestamp: {
+    type: Date,
+    default: Date.now
   },
-  firmwareVersion: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  packetType: {
-    type: String,
-    required: true,
-    uppercase: true,
-    trim: true
-  },
-  messageID: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  packetStatus: {
-    type: String,
-    required: true,
-    trim: true
-  },
+  raw_data: String,
+
+  // All parsed fields at the same level (flat structure)
+  header: String,
+  vendor_id: String,
+  firmware_version: String,
+  message_type: String,
+  message_id: Number,
+  message_description: String,
+  packet_status: String,
+
+  // Device info
   imei: {
     type: String,
-    required: true,
-    validate: {
-      validator: function(v) {
-        return /^\d{15}$/.test(v);
-      },
-      message: 'IMEI must be exactly 15 digits'
-    },
     index: true
   },
-  vehicleRegNo: {
+  vehicle_reg_no: {
     type: String,
-    required: true,
-    uppercase: true,
-    trim: true,
     index: true
   },
-  gpsFix: {
-    type: String,
-    required: true,
-    enum: ['A', 'V'], // A = Active, V = Void
-    uppercase: true
-  },
-  date: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  time: {
-    type: String,
-    required: true,
-    trim: true
-  },
+
+  // GPS info
+  fix_status: Boolean,
+  date: String,
+  time: String,
+  formatted_datetime: String,
   latitude: {
-    type: String,
-    required: true,
-    trim: true
+    type: Number,
+    default: 0
   },
-  latitudeDirection: {
+  latitude_dir: {
     type: String,
-    required: true,
-    enum: ['N', 'S'],
-    uppercase: true
+    default: 'N'
   },
   longitude: {
-    type: String,
-    required: true,
-    trim: true
+    type: Number,
+    default: 0
   },
-  longitudeDirection: {
+  longitude_dir: {
     type: String,
-    required: true,
-    enum: ['E', 'W'],
-    uppercase: true
+    default: 'E'
   },
-  speed: {
-    type: String,
-    required: true,
-    trim: true
+  speed_kmh: {
+    type: Number,
+    default: 0
   },
   heading: {
-    type: String,
-    required: true,
-    trim: true
+    type: Number,
+    default: 0
   },
-  numOfSatellites: {
-    type: String,
-    required: true,
-    trim: true
+  satellites: {
+    type: Number,
+    default: 0
   },
-  altitude: {
-    type: String,
-    required: true,
-    trim: true
+  altitude_m: {
+    type: Number,
+    default: 0
   },
   pdop: {
-    type: String,
-    required: true,
-    trim: true
+    type: Number,
+    default: 0
   },
   hdop: {
-    type: String,
-    required: true,
-    trim: true
+    type: Number,
+    default: 0
   },
-  networkOperator: {
-    type: String,
-    required: true,
-    trim: true
+
+  // Vehicle status
+  operator_name: String,
+  ignition: Boolean,
+  main_power: Boolean,
+  main_voltage: {
+    type: Number,
+    default: 0
   },
-  ignitionStatus: {
-    type: String,
-    required: true,
-    enum: ['ON', 'OFF'],
-    uppercase: true
+  battery_voltage: {
+    type: Number,
+    default: 0
   },
-  mainPowerStatus: {
-    type: String,
-    required: true,
-    trim: true
+  emergency_status: Boolean,
+  tamper_alert: String,
+
+  // Network info
+  gsm_signal: {
+    type: Number,
+    default: 0
   },
-  mainInputVoltage: {
-    type: String,
-    required: true,
-    trim: true
+  mcc: Number,
+  mnc: Number,
+  lac: String,
+  cell_id: String,
+
+  // Neighbor cells (flat)
+  neighbor_cell_1_signal: {
+    type: Number,
+    default: 0
   },
-  internalBattery: {
-    type: String,
-    required: true,
-    trim: true
+  neighbor_cell_1_lac: String,
+  neighbor_cell_1_cell_id: String,
+  neighbor_cell_2_signal: {
+    type: Number,
+    default: 0
   },
-  checksum: {
-    type: String,
-    required: true,
-    uppercase: true,
-    trim: true
+  neighbor_cell_2_lac: String,
+  neighbor_cell_2_cell_id: String,
+  neighbor_cell_3_signal: {
+    type: Number,
+    default: 0
   },
-  emergencyStatus: {
-    type: String,
-    required: true,
-    trim: true
+  neighbor_cell_3_lac: String,
+  neighbor_cell_3_cell_id: String,
+  neighbor_cell_4_signal: {
+    type: Number,
+    default: 0
   },
-  tamperAlert: {
+  neighbor_cell_4_lac: String,
+  neighbor_cell_4_cell_id: String,
+
+  // IO status
+  digital_inputs: {
     type: String,
-    required: true,
-    trim: true
+    default: '0000'
   },
-  gsmSignalStrength: {
+  digital_outputs: {
     type: String,
-    required: true,
-    trim: true
+    default: '00'
   },
-  mcc: {
+  frame_number: {
     type: String,
-    required: true,
-    trim: true
+    default: '0'
   },
-  mnc: {
+  analog_input_1: {
+    type: Number,
+    default: 0
+  },
+  analog_input_2: {
+    type: Number,
+    default: 0
+  },
+
+  // Additional info
+  delta_distance: {
     type: String,
-    required: true,
-    trim: true
+    default: '0'
   },
-  lac: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  cellID: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  gsmSignalStrengthNMR1Neighbour: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  lacNMR1Neighbour: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  cellIDNMR1stNeighbour: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  gsmSignalStrengthNMR2ndNeighbour: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  lacNMR2Neighbour: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  cellIDNMR2Neighbour: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  gsmSignalStrengthNMR3Neighbour: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  lacNMR3Neighbour: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  cellIDNMR3Neighbour: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  gsmSignalStrengthNMR4Neighbour: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  lacNMR4Neighbour: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  cellIDNMR4Neighbour: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  digitalInputStatus: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  digitalOutputStatus: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  frameNumber: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  analogInput1: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  analogInput2: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  deltaDistance: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  otaResponse: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  endCharacter: {
-    type: String,
-    required: true,
-    maxlength: 1
-  },
-  checkSum: {
-    type: String,
-    required: true,
-    uppercase: true,
-    trim: true
-  },
-  // Additional processing fields
+  ota_response: String,
+  checksum: String,
+
+  // Location for geospatial queries
   location: {
     type: {
       type: String,
       enum: ['Point'],
-      default: 'Point'
+      // no default - only set when coordinates are available
     },
     coordinates: {
-      type: [Number], // [longitude, latitude]
-      index: '2dsphere'
-    }
-  },
-  parsedDateTime: {
-    type: Date,
-    index: true
-  },
-  isProcessed: {
-    type: Boolean,
-    default: false
+      type: [Number]
+    } // [longitude, latitude]
   }
 }, {
   timestamps: true
 });
 
-// Indexes
-trackingPacketSchema.index({ vehicleRegNo: 1, createdAt: -1 });
-trackingPacketSchema.index({ imei: 1, createdAt: -1 });
-trackingPacketSchema.index({ parsedDateTime: -1 });
-trackingPacketSchema.index({ location: '2dsphere' });
-
-// Pre-save middleware to parse location and datetime
+// Create location from GPS data
 trackingPacketSchema.pre('save', function(next) {
   try {
-    // Parse location if GPS fix is valid
-    if (this.gpsFix === 'A' && this.latitude && this.longitude) {
-      let lat = parseFloat(this.latitude);
-      let lng = parseFloat(this.longitude);
-      
-      if (this.latitudeDirection === 'S') lat = -Math.abs(lat);
-      if (this.longitudeDirection === 'W') lng = -Math.abs(lng);
-      
+    const latVal = this.latitude;
+    const lngVal = this.longitude;
+    if (Number.isFinite(Number(latVal)) && Number.isFinite(Number(lngVal)) && (latVal !== 0 || lngVal !== 0)) {
+      let lat = Number(latVal);
+      let lng = Number(lngVal);
+      if (this.latitude_dir === 'S') lat = -Math.abs(lat);
+      if (this.longitude_dir === 'W') lng = -Math.abs(lng);
       this.location = {
         type: 'Point',
         coordinates: [lng, lat]
       };
+    } else {
+      // ensure we don't save an incomplete location object
+      if (this.location) delete this.location;
     }
-
-    // Parse date and time
-    if (this.date && this.time) {
-      // Assuming date format: DDMMYY and time format: HHMMSS
-      const dateStr = this.date;
-      const timeStr = this.time;
-      
-      if (dateStr.length === 6 && timeStr.length === 6) {
-        const day = dateStr.substring(0, 2);
-        const month = dateStr.substring(2, 4);
-        const year = '20' + dateStr.substring(4, 6);
-        const hour = timeStr.substring(0, 2);
-        const minute = timeStr.substring(2, 4);
-        const second = timeStr.substring(4, 6);
-        
-        this.parsedDateTime = new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}Z`);
-      }
-    }
-  } catch (error) {
-    console.error('Error parsing tracking packet data:', error);
+  } catch (err) {
+    console.error('Error in pre-save middleware:', err);
   }
   next();
 });
+
+// Add geospatial index
+trackingPacketSchema.index({ location: '2dsphere' });
 
 const TrackingPacket = model('TrackingPacket', trackingPacketSchema);
 export default TrackingPacket;

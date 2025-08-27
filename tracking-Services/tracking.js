@@ -6,12 +6,13 @@ import { Kafka } from "kafkajs"
 import consoleManager from "../utils/consoleManager.js"
 import net from "net"; 
 import BharatDeviceParser from "../utils/BharatDeviceParser.js";
+import axios from "axios";
+
+dotenv.config();
 
 
 
 const parser = new BharatDeviceParser();
-
-dotenv.config();
 
 const app = express()
 const server = http.createServer(app)
@@ -51,33 +52,38 @@ async function connectKafka() {
   await consumer.subscribe({ topic: "bharatBusTrack", fromBeginning: false });
 
   await consumer.run({
-    eachMessage: async ({ topic, message }) => {
-      const data = message.value.toString();
-      console.log("📩 Received message:", data);
-      
-      // 🔹 Parse
-    const parsed = parser.parseDeviceData(data);
- if (!parsed) {
-      consoleManager.log("⚠️ Could not parse GPS data:", data);
+  eachMessage: async ({ topic, message }) => {
+    const data = message.value.toString();
+    
+    // Parse the data
+    const parsed =await parser.parseDeviceData(data);
+    if (!parsed) {
+      consoleManager.log("⚠️ Could not parse GPS data:",parsed);
       return;
     }
-      // Convert UTC → IST (Asia/Kolkata)
-      const timestamp = new Date().toLocaleString("en-IN", {
-        timeZone: "Asia/Kolkata"
-      });
 
-      console.log(`[${timestamp}] Received message from topic ${topic}:`, parsed);
+    const timestamp = new Date().toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata"
+    });
 
-      if (topic === "bharatBusTrack") {
-        io.emit("track", parsed)
-       
-        
-      } else if (topic === "acuteBusTrack") {
-        io.emit("track", parsed)
-        
-      }
-    },
-  });
+    console.log(`[${timestamp}] Received message from topic ${topic}:`, parsed);
+
+    // Fix: Send to correct endpoint with raw_data included
+    try {
+      await axios.post(`${process.env.MY_AXIOS_URL||"http://localhost:5000"}/api/tracking/track`,{data:parsed});
+      consoleManager.log("✅ Data saved to API successfully");
+    } catch (error) {
+      console.error("❌ Failed to save to API:", error.message);
+    }
+
+    // Emit to WebSocket
+    if (topic === "bharatBusTrack") {
+      io.emit("track", parsed);
+    } else if (topic === "acuteBusTrack") {
+      io.emit("track", parsed);
+    }
+  },
+});
 }
 
 

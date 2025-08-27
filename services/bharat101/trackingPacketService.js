@@ -1,154 +1,157 @@
 import TrackingPacket from "../../models/trackingPacketModel.js";
 
 
+
+
 export const addTrackingPacket = async (req, res) => {
-  const {
-    startCharacter,
-    header,
-    vendorID,
-    firmwareVersion,
-    packetType,
-    messageID,
-    packetStatus,
-    imei,
-    vehicleRegNo,
-    gpsFix,
-    date,
-    time,
-    latitude,
-    latitudeDirection,
-    longitude,
-    longitudeDirection,
-    speed,
-    heading,
-    numOfSatellites,
-    altitude,
-    pdop,
-    hdop,
-    networkOperator,
-    ignitionStatus,
-    mainPowerStatus,
-    mainInputVoltage,
-    internalBattery,
-    checksum,
-    emergencyStatus,
-    tamperAlert,
-    gsmSignalStrength,
-    mcc,
-    mnc,
-    lac,
-    cellID,
-    gsmSignalStrengthNMR1Neighbour,
-    lacNMR1Neighbour,
-    cellIDNMR1stNeighbour,
-    gsmSignalStrengthNMR2ndNeighbour,
-    lacNMR2Neighbour,
-    cellIDNMR2Neighbour,
-    gsmSignalStrengthNMR3Neighbour,
-    lacNMR3Neighbour,
-    cellIDNMR3Neighbour,
-    gsmSignalStrengthNMR4Neighbour,
-    lacNMR4Neighbour,
-    cellIDNMR4Neighbour,
-    digitalInputStatus,
-    digitalOutputStatus,
-    frameNumber,
-    analogInput1,
-    analogInput2,
-    deltaDistance,
-    otaResponse,
-    endCharacter,
-    checkSum
-  } = req.body;
-  
-  console.log("Tracking packet data:", { header, vendorID, vehicleRegNo, imei, packetType });
-  
-  
-  if (!header || !vendorID || !vehicleRegNo || !imei || !packetType || !messageID || 
-      !date || !time || !latitude || !longitude || !checksum) {
-    return res.status(400).json({
-      message: "All required details must be provided (header, vendorID, vehicleRegNo, imei, packetType, messageID, date, time, latitude, longitude, checksum)"
-    });
-  }
-  
   try {
-    const trackingPacket = await TrackingPacket.create({
-      startCharacter: startCharacter || '$',
-      header,
-      vendorID,
-      firmwareVersion,
-      packetType,
-      messageID,
-      packetStatus,
-      imei,
-      vehicleRegNo,
-      gpsFix: gpsFix || 'V',
-      date,
-      time,
-      latitude,
-      latitudeDirection,
-      longitude,
-      longitudeDirection,
-      speed,
-      heading,
-      numOfSatellites,
-      altitude,
-      pdop,
-      hdop,
-      networkOperator,
-      ignitionStatus,
-      mainPowerStatus,
-      mainInputVoltage,
-      internalBattery,
-      checksum,
-      emergencyStatus,
-      tamperAlert,
-      gsmSignalStrength,
-      mcc,
-      mnc,
-      lac,
-      cellID,
-      gsmSignalStrengthNMR1Neighbour,
-      lacNMR1Neighbour,
-      cellIDNMR1stNeighbour,
-      gsmSignalStrengthNMR2ndNeighbour,
-      lacNMR2Neighbour,
-      cellIDNMR2Neighbour,
-      gsmSignalStrengthNMR3Neighbour,
-      lacNMR3Neighbour,
-      cellIDNMR3Neighbour,
-      gsmSignalStrengthNMR4Neighbour,
-      lacNMR4Neighbour,
-      cellIDNMR4Neighbour,
-      digitalInputStatus,
-      digitalOutputStatus,
-      frameNumber,
-      analogInput1,
-      analogInput2,
-      deltaDistance,
-      otaResponse,
-      endCharacter,
-      checkSum
-    });
+    const {data}= req.body;
+
     
-    if (!trackingPacket) {
-      return res.status(500).json({
-        message: "Something went wrong while creating tracking packet"
+
+    // Create tracking packet directly
+    const trackingPacket = new TrackingPacket(data);
+    const savedPacket = await trackingPacket.save();
+    if (!savedPacket) {
+      return res.status(500).json({ 
+        success: false,
+        error: 'Failed to save tracking packet',  
+        code: 'SAVE_ERROR'
+      });
+    } 
+
+    res.status(201).json({
+      success: true,
+      message: 'Tracking packet created successfully',
+      data: {
+        id: savedPacket._id,
+        imei: savedPacket.imei,
+        vehicle_reg_no: savedPacket.vehicle_reg_no,
+        latitude: savedPacket.latitude,
+        longitude: savedPacket.longitude,
+        timestamp: savedPacket.timestamp
+      }
+    });
+
+
+  } catch (error) {
+    console.error('Error creating tracking packet:', error);
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => ({
+        field: err.path,
+        message: err.message,
+        value: err.value
+      }));
+
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        code: 'VALIDATION_ERROR',
+        details: validationErrors
       });
     }
-    
-    res.status(201).json({
-      message: "created",
-      data: trackingPacket
-    });
-  } catch (error) {
-    console.log(error);
-    
-    return res.status(500).json({
-      message: "Server Error"
+
+    // Handle other errors
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      code: 'INTERNAL_ERROR',
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
     });
   }
 };
+
+// Bulk insert controller function
+export const addTrackingPacketsBulk = async (req, res) => {
+  try {
+    const { packets } = req.body;
+
+    if (!Array.isArray(packets) || packets.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'packets array is required and must not be empty',
+        code: 'INVALID_BULK_DATA'
+      });
+    }
+
+    if (packets.length > 100) {
+      return res.status(400).json({
+        success: false,
+        error: 'Maximum 100 packets allowed per bulk insert',
+        code: 'BULK_LIMIT_EXCEEDED'
+      });
+    }
+
+    // Validate each packet has required fields
+    for (let i = 0; i < packets.length; i++) {
+      const packet = packets[i];
+      if (!packet.packet_type || !packet.raw_data) {
+        return res.status(400).json({
+          success: false,
+          error: `Packet at index ${i} is missing required fields (packet_type, raw_data)`,
+          code: 'INVALID_PACKET_DATA'
+        });
+      }
+    }
+
+    // Transform packets for bulk insert
+    const transformedPackets = packets.map(packet => ({
+      protocol: packet.protocol || 'UNKNOWN',
+      packet_type: packet.packet_type,
+      timestamp: packet.timestamp ? new Date(packet.timestamp) : new Date(),
+      raw_data: packet.raw_data,
+      parsed_data: packet.parsed_data,
+      sourceProtocol: packet.sourceProtocol || 'UNKNOWN',
+      isProcessed: false
+    }));
+
+    // Bulk insert
+    const savedPackets = await TrackingPacket.insertMany(transformedPackets, {
+      ordered: false // Continue inserting even if some fail
+    });
+
+    res.status(201).json({
+      success: true,
+      message: `Successfully inserted ${savedPackets.length} tracking packets`,
+      data: {
+        inserted_count: savedPackets.length,
+        requested_count: packets.length,
+        ids: savedPackets.map(packet => packet._id)
+      }
+    });
+
+  } catch (error) {
+    console.error('Error in bulk insert:', error);
+    
+    // Handle bulk write errors
+    if (error.name === 'BulkWriteError') {
+      const insertedCount = error.result.nInserted || 0;
+      const errors = error.writeErrors || [];
+      
+      return res.status(207).json({ // 207 Multi-Status
+        success: insertedCount > 0,
+        message: `Inserted ${insertedCount} packets with ${errors.length} errors`,
+        data: {
+          inserted_count: insertedCount,
+          errors: errors.map(err => ({
+            index: err.index,
+            message: err.errmsg
+          }))
+        }
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: 'Bulk insert failed',
+      code: 'BULK_INSERT_ERROR',
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+    });
+  }
+};
+
 
 export const getTrackingPackets = async (req, res) => {
   try {
