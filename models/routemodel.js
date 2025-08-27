@@ -3,7 +3,6 @@ import { model, Schema } from "mongoose";
 const routeSchema = new Schema({
   routeCode: {
     type: String,
-    required: true,
     unique: true,
     uppercase: true
   },
@@ -18,18 +17,18 @@ const routeSchema = new Schema({
     min: 0
   },
   source: {
-    type: String,
+    type: Schema.Types.ObjectId,
+      ref: "BusStop",
     required: true,
-    uppercase: true
   },
   destination: {
-    type: String,
+    type: Schema.Types.ObjectId,
+    ref: "BusStop",
     required: true,
-    uppercase: true
   },
   via: {
-    type: String,
-    uppercase: true
+    type: Schema.Types.ObjectId,
+    ref: "BusStop"
   },
   stops: [{ 
     km: {
@@ -37,17 +36,65 @@ const routeSchema = new Schema({
       required: true,
       min: 0
     },
-    stop:{
-      type:Schema.Types.ObjectId,
-      ref:"BusStop"
-    },toll:{
-      type:Schema.Types.ObjectId,
-      ref:"Toll"
+    stop: {
+      type: Schema.Types.ObjectId,
+      ref: "BusStop"
+    },
+    toll: {
+      type: Schema.Types.ObjectId,
+      ref: "Toll"
     }
   }]
 }, {
   timestamps: true
 });
 
-const Route=model("Route",routeSchema)
-export default Route
+// Pre-save middleware to auto-generate routeCode
+routeSchema.pre('save', async function(next) {
+  try {
+    // Only generate routeCode if it's not already set (for new documents)
+    if (!this.routeCode || this.isNew) {
+      // Find the highest existing routeCode
+      const lastRoute = await this.constructor.findOne(
+        {},
+        { routeCode: 1 },
+        { sort: { routeCode: -1 } }
+      );
+
+      let nextNumber = 1;
+      
+      if (lastRoute && lastRoute.routeCode) {
+        // Extract number from routeCode (e.g., "0001" -> 1)
+        const lastNumber = parseInt(lastRoute.routeCode);
+        nextNumber = lastNumber + 1;
+      }
+
+      // Format as 4-digit string with leading zeros
+      this.routeCode = nextNumber.toString().padStart(4, '0');
+    }
+    
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Static method to get next route code (optional utility)
+routeSchema.statics.getNextRouteCode = async function() {
+  const lastRoute = await this.findOne(
+    {},
+    { routeCode: 1 },
+    { sort: { routeCode: -1 } }
+  );
+
+  let nextNumber = 1;
+  if (lastRoute && lastRoute.routeCode) {
+    const lastNumber = parseInt(lastRoute.routeCode);
+    nextNumber = lastNumber + 1;
+  }
+
+  return nextNumber.toString().padStart(4, '0');
+};
+
+const Route = model("Route", routeSchema);
+export default Route;
