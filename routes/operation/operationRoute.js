@@ -2,10 +2,10 @@ import { Router } from "express";
 import { isLogin } from "../../middleWares/isLogin.js";
 import { roleBaseAuth } from "../../middleWares/rolebaseAuth.js";
 import { checkPermission } from "../../middleWares/checkPermission.js";
-import { getRoutes } from "../../services/userServices.js";
+// import { getRoutes } from "../../services/userServices.js";
 import { addSeatLayout, getSeatLayout, updateSeatLayout } from "../../services/admin/seatLayout/seatLayoutServices.js";
 import { addTrip, getTrip, updateTrip } from "../../services/admin/trip/tripServices.js";
-import { addRoute, updateRoute } from "../../services/admin/route/routeService.js";
+import { addRoute, updateRoute ,getRoutes} from "../../services/admin/route/routeService.js";
 import { addDuty, getDuty, updateDuty } from "../../services/admin/duty/dutyServices.js";
 
 
