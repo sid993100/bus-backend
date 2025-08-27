@@ -54,7 +54,7 @@ export const addRoute = async (req, res) => {
     
     if (!source || !destination || !routeLength || !routeName) {
         return res.status(400).json({
-            message: "Required fields are missing: source, destination, routeCode, routeLength, routeName"
+            message: "Required fields are missing: source, destination, routeLength, routeName"
         });
     }
     
