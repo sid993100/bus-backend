@@ -10,10 +10,6 @@ export const addEmergencyPacket = async (req, res) => {
     const emergencyPacket = new EmergencyPacket(data);
     const savedPacket = await emergencyPacket.save();
 
-
-    // Log critical emergency
-    console.log(`🚨 EMERGENCY ALERT: ${savedPacket.vehicle_reg_no} at ${savedPacket.location?.coordinates}`);
-
     res.status(201).json({
       success: true,
       message: 'Emergency packet created successfully',

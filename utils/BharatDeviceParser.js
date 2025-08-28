@@ -112,12 +112,24 @@ export default class UnifiedDeviceParser {
         return null;
     }
 
-async parseBharatTrackingPacket(data) {
+ parseBharatTrackingPacket(data) {
     const fields = data.split(',');
     if (fields.length < 13) {
         return this.parseBharatLoginPacket(data);   
     }else if(fields.length<17){
         return this.parseBharatHealthPacket(data);
+    }
+     const lastField = fields[51] || '';
+    let opt = "()";
+    let checksum = null;
+    
+    if (lastField.includes('*')) {
+        const parts = lastField.split('*');
+        opt = parts[0] || "()";
+      
+        checksum = parts[1] || null;
+    } else {
+        opt = lastField || "()";
     }
     return {
         protocol: "BHARAT_101",
@@ -192,8 +204,8 @@ async parseBharatTrackingPacket(data) {
             
             // Additional information
             delta_distance: fields[50] || '0', // Provide default
-            ota_response: fields[51] || null,
-            checksum: fields[52] || null
+            ota_response:opt || null,
+            checksum:checksum || null
         
     };
 }
@@ -202,6 +214,18 @@ async parseBharatTrackingPacket(data) {
     parseBharatEmergencyPacket(data) {    
     const fields = data.split(',');
     
+      const lastField = fields[15] || '';
+    let emergency_contact = lastField;
+    let checksum = null;
+    
+    if (lastField.includes('*')) {
+        const parts = lastField.split('*');
+        emergency_contact = parts[0] || "()";
+      
+        checksum = parts[1] || null;
+    } else {
+        emergency_contact = lastField;
+    }
     return {
         protocol: "BHARAT_101",
         packet_type: "emergency",
@@ -224,8 +248,8 @@ async parseBharatTrackingPacket(data) {
         distance: parseInt(fields[12]) || 0, // 2
         provider: fields[13] || 'G', // G=GPS, N=Network
         vehicle_reg_no: fields[14] || '', // KA01G1234
-        emergency_contact: fields[15] || '', // +9164061023
-        checksum: fields[16] || null // *4B
+        emergency_contact:emergency_contact || '', // +9164061023
+        checksum:checksum || null // *4B
     };
 }
 
@@ -233,6 +257,20 @@ async parseBharatTrackingPacket(data) {
 parseBharatHealthPacket(data) {
     const fields = data.split(',');
     
+     const lastField = fields[12] || '';
+    let input_2 = 0;
+    let checksum = null;
+    
+    if (lastField.includes('*')) {
+        const parts = lastField.split('*');
+        input_2 = parts[0] || "()";
+      
+        checksum = parts[1] || null;
+    } else {
+        input_2 = parseFloat(lastField) || 0;
+    }
+
+
     return {
         protocol: "BHARAT_101",
         packet_type: "health",
@@ -252,8 +290,8 @@ parseBharatHealthPacket(data) {
         ignition_off_interval: parseInt(fields[9]) || 0,
         digital_inputs: fields[10] || '0000',
         analog_input_1: parseFloat(fields[11]) || 0,
-        analog_input_2: parseFloat(fields[12]) || 0,
-        checksum: fields[13] || null
+        analog_input_2: parseFloat(input_2) || 0,
+        checksum:checksum || null
     };
 }
 
