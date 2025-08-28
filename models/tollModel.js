@@ -36,35 +36,21 @@ const tollSchema = new Schema({
     }
   },
   state: {
-    type: String,
-    required: true,
-    trim: true,
-    maxlength: 50,
-    index: true
+   type:Schema.Types.ObjectId,
+   ref:"Strate"
   },
   country: {
-    type: String,
-    required: true,
-    trim: true,
-    maxlength: 50,
-    default: 'India',
-    index: true
+   type:Schema.Types.ObjectId,
+   ref:"Country"
   },
   isActive: {
     type: Boolean,
     default: true
   },
-  coordinates: {
-    type: {
-      type: String,
-      enum: ['Point'],
-      default: 'Point'
+  latitude:{
+    type:Number
     },
-    coordinates: {
-      type: [Number], // [longitude, latitude]
-      index: '2dsphere'
-    }
-  }
+    longitude:Number
 }, {
   timestamps: true,
 });
