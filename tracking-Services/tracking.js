@@ -8,10 +8,11 @@ import net from "net";
 import BharatDeviceParser from "../utils/BharatDeviceParser.js";
 import axios from "axios";
 
+
 dotenv.config();
 
 
-
+const axiosApi=process.env.MY_AXIOS_URL||"http://localhost:5000"
 const parser = new BharatDeviceParser();
 
 const app = express()
@@ -70,8 +71,19 @@ async function connectKafka() {
 
     // Fix: Send to correct endpoint with raw_data included
     try {
-      await axios.post(`${process.env.MY_AXIOS_URL||"http://localhost:5000"}/api/tracking/track`,{data:parsed});
-      consoleManager.log("✅ Data saved to API successfully");
+      if(parsed.packet_type==="tracking"){
+        await axios.post(`${axiosApi}/api/tracking/track`,{data:parsed});
+        consoleManager.log("✅ Data saved to API successfully");
+      }else if(parsed.packet_type==="login"){
+        await axios.post(`${axiosApi}/api/tracking/login`,{data:parsed});
+        consoleManager.log("✅ Login Data saved to API successfully");
+      }else if(parsed.packet_type==="health"){
+        await axios.post(`${axiosApi}/api/tracking/health`,{data:parsed});
+        consoleManager.log("✅ Health Data saved to API successfully");
+      }else if(parsed.packet_type==="emergency"){
+        await axios.post(`${axiosApi}/api/tracking/emergency`,{data:parsed});
+        consoleManager.log("✅ Emergency Data saved to API successfully");
+      }
     } catch (error) {
       console.error("❌ Failed to save to API:", error.message);
     }

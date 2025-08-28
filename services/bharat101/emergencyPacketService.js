@@ -1,63 +1,46 @@
 
-import responseManager from "../../utils/responseManager.js";
 import EmergencyPacket from "../../models/emergencyPacketModel.js";
 
 // CREATE
 export const addEmergencyPacket = async (req, res) => {
   try {
-    
+    const {data} = req.body;
 
-    const required = [
-      "header","protocolName","deviceID","packetType","date",
-      "gpsValidity","latitude","latitudeDir","longitude","longitudeDir",
-      "altitude","speed","distance","provider","vehicleRegNo",
-      "replyNumber","checksum"
-    ];
+    // Create emergency packet
+    const emergencyPacket = new EmergencyPacket(data);
+    const savedPacket = await emergencyPacket.save();
 
-    for (const f of required) {
-      if (req.body[f] === undefined || req.body[f] === null || req.body[f] === "") {
-        return res.status(400).json({ message: `Field '${f}' is required` });
+
+    // Log critical emergency
+    console.log(`🚨 EMERGENCY ALERT: ${savedPacket.vehicle_reg_no} at ${savedPacket.location?.coordinates}`);
+
+    res.status(201).json({
+      success: true,
+      message: 'Emergency packet created successfully',
+      data: {
+        id: savedPacket._id,
+        device_id: savedPacket.device_id,
+        vehicle_reg_no: savedPacket.vehicle_reg_no,
+        location: savedPacket.location,
+        emergency_type: savedPacket.emergency_type,
+        priority: savedPacket.priority,
+        status: savedPacket.status,
+        emergency_contact: savedPacket.emergency_contact,
+        timestamp: savedPacket.timestamp
       }
-    }
-
-    const payload = {
-      startCharacter: req.body.startCharacter || "$",
-      header: req.body.header,
-      protocolName: req.body.protocolName,
-      deviceID: req.body.deviceID,
-      packetType: req.body.packetType,
-      date: req.body.date,
-      gpsValidity: req.body.gpsValidity,
-      latitude: req.body.latitude,
-      latitudeDir: req.body.latitudeDir,
-      longitude: req.body.longitude,
-      longitudeDir: req.body.longitudeDir,
-      altitude: req.body.altitude,
-      speed: req.body.speed,
-      distance: req.body.distance,
-      provider: req.body.provider,
-      vehicleRegNo: req.body.vehicleRegNo,
-      replyNumber: req.body.replyNumber,
-      checksumSeparator: req.body.checksumSeparator || "*",
-      checksum: req.body.checksum,
-      emergencyType: req.body.emergencyType || "PANIC",
-      priority: req.body.priority || "CRITICAL",
-      status: req.body.status || "ACTIVE",
-      responseTeam: req.body.responseTeam,
-      notes: req.body.notes
-    };
-
-    const created = await EmergencyPacket.create(payload);
-
-    return res.status(201).json({
-      message: "created",
-      data: created
     });
+
   } catch (error) {
-    console.error("createEmergencyPacket error:", error);
-    return res.status(500).json({ message: "Server Error" });
+    console.error('❌ Error creating emergency packet:', error);
+    
+    res.status(500).json({
+      success: false,
+      error: 'Failed to save emergency packet',
+      message: error.message
+    });
   }
 };
+
 
 export const getAllEmergencyPackets = async (req, res) => {
   try {

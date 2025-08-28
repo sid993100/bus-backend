@@ -1,104 +1,126 @@
 import { Schema, model } from 'mongoose';
 
 const loginPacketSchema = new Schema({
-  startCharacter: {
+  protocol: {
     type: String,
-    required: true,
-    maxlength: 1,
+    default: 'BHARAT_101'
+  },
+  packet_type: {
+    type: String,
+    default: 'login'
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now
+  },
+  raw_data: String,
+
+  start_character: {
+    type: String,
     default: '$'
   },
   header: {
     type: String,
-    required: true,
-    uppercase: true,
-    trim: true
+    required: true
   },
-  vendorID: {
+  vendor_id: {
+    type: String,
+    required: true
+  },
+  vehicle_reg_no: {
     type: String,
     required: true,
     uppercase: true,
-    trim: true
-  },
-  vehicleRegNo: {
-    type: String,
-    required: true,
-    uppercase: true,
-    trim: true,
     index: true
   },
   imei: {
     type: String,
     required: true,
-    validate: {
-      validator: function(v) {
-        return /^\d{15}$/.test(v);
-      },
-      message: 'IMEI must be exactly 15 digits'
-    },
-    unique: true,
     index: true
   },
-  firmwareVersion: {
+  firmware_version: {
     type: String,
-    required: true,
-    trim: true
+    required: true
   },
-  protocolVersion: {
+  protocol_version: {
     type: String,
-    required: true,
-    uppercase: true,
-    trim: true
+    required: true
   },
   latitude: {
-    type: String,
+    type: Number,
     required: true,
-    trim: true
+    min: -90,
+    max: 90,
+    default: 0
   },
-  latitudeDirection: {
+  latitude_dir: {
     type: String,
-    required: true,
     enum: ['N', 'S'],
-    uppercase: true
+    default: 'N'
   },
   longitude: {
-    type: String,
+    type: Number,
     required: true,
-    trim: true
+    min: -180,
+    max: 180,
+    default: 0
   },
-  longitudeDirection: {
+  longitude_dir: {
     type: String,
-    required: true,
     enum: ['E', 'W'],
-    uppercase: true
+    default: 'E'
   },
-  checksumSeparator: {
+  checksum_separator: {
     type: String,
-    required: true,
-    maxlength: 1,
     default: '*'
   },
   checksum: {
-    type: String,
-    required: true,
-    uppercase: true,
-    trim: true
+    type: String
   },
-  isProcessed: {
-    type: Boolean,
-    default: false
-  },
-  status: {
-    type: String,
-    enum: ['SUCCESS', 'FAILED', 'PENDING'],
-    default: 'PENDING'
+
+  // Computed location for geospatial queries
+  location: {
+    type: {
+      type: String,
+      enum: ['Point']
+    },
+    coordinates: {
+      type: [Number]
+    }
   }
 }, {
   timestamps: true
 });
 
-// Indexes
-loginPacketSchema.index({ imei: 1, createdAt: -1 });
-loginPacketSchema.index({ vehicleRegNo: 1, createdAt: -1 });
+// Pre-save middleware to compute location
+loginPacketSchema.pre('save', function(next) {
+  try {
+    const lat = this.latitude;
+    const lng = this.longitude;
+
+    const haveValidCoords = Number.isFinite(lat) && Number.isFinite(lng) && !(lat === 0 && lng === 0);
+
+    if (haveValidCoords) {
+      let outLat = lat;
+      let outLng = lng;
+      if (this.latitude_dir === 'S') outLat = -Math.abs(outLat);
+      if (this.longitude_dir === 'W') outLng = -Math.abs(outLng);
+
+      this.location = {
+        type: 'Point',
+        coordinates: [outLng, outLat]
+      };
+    } else {
+      // Remove any partial location so we don't attempt to insert an invalid GeoJSON object
+      if (this.location && (this.location.coordinates == null || this.location.coordinates.length === 0)) {
+        this.location = undefined;
+      }
+    }
+  } catch (error) {
+    console.error('Error computing location:', error);
+  }
+  next();
+});
 
 const LoginPacket = model('LoginPacket', loginPacketSchema);
 export default LoginPacket;

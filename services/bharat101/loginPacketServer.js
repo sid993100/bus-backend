@@ -2,70 +2,112 @@ import LoginPacket from "../../models/loginPacketModel.js"
 
 
 export const addLoginPacket = async (req, res) => {
-  const {
-    startCharacter,
-    header,
-    vendorID,
-    vehicleRegNo,
-    imei,
-    firmwareVersion,
-    protocolVersion,
-    latitude,
-    latitudeDirection,
-    longitude,
-    longitudeDirection,
-    checksumSeparator,
-    checksum
-  } = req.body;
-  
- 
-  if (!header || !vendorID || !vehicleRegNo || !imei || !latitude || !longitude || !checksum) {
-    return res.status(400).json({
-      message: "All required details must be provided (header, vendorID, vehicleRegNo, imei, latitude, longitude, checksum)"
-    });
-  }
-  
   try {
-    const loginPacket = await LoginPacket.create({
-      startCharacter: startCharacter || '$',
-      header,
-      vendorID,
-      vehicleRegNo,
-      imei,
-      firmwareVersion,
-      protocolVersion,
-      latitude,
-      latitudeDirection,
-      longitude,
-      longitudeDirection,
-      checksumSeparator: checksumSeparator || '*',
-      checksum
-    });
+    const {data} = req.body;
+    console.log(".........................",data);
     
-    if (!loginPacket) {
-      return res.status(500).json({
-        message: "Something went wrong while creating login packet"
+
+    // Validate required fields based on the flat structure
+    if (!data.header || !data.vendor_id || !data.vehicle_reg_no || !data.imei) {
+      return res.status(400).json({
+        success: false,
+        error: "Required fields missing: header, vendor_id, vehicle_reg_no, imei",
+        code: 'MISSING_REQUIRED_FIELDS'
       });
     }
-    
+
+   
+
+    // Create login packet with flat structure
+    const loginPacketData = {
+      protocol: data.protocol || 'BHARAT_101',
+      packet_type: data.packet_type || 'login',
+      timestamp: data.timestamp ? new Date(data.timestamp) : new Date(),
+      raw_data: data.raw_data || '',
+      
+      // Login packet fields matching the image format
+      start_character: data.start_character || '$',
+      header: data.header,
+      vendor_id: data.vendor_id,
+      vehicle_reg_no: data.vehicle_reg_no,
+      imei: data.imei,
+      firmware_version: data.firmware_version || '',
+      protocol_version: data.protocol_version || 'AIS140',
+      latitude: parseFloat(data.latitude) || 0,
+      latitude_dir: data.latitude_dir || 'N',
+      longitude: parseFloat(data.longitude) || 0,
+      longitude_dir: data.longitude_dir || 'E',
+      checksum_separator: data.checksum_separator || '*',
+      checksum: data.checksum || null
+    };
+
+    const loginPacket = new LoginPacket(loginPacketData);
+    const savedPacket = await loginPacket.save();
+
     res.status(201).json({
-      message: "created",
-      data: loginPacket
+      success: true,
+      message: "Login packet created successfully",
+      data: {
+        id: savedPacket._id,
+        imei: savedPacket.imei,
+        vehicle_reg_no: savedPacket.vehicle_reg_no,
+        vendor_id: savedPacket.vendor_id,
+        firmware_version: savedPacket.firmware_version,
+        protocol_version: savedPacket.protocol_version,
+        location: savedPacket.location,
+        timestamp: savedPacket.timestamp,
+        createdAt: savedPacket.createdAt
+      }
     });
+
   } catch (error) {
-    console.log(error);
-    
-    if (error.code === 11000) {
-      return res.status(409).json({
-        message: "IMEI already exists"
+    console.error('❌ Error creating login packet:', error);
+
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => ({
+        field: err.path,
+        message: err.message,
+        value: err.value
+      }));
+
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        code: 'VALIDATION_ERROR',
+        details: validationErrors
       });
     }
-    
+
+    // Handle duplicate key errors
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      return res.status(409).json({
+        success: false,
+        error: `Duplicate ${field} detected`,
+        code: 'DUPLICATE_ERROR',
+        field: field
+      });
+    }
+
+    // Handle cast errors
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid ${error.path}: ${error.value}`,
+        code: 'CAST_ERROR'
+      });
+    }
+
     return res.status(500).json({
-      message: "Server Error"
+      success: false,
+      error: 'Internal server error',
+      code: 'INTERNAL_ERROR',
+      message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
     });
   }
 };
+
 
 export const getLoginPackets = async (req, res) => {
   try {

@@ -1,28 +1,35 @@
 import { Schema, model } from 'mongoose';
 
 const healthMonitoringPacketSchema = new Schema({
-  startCharacter: {
+  // Top level fields
+  protocol: {
     type: String,
-    required: true,
-    maxlength: 1,
-    default: '$'
+    default: 'BHARAT_101'
   },
+  packet_type: {
+    type: String,
+    default: 'health'
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now
+  },
+  raw_data: String,
+
+  // Flat health packet fields
   header: {
     type: String,
     required: true,
-    uppercase: true,
-    trim: true
+    default: '$Header'
   },
-  vendorID: {
+  vendor_id: {
     type: String,
     required: true,
-    uppercase: true,
-    trim: true
+    default: 'iTriangle'
   },
-  firmwareVersion: {
+  firmware_version: {
     type: String,
-    required: true,
-    trim: true
+    required: true
   },
   imei: {
     type: String,
@@ -35,77 +42,98 @@ const healthMonitoringPacketSchema = new Schema({
     },
     index: true
   },
-  batteryPercentage: {
-    type: String,
+  battery_percentage: {
+    type: Number,
     required: true,
-    trim: true,
-    validate: {
-      validator: function(v) {
-        const num = parseInt(v);
-        return !isNaN(num) && num >= 0 && num <= 100;
-      },
-      message: 'Battery percentage must be between 0-100'
-    }
+    min: 0,
+    max: 100,
+    default: 0
   },
-  lowBatteryThresholdPercentage: {
-    type: String,
+  low_battery_threshold: {
+    type: Number,
     required: true,
-    trim: true
+    min: 0,
+    max: 100,
+    default: 20
   },
-  memoryPercentage1: {
-    type: String,
+  server1_memory_percentage: {
+    type: Number,
     required: true,
-    trim: true
+    min: 0,
+    max: 100,
+    default: 0
   },
-  memoryPercentage2: {
-    type: String,
+  server2_memory_percentage: {
+    type: Number,
     required: true,
-    trim: true
+    min: 0,
+    max: 100,
+    default: 0
   },
-  dataIgnitionOn: {
-    type: String,
+  ignition_on_interval: {
+    type: Number,
     required: true,
-    trim: true
+    min: 5,
+    max: 300,
+    default: 60
   },
-  dataUpdateRateWhenIgnitionOff: {
-    type: String,
+  ignition_off_interval: {
+    type: Number,
     required: true,
-    trim: true
+    min: 1,
+    max: 600,
+    default: 300
   },
-  analogInput1Status: {
+  digital_inputs: {
     type: String,
     required: true,
-    trim: true
+    default: '0000'
   },
-  analogInput2Status: {
-    type: String,
+  analog_input_1: {
+    type: Number,
     required: true,
-    trim: true
+    min: 0,
+    default: 0
   },
-  digitalInputStatus: {
-    type: String,
+  analog_input_2: {
+    type: Number,
     required: true,
-    trim: true
-  },
-  checksumSeparator: {
-    type: String,
-    required: true,
-    maxlength: 1,
-    default: '*'
+    min: 0,
+    default: 0
   },
   checksum: {
     type: String,
-    required: true,
-    uppercase: true,
     trim: true
   },
-  // Additional fields
-  healthStatus: {
+
+  // Health status fields
+  health_status: {
     type: String,
-    enum: ['GOOD', 'WARNING', 'CRITICAL'],
+    enum: ['EXCELLENT', 'GOOD', 'WARNING', 'CRITICAL'],
     default: 'GOOD'
   },
-  isProcessed: {
+  battery_status: {
+    type: String,
+    enum: ['FULL', 'GOOD', 'LOW', 'CRITICAL'],
+    default: 'GOOD'
+  },
+  memory_status: {
+    type: String,
+    enum: ['NORMAL', 'HIGH', 'FULL'],
+    default: 'NORMAL'
+  },
+  device_temperature: {
+    type: Number,
+    default: 25 // Celsius
+  },
+  last_maintenance: {
+    type: Date
+  },
+  maintenance_alert: {
+    type: Boolean,
+    default: false
+  },
+  is_processed: {
     type: Boolean,
     default: false
   }
@@ -113,28 +141,93 @@ const healthMonitoringPacketSchema = new Schema({
   timestamps: true
 });
 
-// Indexes
+// Indexes for performance
 healthMonitoringPacketSchema.index({ imei: 1, createdAt: -1 });
+healthMonitoringPacketSchema.index({ health_status: 1, createdAt: -1 });
+healthMonitoringPacketSchema.index({ battery_percentage: 1 });
 healthMonitoringPacketSchema.index({ createdAt: -1 });
 
 // Pre-save middleware to determine health status
 healthMonitoringPacketSchema.pre('save', function(next) {
   try {
-    const batteryLevel = parseInt(this.batteryPercentage);
-    const lowBatteryThreshold = parseInt(this.lowBatteryThresholdPercentage);
-    
+    const batteryLevel = this.battery_percentage;
+    const lowBatteryThreshold = this.low_battery_threshold;
+    const server1Memory = this.server1_memory_percentage;
+    const server2Memory = this.server2_memory_percentage;
+
+    // Determine battery status
     if (batteryLevel <= lowBatteryThreshold) {
-      this.healthStatus = 'CRITICAL';
+      this.battery_status = 'CRITICAL';
     } else if (batteryLevel <= 20) {
-      this.healthStatus = 'WARNING';
+      this.battery_status = 'LOW';
+    } else if (batteryLevel <= 50) {
+      this.battery_status = 'GOOD';
     } else {
-      this.healthStatus = 'GOOD';
+      this.battery_status = 'FULL';
     }
+
+    // Determine memory status
+    const maxMemoryUsage = Math.max(server1Memory, server2Memory);
+    if (maxMemoryUsage >= 90) {
+      this.memory_status = 'FULL';
+    } else if (maxMemoryUsage >= 70) {
+      this.memory_status = 'HIGH';
+    } else {
+      this.memory_status = 'NORMAL';
+    }
+
+    // Determine overall health status
+    if (this.battery_status === 'CRITICAL' || this.memory_status === 'FULL') {
+      this.health_status = 'CRITICAL';
+    } else if (this.battery_status === 'LOW' || this.memory_status === 'HIGH') {
+      this.health_status = 'WARNING';
+    } else if (this.battery_status === 'GOOD' && this.memory_status === 'NORMAL') {
+      this.health_status = 'GOOD';
+    } else {
+      this.health_status = 'EXCELLENT';
+    }
+
+    // Set maintenance alert if needed
+    if (this.health_status === 'CRITICAL' || this.battery_percentage <= 10) {
+      this.maintenance_alert = true;
+    }
+
   } catch (error) {
     console.error('Error determining health status:', error);
   }
   next();
 });
+
+// Static methods for health monitoring
+healthMonitoringPacketSchema.statics.findCriticalDevices = function(limit = 20) {
+  return this.find({ health_status: 'CRITICAL' })
+    .sort({ createdAt: -1 })
+    .limit(limit);
+};
+
+healthMonitoringPacketSchema.statics.findLowBatteryDevices = function(threshold = 20) {
+  return this.find({ battery_percentage: { $lte: threshold } })
+    .sort({ battery_percentage: 1 });
+};
+
+healthMonitoringPacketSchema.statics.findByImei = function(imei, limit = 10) {
+  return this.find({ imei: imei })
+    .sort({ createdAt: -1 })
+    .limit(limit);
+};
+
+healthMonitoringPacketSchema.statics.getHealthSummary = function() {
+  return this.aggregate([
+    {
+      $group: {
+        _id: '$health_status',
+        count: { $sum: 1 },
+        avgBattery: { $avg: '$battery_percentage' },
+        avgMemory: { $avg: { $max: ['$server1_memory_percentage', '$server2_memory_percentage'] } }
+      }
+    }
+  ]);
+};
 
 const HealthMonitoringPacket = model('HealthMonitoringPacket', healthMonitoringPacketSchema);
 export default HealthMonitoringPacket;

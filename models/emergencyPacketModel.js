@@ -1,126 +1,133 @@
 import { Schema, model } from 'mongoose';
 
 const emergencyPacketSchema = new Schema({
-  startCharacter: {
+  // Top level fields
+  protocol: {
     type: String,
-    required: true,
-    maxlength: 1,
-    default: '$'
+    default: 'BHARAT_101'
   },
+  packet_type: {
+    type: String,
+    default: 'emergency'
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now
+  },
+  raw_data: String,
+
+  // Flat emergency packet fields
   header: {
     type: String,
-    required: true,
-    uppercase: true,
-    trim: true
+    
+    default: '$EPB'
   },
-  protocolName: {
+  message_type: {
     type: String,
-    required: true,
-    uppercase: true,
-    trim: true
+    
+    enum: ['EMR', 'SEM'], // EMR=Emergency Message, SEM=Stop Message
+    default: 'EMR'
   },
-  deviceID: {
+  device_id: {
     type: String,
-    required: true,
-    trim: true,
+    
     index: true
   },
-  packetType: {
+  packet_status: {
     type: String,
-    required: true,
-    uppercase: true,
-    trim: true
+    
+    enum: ['NM', 'SP'], // NM=Normal, SP=Stored
+    default: 'NM'
   },
-  date: {
+  datetime: {
     type: String,
-    required: true,
-    trim: true
+    
   },
-  gpsValidity: {
+  gps_validity: {
     type: String,
-    required: true,
-    enum: ['A', 'V'], // A = Active, V = Void
-    uppercase: true
+    
+    enum: ['A', 'V'], // A=Active/Valid, V=Void/Invalid
+    default: 'A'
   },
   latitude: {
-    type: String,
-    required: true,
-    trim: true
+    type: Number,
+    
+    min: -90,
+    max: 90,
+    default: 0
   },
-  latitudeDir: {
+  latitude_dir: {
     type: String,
-    required: true,
+    
     enum: ['N', 'S'],
-    uppercase: true
+    default: 'N'
   },
   longitude: {
-    type: String,
-    required: true,
-    trim: true
+    type: Number,
+    
+    min: -180,
+    max: 180,
+    default: 0
   },
-  longitudeDir: {
+  longitude_dir: {
     type: String,
-    required: true,
+    
     enum: ['E', 'W'],
-    uppercase: true
+    default: 'E'
   },
   altitude: {
-    type: String,
-    required: true,
-    trim: true
+    type: Number,
+    
+    default: 0
   },
   speed: {
-    type: String,
-    required: true,
-    trim: true
+    type: Number,
+    
+    min: 0,
+    default: 0
   },
   distance: {
-    type: String,
-    required: true,
-    trim: true
+    type: Number,
+    
+    min: 0,
+    default: 0
   },
   provider: {
     type: String,
-    required: true,
-    trim: true
+    
+    enum: ['G', 'N'], // G=GPS, N=Network
+    default: 'G'
   },
-  vehicleRegNo: {
+  vehicle_reg_no: {
     type: String,
-    required: true,
+    
     uppercase: true,
     trim: true,
     index: true
   },
-  replyNumber: {
+  emergency_contact: {
     type: String,
-    required: true,
+    
     trim: true
-  },
-  checksumSeparator: {
-    type: String,
-    required: true,
-    maxlength: 1,
-    default: '*'
   },
   checksum: {
     type: String,
-    required: true,
-    uppercase: true,
     trim: true
   },
-  // Additional fields
+
+  // Computed location field for geospatial queries
   location: {
     type: {
       type: String,
-      enum: ['Point'],
-      default: 'Point'
+     
     },
     coordinates: {
-      type: [Number], // [longitude, latitude]
-      index: '2dsphere'
+      type: [Number] // [longitude, latitude]
     }
   },
-  emergencyType: {
+
+  // Emergency management fields
+  emergency_type: {
     type: String,
     enum: ['PANIC', 'ACCIDENT', 'BREAKDOWN', 'MEDICAL', 'OTHER'],
     default: 'PANIC'
@@ -135,21 +142,11 @@ const emergencyPacketSchema = new Schema({
     enum: ['ACTIVE', 'ACKNOWLEDGED', 'RESOLVED'],
     default: 'ACTIVE'
   },
-  acknowledgedAt: {
-    type: Date
-  },
-  resolvedAt: {
-    type: Date
-  },
-  responseTeam: {
-    type: String,
-    trim: true
-  },
-  notes: {
-    type: String,
-    trim: true
-  },
-  isProcessed: {
+  acknowledged_at: Date,
+  resolved_at: Date,
+  response_team: String,
+  notes: String,
+  is_processed: {
     type: Boolean,
     default: false
   }
@@ -157,33 +154,70 @@ const emergencyPacketSchema = new Schema({
   timestamps: true
 });
 
-// Indexes
-emergencyPacketSchema.index({ vehicleRegNo: 1, createdAt: -1 });
-emergencyPacketSchema.index({ deviceID: 1, createdAt: -1 });
+// Indexes for performance
+emergencyPacketSchema.index({ vehicle_reg_no: 1, createdAt: -1 });
+emergencyPacketSchema.index({ device_id: 1, createdAt: -1 });
 emergencyPacketSchema.index({ status: 1, priority: -1 });
 emergencyPacketSchema.index({ location: '2dsphere' });
+emergencyPacketSchema.index({ createdAt: -1 }); // For latest emergencies
 
-// Pre-save middleware to parse location
+// Pre-save middleware to compute location
 emergencyPacketSchema.pre('save', function(next) {
   try {
-    // Parse location if GPS is valid
-    if (this.gpsValidity === 'A' && this.latitude && this.longitude) {
-      let lat = parseFloat(this.latitude);
-      let lng = parseFloat(this.longitude);
-      
-      if (this.latitudeDir === 'S') lat = -Math.abs(lat);
-      if (this.longitudeDir === 'W') lng = -Math.abs(lng);
-      
+    // Only set location when GPS validity is 'A' and lat/lng are finite numbers
+    const lat = this.latitude;
+    const lng = this.longitude;
+
+    const haveValidCoords = Number.isFinite(lat) && Number.isFinite(lng) && !(lat === 0 && lng === 0);
+
+    if (this.gps_validity === 'A' && haveValidCoords) {
+      let outLat = lat;
+      let outLng = lng;
+
+      if (this.latitude_dir === 'S') outLat = -Math.abs(outLat);
+      if (this.longitude_dir === 'W') outLng = -Math.abs(outLng);
+
       this.location = {
         type: 'Point',
-        coordinates: [lng, lat]
+        coordinates: [outLng, outLat]
       };
+    } else {
+      // Remove any partial location so we don't insert an invalid GeoJSON object
+      if (this.location && (this.location.coordinates == null || this.location.coordinates.length === 0)) {
+        this.location = undefined;
+      }
     }
   } catch (error) {
     console.error('Error parsing emergency packet location:', error);
   }
   next();
 });
+
+// Static methods for emergency management
+emergencyPacketSchema.statics.findActiveEmergencies = function(limit = 50) {
+  return this.find({ status: 'ACTIVE' })
+    .sort({ createdAt: -1 })
+    .limit(limit);
+};
+
+emergencyPacketSchema.statics.findByVehicle = function(vehicleRegNo) {
+  return this.find({ vehicle_reg_no: vehicleRegNo })
+    .sort({ createdAt: -1 });
+};
+
+emergencyPacketSchema.statics.findNearLocation = function(longitude, latitude, radiusInMeters = 5000) {
+  return this.find({
+    location: {
+      $near: {
+        $geometry: {
+          type: 'Point',
+          coordinates: [longitude, latitude]
+        },
+        $maxDistance: radiusInMeters
+      }
+    }
+  });
+};
 
 const EmergencyPacket = model('EmergencyPacket', emergencyPacketSchema);
 export default EmergencyPacket;
