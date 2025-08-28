@@ -12,19 +12,20 @@ const tripSchema = new Schema({
     uppercase: true
   },
   depot: {
-    type: String,
+    type: Schema.Types.ObjectId,
+    ref:"DepotCustomer",
     required: true,
-    uppercase: true
   },
   seatLayout: {
-    type: String,
+    type: Schema.Types.ObjectId,
+    ref:"SeatLayout",
     required: true,
-    uppercase: true
   },
   busService: {
-    type: String,
+    type: Schema.Types.ObjectId,
+    ref:"ServiceType",
     required: true,
-    uppercase: true
+   
   },
   route: {
     type: Schema.Types.ObjectId,
