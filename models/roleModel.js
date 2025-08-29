@@ -24,7 +24,7 @@ const roleSchema = new Schema({
     },
     department: {
         type: Schema.Types.ObjectId,
-        ref: "Department"
+        ref: "Account"
     },
     permissions: {
         account: { type: permissionSchema, default: defaultPermission },
@@ -51,6 +51,7 @@ const roleSchema = new Schema({
         vehicle: { type: permissionSchema, default: defaultPermission },
         vehicleM: { type: permissionSchema, default: defaultPermission },
         vehicleType: { type: permissionSchema, default: defaultPermission },
+        vehicleModel: { type: permissionSchema, default: defaultPermission },
         vltDevice: { type: permissionSchema, default: defaultPermission },
         viltM: { type: permissionSchema, default: defaultPermission },
         vltModel: { type: permissionSchema, default: defaultPermission },

@@ -1,4 +1,4 @@
-import { Schema } from "mongoose";
+import { model, Schema } from "mongoose";
 
 
 const vehicleModelSchema = new Schema({
@@ -21,6 +21,6 @@ const vehicleModelSchema = new Schema({
   timestamps: true
 });
 
-const VehicalModel= module("VehicalModel",vehicleModelSchema)
+const VehicalModel= model("VehicalModel",vehicleModelSchema)
 
 export default VehicalModel

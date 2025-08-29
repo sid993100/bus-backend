@@ -15,7 +15,8 @@ const tollSchema = new Schema({
     required: true,
     trim: true,
     maxlength: 100,
-    index: true
+    index: true,
+    uppercase:true
   },
   typeA: {
     type: Number,
@@ -58,11 +59,10 @@ const tollSchema = new Schema({
     type: {
       type: String,
       enum: ['Point'],
-      default: 'Point'
     },
     coordinates: {
       type: [Number], // [longitude, latitude]
-      index: '2dsphere'
+      
     }
   }
 }, {

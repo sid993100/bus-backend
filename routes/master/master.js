@@ -11,7 +11,7 @@ import { addArea, getArea, updateArea, updateAreaByName } from "../../services/a
 import { addVehicle, getVehicle, updateVehicle } from "../../services/admin/vehicle/vehicleServices.js";
 import { addVehicleManufacturer, getVehicleManufacturer, updateVehicleManufacturer } from "../../services/admin/vehicleManufacturer/vehicleManufacturerServices.js";
 import { isLogin } from "../../middleWares/isLogin.js";
-import { addVehicleType, getVehicleTypes } from "../../services/master/vehicleTypeService.js";
+import { addVehicleType, getVehicleType, getVehicleTypes } from "../../services/master/vehicleTypeService.js";
 import { roleBaseAuth } from "../../middleWares/rolebaseAuth.js";
 import { updatePlan } from "../../services/admin/plan/planServices.js";
 import { updateOwnerType } from "../../services/admin/owner/ownerServices.js";
@@ -20,6 +20,7 @@ import { addDepotCustomer, getDepotCustomer, getDepotCustomers, updateDepotCusto
 import { checkPermission } from "../../middleWares/checkPermission.js";
 import { addToll, getToll, updateToll } from "../../services/master/toll/tollService.js";
 import { updateDepartment, updateDepartmentByName } from "../../services/admin/department/departmentServices.js";
+import { addVehicleModel, getVehicleModels } from "../../services/master/vehicleModelService.js";
 
 
 
@@ -40,6 +41,7 @@ router.get("/vehiclemanufacturer",isLogin,roleBaseAuth( "ADMIN"),checkPermission
 router.get("/vehicletypes",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleType","read"),getVehicleTypes)
 router.get("/zone",isLogin,roleBaseAuth( "ADMIN"),checkPermission("zone","read"),getRegions)
 router.get("/depot",isLogin,roleBaseAuth( "ADMIN"),checkPermission("depot","read"),getDepotCustomers)
+router.get("/vehiclemodel",isLogin,roleBaseAuth( "ADMIN"),getVehicleModels)
 
 
 
@@ -59,6 +61,7 @@ router.post("/vehiclemanufacturer",isLogin,roleBaseAuth( "ADMIN"),checkPermissio
 router.post("/vehicletype",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleType","create"),addVehicleType);
 router.post("/zone",isLogin,roleBaseAuth( "ADMIN"),checkPermission("zone","create"),addRegion);
 router.post("/depot",isLogin,roleBaseAuth( "ADMIN"),checkPermission("depot","create"),addDepotCustomer);
+router.post("/vehiclemodel",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleModel","create"),addVehicleModel);
 
 
 

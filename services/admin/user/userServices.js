@@ -8,8 +8,8 @@ export const getUsers = async (req, res) => {
     
     try {
         const users = await User.find({})
-            .populate('account', 'accountName accountNumber')
-            .populate('roleName', 'roleName permissions')
+            .populate('account', 'account')
+            .populate('roleName', 'role permissions')
             .select('-password') // Exclude password from response
             .sort({ username: 1 });
         
@@ -156,17 +156,19 @@ export const addUser = async (req, res) => {
         }
         
         // Populate the references and exclude password
-        await newUser.populate('account', 'accountName accountNumber');
-        await newUser.populate('roleName', 'roleName permissions');
+        // await newUser.populate('account', 'accountName accountNumber');
+        // await newUser.populate('roleName', 'roleName permissions');
         
-        const userResponse = newUser.toObject();
-        delete userResponse.password;
+        // const userResponse = newUser.toObject();
+        // delete userResponse.password;
         
         return res.status(201).json({
             message: "User Created Successfully",
             data: userResponse
         });
     } catch (error) {
+        console.log(error.message);
+        
         if (error.code === 11000) {
             const field = Object.keys(error.keyPattern)[0];
             return res.status(409).json({
