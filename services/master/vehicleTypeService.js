@@ -97,9 +97,9 @@ export const addVehicleType = async (req, res) => {
 
 // UPDATE VEHICLE TYPE
 export const updateVehicleType = async (req, res) => {
-    const user = req.user;
+
     const { id } = req.params;
-    const { make, vehicleType } = req.body;
+    const { make, vehicleType } = req.body;  
    
     
     if (!make || !vehicleType) {

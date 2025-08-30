@@ -11,16 +11,16 @@ import { addArea, getArea, updateArea, updateAreaByName } from "../../services/a
 import { addVehicle, getVehicle, updateVehicle } from "../../services/admin/vehicle/vehicleServices.js";
 import { addVehicleManufacturer, getVehicleManufacturer, updateVehicleManufacturer } from "../../services/admin/vehicleManufacturer/vehicleManufacturerServices.js";
 import { isLogin } from "../../middleWares/isLogin.js";
-import { addVehicleType, getVehicleType, getVehicleTypes } from "../../services/master/vehicleTypeService.js";
+import { addVehicleType, getVehicleTypes, updateVehicleType } from "../../services/master/vehicleTypeService.js";
 import { roleBaseAuth } from "../../middleWares/rolebaseAuth.js";
 import { updatePlan } from "../../services/admin/plan/planServices.js";
 import { updateOwnerType } from "../../services/admin/owner/ownerServices.js";
 import { addRegion, getRegions, updateRegion } from "../../services/master/zoneRegionService.js";
-import { addDepotCustomer, getDepotCustomer, getDepotCustomers, updateDepotCustomer } from "../../services/master/depotService.js";
+import { addDepotCustomer,  getDepotCustomers, updateDepotCustomer } from "../../services/master/depotService.js";
 import { checkPermission } from "../../middleWares/checkPermission.js";
 import { addToll, getToll, updateToll } from "../../services/master/toll/tollService.js";
 import { updateDepartment, updateDepartmentByName } from "../../services/admin/department/departmentServices.js";
-import { addVehicleModel, getVehicleModels } from "../../services/master/vehicleModelService.js";
+import { addVehicleModel, getVehicleModels, updateVehicleModel } from "../../services/master/vehicleModelService.js";
 
 
 
@@ -38,10 +38,10 @@ router.get("/stoparea",isLogin,roleBaseAuth( "ADMIN"),checkPermission("stopArea"
 router.get("/stopgrade",isLogin,roleBaseAuth( "ADMIN"),checkPermission("stopGrade","read"),getStopGrade)
 router.get("/vehicle",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicle","read"),getVehicle)
 router.get("/vehiclemanufacturer",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleM","read"),getVehicleManufacturer)
-router.get("/vehicletypes",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleType","read"),getVehicleTypes)
+router.get("/vehicletype",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleType","read"),getVehicleTypes)
 router.get("/zone",isLogin,roleBaseAuth( "ADMIN"),checkPermission("zone","read"),getRegions)
 router.get("/depot",isLogin,roleBaseAuth( "ADMIN"),checkPermission("depot","read"),getDepotCustomers)
-router.get("/vehiclemodel",isLogin,roleBaseAuth( "ADMIN"),getVehicleModels)
+router.get("/vehiclemodel",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleModel","read"),getVehicleModels)
 
 
 
@@ -84,5 +84,7 @@ router.put('/department/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("dep
 router.put('/department/name/:departmentName',isLogin,roleBaseAuth( "ADMIN"),checkPermission("department","update"), updateDepartmentByName);
 router.put('/area/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("area","update"), updateArea);
 router.put('/area/name/:name',isLogin,roleBaseAuth( "ADMIN"),checkPermission("area","update"), updateAreaByName);
+router.put('/vehiclemodel/:name',isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleModel","update"), updateVehicleModel);
+router.put('/vehicletype/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleType","update"), updateVehicleType);
 
 export default router

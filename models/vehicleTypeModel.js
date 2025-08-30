@@ -4,7 +4,6 @@ const vehicleTypeSchema = new Schema({
   make: {
     type: String,
     required: true,
-    uppercase: true
   },
   vehicleType: {
     type: String,

@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import Vehicle from "../../../models/vehicleModel.js";
 
 export const getVehicle=async (req,res) => {
-  const user = req.user;
      
      try {
       const vehicles= await Vehicle.find({})
