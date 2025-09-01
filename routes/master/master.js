@@ -2,7 +2,7 @@ import { Router } from "express";
 import { addAccount, getAccount, updateAccount } from "../../services/admin/accounts/accountServices.js";
 import { addTollType, getTollType, updateTollType } from "../../services/admin/tollyType/tollTypeServices.js";
 import { addServiceCategory, getServiceCategory, updateServiceCategory } from "../../services/admin/serviceCategory/serviceCategoryServices.js";
-import { addState, getState } from "../../services/admin/state/stateServices.js";
+import { addState, getState, updateState } from "../../services/admin/state/stateServices.js";
 import { addBusStop, getBusStop, updateBusStop } from "../../services/admin/busStop/busStopServices.js";
 import { addCountry, getCountry, updateCountry } from "../../services/admin/country/countryServices.js";
 import { addServiceType, getServiceType, updateServiceType } from "../../services/admin/serviceType/serviceTypeServices.js";
@@ -82,9 +82,10 @@ router.put("/vehicle/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicl
 router.put("/vehiclemanufacturer/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleM","update"), updateVehicleManufacturer);
 router.put('/department/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("department","update"), updateDepartment);
 router.put('/department/name/:departmentName',isLogin,roleBaseAuth( "ADMIN"),checkPermission("department","update"), updateDepartmentByName);
-router.put('/area/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("area","update"), updateArea);
+router.put('/stoparea/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("area","update"), updateArea);
 router.put('/area/name/:name',isLogin,roleBaseAuth( "ADMIN"),checkPermission("area","update"), updateAreaByName);
 router.put('/vehiclemodel/:name',isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleModel","update"), updateVehicleModel);
 router.put('/vehicletype/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleType","update"), updateVehicleType);
+router.put('/state/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("state","update"), updateState);
 
 export default router

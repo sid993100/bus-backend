@@ -30,7 +30,7 @@ export const getDepotCustomers = async (req, res) => {
 
 // GET SINGLE DEPOT/CUSTOMER BY ID
 export const getDepotCustomer = async (req, res) => {
-    const user = req.user;
+
     const { id } = req.params;
 
     
@@ -58,11 +58,11 @@ export const getDepotCustomer = async (req, res) => {
 // ADD NEW DEPOT/CUSTOMER
 export const addDepotCustomer = async (req, res) => {
     const user = req.user;
-    const { depotCustomer, region } = req.body;
+    const { depotCustomer, region,code } = req.body;
     
        
     
-    if (!depotCustomer || !region) {
+    if (!depotCustomer || !region||!code) {
         return res.status(400).json({
             message: "All details Required"
         });
@@ -90,7 +90,7 @@ export const addDepotCustomer = async (req, res) => {
         
         const newDepotCustomer = await DepotCustomer.create({
             depotCustomer,
-            region
+            region,code
         });
         
         if (!newDepotCustomer) {
@@ -120,13 +120,13 @@ export const addDepotCustomer = async (req, res) => {
 
 // UPDATE DEPOT/CUSTOMER
 export const updateDepotCustomer = async (req, res) => {
-    const user = req.user;
+  
     const { id } = req.params;
-    const { depotCustomer, region } = req.body;
+    const { depotCustomer, region ,code} = req.body;
     
        
     
-    if (!depotCustomer || !region) {
+    if (!depotCustomer || !region||!code) {
         return res.status(400).json({
             message: "All details Required"
         });
@@ -155,7 +155,7 @@ export const updateDepotCustomer = async (req, res) => {
         
         const updatedDepotCustomer = await DepotCustomer.findByIdAndUpdate(
             id,
-            { depotCustomer, region },
+            { depotCustomer, region,code },
             { new: true, runValidators: true }
         ).populate('region', 'name communicationAddress location');
         

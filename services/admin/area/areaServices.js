@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Area from "../../../models/areaModel.js";
 
 

@@ -7,6 +7,12 @@ const depotCustomerSchema = new Schema({
     uppercase: true,
     unique: true
   },
+  code:{
+    type: String,
+    required: true,
+    uppercase: true,
+    unique: true
+  },
   region: {
     type: Schema.Types.ObjectId,
     ref: "Region",

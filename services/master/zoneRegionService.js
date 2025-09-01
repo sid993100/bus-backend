@@ -30,14 +30,15 @@ export const getRegion = async (req, res) => {
 
 // CREATE a new region
 export const addRegion = async (req, res) => {
-  const { name, communicationAddress, location } = req.body;
-  if (!name || !communicationAddress || !location || !location.coordinates) {
+  const { name, communicationAddress, location,code } = req.body;
+  if (!name || !communicationAddress || !location || !location.coordinates||!code) {
     return res.status(400).json({ message: "All details required" });
   }
   try {
     const newRegion = await Region.create({
       name,
       communicationAddress,
+      code,
       location: {
         type: "Point",
         coordinates: location.coordinates, // [longitude, latitude]
@@ -57,7 +58,7 @@ export const addRegion = async (req, res) => {
 export const updateRegion = async (req, res) => {
   const { id } = req.params;
   const { name, communicationAddress, location } = req.body;
-  if (!name || !communicationAddress || !location || !location.coordinates) {
+  if (!name || !communicationAddress || !location || !location.coordinates||!code ) {
     return res.status(400).json({ message: "All details required" });
   }
   try {
@@ -65,6 +66,7 @@ export const updateRegion = async (req, res) => {
       id,
       {
         name,
+        code,
         communicationAddress,
         location: {
           type: "Point",

@@ -29,6 +29,12 @@ export const addCountry= async (req,res) => {
      }
 
   try {
+    const existingCountry = await Country.findOne({ $or: [{ countryCode: code }, { country: name }] });
+    if (existingCountry) {
+      return res.status(409).json({
+        message: "Country with the same code or name already exists"
+      });
+    }
       const country=await Country.create({
         countryCode:code,
         country:name
@@ -36,7 +42,7 @@ export const addCountry= async (req,res) => {
       
       if(!country){
          res.status(500).json({
-                 message:"Somthing went Wrong while Creating A Account "
+                 message:"Somthing went Wrong while Creating A Country "
              })
       }
       res.status(201).json({

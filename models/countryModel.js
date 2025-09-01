@@ -4,12 +4,14 @@ const countrySchema= new Schema({
      countryCode:{
           type:String,
         required:true,
-        uppercase: true
+        unique:true,
+        uppercase: true,
     },
      country:{
           type:String,
         required:true,
-        uppercase: true
+        unique:true,
+        uppercase: true,
     }
 })
 
