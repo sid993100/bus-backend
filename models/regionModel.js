@@ -12,6 +12,12 @@ const zoneRegionSchema = new Schema({
     required: true,
     uppercase: true
   },
+  code:{
+    type:String,
+    required:true,
+    unique:true,
+    uppercase:true 
+  },
  location: {
     type: {
       type: String,

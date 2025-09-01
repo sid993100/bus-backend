@@ -57,7 +57,7 @@ export const addRegion = async (req, res) => {
 // UPDATE a region
 export const updateRegion = async (req, res) => {
   const { id } = req.params;
-  const { name, communicationAddress, location } = req.body;
+  const { name, communicationAddress, location,code } = req.body;
   if (!name || !communicationAddress || !location || !location.coordinates||!code ) {
     return res.status(400).json({ message: "All details required" });
   }
