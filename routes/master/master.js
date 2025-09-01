@@ -21,6 +21,8 @@ import { checkPermission } from "../../middleWares/checkPermission.js";
 import { addToll, getToll, updateToll } from "../../services/master/toll/tollService.js";
 import { updateDepartment, updateDepartmentByName } from "../../services/admin/department/departmentServices.js";
 import { addVehicleModel, getVehicleModels, updateVehicleModel } from "../../services/master/vehicleModelService.js";
+import { addGender, getGender, updateGender } from "../../services/otc/genderServices.js";
+import { addPhotoIdCard, getPhotoIdCard, updatePhotoIdCard } from "../../services/otc/photoIdCardServices.js";
 
 
 
@@ -42,6 +44,8 @@ router.get("/vehicletype",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicl
 router.get("/zone",isLogin,roleBaseAuth( "ADMIN"),checkPermission("zone","read"),getRegions)
 router.get("/depot",isLogin,roleBaseAuth( "ADMIN"),checkPermission("depot","read"),getDepotCustomers)
 router.get("/vehiclemodel",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleModel","read"),getVehicleModels)
+router.get("/gender",isLogin,roleBaseAuth( "ADMIN"),checkPermission("gender","read"),getGender)
+router.get("/photoidcard",isLogin,roleBaseAuth( "ADMIN"),checkPermission("photoIdCard","read"),getPhotoIdCard)
 
 
 
@@ -62,6 +66,8 @@ router.post("/vehicletype",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehic
 router.post("/zone",isLogin,roleBaseAuth( "ADMIN"),checkPermission("zone","create"),addRegion);
 router.post("/depot",isLogin,roleBaseAuth( "ADMIN"),checkPermission("depot","create"),addDepotCustomer);
 router.post("/vehiclemodel",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleModel","create"),addVehicleModel);
+router.post("/gender",isLogin,roleBaseAuth( "ADMIN"),checkPermission("gender","create"),addGender);
+router.post("/photoidcard",isLogin,roleBaseAuth( "ADMIN"),checkPermission("photoIdCard","create"),addPhotoIdCard);
 
 
 
@@ -87,5 +93,7 @@ router.put('/area/name/:name',isLogin,roleBaseAuth( "ADMIN"),checkPermission("ar
 router.put('/vehiclemodel/:name',isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleModel","update"), updateVehicleModel);
 router.put('/vehicletype/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleType","update"), updateVehicleType);
 router.put('/state/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("state","update"), updateState);
+router.put('/gender/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("gender","update"),updateGender );
+router.put('/photoidcard/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("photoIdCard","update"),updatePhotoIdCard);
 
 export default router

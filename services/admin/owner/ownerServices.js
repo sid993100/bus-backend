@@ -1,8 +1,7 @@
 import OwnerType from "../../../models/ownerModel.js";
 
 export const getOwnerType=async (req,res) => {
-  const user = req.user;
-       
+
      try {
       const owners= await OwnerType.find({})
       if (!owners||owners.length===0) {
@@ -22,7 +21,7 @@ export const getOwnerType=async (req,res) => {
      }
 }
 export const addOwnerType=async (req,res) => {
-  const user=req.user
+
   const {ownerType,description}=req.body
 
     

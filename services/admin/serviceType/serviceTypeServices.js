@@ -50,7 +50,7 @@ export const addServiceType=async (req,res) => {
                  message:"Somthing went Wrong while Creating A Account "
              })
       }
-consoleManager.log(serviceType);
+
 
      return res.status(201).json({
         message:"created",

@@ -57,6 +57,8 @@ const roleSchema = new Schema({
         vltModel: { type: permissionSchema, default: defaultPermission },
         depot: { type: permissionSchema, default: defaultPermission },
         zone: { type: permissionSchema, default: defaultPermission },
+        gender:{ type: permissionSchema, default: defaultPermission },//new
+        photoIdCard:{ type: permissionSchema, default: defaultPermission },//new
     },
     hierarchy: {
         type: String,

@@ -1,7 +1,7 @@
 import Route from "../models/routemodel.js";
 
 export const getRoutes= async (req,res) => {
-     const user = req.user;
+
      try {
           const route= await Route.find({})
         if(!route){
