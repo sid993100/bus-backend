@@ -22,7 +22,7 @@ export const getVltModel=async (req,res) => {
      }
 }
 export const addVltModel=async (req,res) => {
-  const user=req.user
+
   const {name,modelName}=req.body
 
   

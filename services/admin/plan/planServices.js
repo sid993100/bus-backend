@@ -25,7 +25,7 @@ export const getPlan=async (req,res) => {
      }
 }
 export const addPlan =async (req,res) => {
-  const user=req.user
+
   const {planName,vltdManufacturer,durationDays}=req.body
 
     

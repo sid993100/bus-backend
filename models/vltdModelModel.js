@@ -6,7 +6,6 @@ const vltdModelSchema = new Schema({
     type: String,
     required: true,
     uppercase: true,
-    unique:true
   },
   modelName: {
     type: String,

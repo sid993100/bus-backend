@@ -2,11 +2,10 @@ import mongoose from "mongoose";
 import VltdManufacturer from "../../../models/vltdManufacturerModel.js";
 
 export const getVltdManufacturer=async (req,res) => {
-  const user = req.user;
      
      try {
       const vltdManufacturer= await VltdManufacturer.find({})
-      if (!vltdManufacturer) {
+      if (!vltdManufacturer|| vltdManufacturer.length===0) {
          return res.status(404).json({
             message: "Vltd Manufacturer Not Found",
             });
@@ -23,14 +22,9 @@ export const getVltdManufacturer=async (req,res) => {
      }
 }
 export async function addVltdManufacturer(req, res) {
-    const user = req.user;
     const { name, shortName } = req.body;
 
-    if (user.hierarchy !== "ADMIN") {
-        return res.status(403).json({
-            message: " Not Admin",
-        });
-    }
+ 
     if (!name || !shortName) {
         return res.status(404).json({
             message: "All details Required"
