@@ -22,11 +22,11 @@ export const getServiceType=async (req,res) => {
      }
 }
 export const addServiceType=async (req,res) => {
-   const user=req.user
+ 
   const {code,name,tollType,sleeperCharges,resCharge,reservationCharges,childDiscount,perKmFare,account,fare,category}=req.body
   
   
-     if(!code||!name||!tollType||!sleeperCharges||!resCharge||!reservationCharges||!childDiscount||!perKmFare||!account||!fare||!category){
+     if(!code||!name||!tollType||!perKmFare||!account||!category){
        return res.status(404).json({
             message:"All details Required"
          })

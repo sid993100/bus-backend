@@ -22,6 +22,7 @@ const serviceTypeSchema = new Schema(
     fare: {
       type: Number,
       required: true,
+      default:0
     },
     sleeperCharges: {
       type: Number,
@@ -38,6 +39,7 @@ const serviceTypeSchema = new Schema(
     childDiscount:{
         type: Number,
         required: true,
+        default:0
     },
     perKmFare:{
           type: Number,
