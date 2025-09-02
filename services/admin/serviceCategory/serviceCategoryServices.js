@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import ServiceCategory from "../../../models/serviceCategoryModel.js";
 
 export const getServiceCategory= async (req,res)=>{
-    const user = req.user
      
    try {
       const serviceCategory=await ServiceCategory.find({})
@@ -16,6 +15,7 @@ export const getServiceCategory= async (req,res)=>{
         message:serviceCategory
        }) 
    } catch (error) {
+    
       return res.status(500).json({
         message:"Backend Error"
     })
@@ -50,6 +50,11 @@ export const addServiceCategory=async (req,res) => {
         data:serviceCategory
       })
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Service Category already exists"
+      });
+    }
     return res.status(500).json({
         message:"Server Error"
          })
@@ -99,6 +104,11 @@ export const updateServiceCategory = async (req, res) => {
     });
 
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Service Category already exists"
+      });
+    }
     console.error(error);
     return res.status(500).json({
       message: error.message || "Server Error",

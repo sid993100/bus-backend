@@ -58,7 +58,11 @@ export const addServiceType=async (req,res) => {
       })
      } catch (error) {
       consoleManager.log(error);
-      
+       if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Service Type already exists"
+      });
+    }
        return res.status(500).json({
         message:"Server Error"
          })
@@ -138,6 +142,11 @@ export const updateServiceType = async (req, res) => {
 
   } catch (error) {
     console.error(error);
+     if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Service Type already exists"
+      });
+    }
     return res.status(500).json({
       message: error.message || "Server Error"
     });

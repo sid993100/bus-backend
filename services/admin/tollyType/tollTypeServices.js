@@ -5,7 +5,7 @@ export const getTollType= async(req,res)=>{
      const user = req.user;
      try {
         const tollType=await TollType.find({})
-        if (!tollType) {
+        if (!tollType||tollType.length===0) {
         return res.status(404).json({
            message: "Toll Type Not Found",
          });
@@ -20,7 +20,7 @@ export const getTollType= async(req,res)=>{
      }
 };
 export const addTollType=async (req,res) => {
-  const user=req.user
+
   const {name,description}=req.body
   
  
@@ -96,6 +96,11 @@ export const updateTollType = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
+    if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Toll Type already exists"
+      });
+    }
     return res.status(500).json({
       message: "Server Error",
     });
