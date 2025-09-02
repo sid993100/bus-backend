@@ -96,6 +96,11 @@ export const updateArea = async (req, res) => {
 
   } catch (error) {
     console.error(error);
+     if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Stop Area already exists"
+      });
+    }
     res.status(500).json({
       message: error.message || "Server Error",
     });

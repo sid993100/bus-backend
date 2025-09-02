@@ -2,13 +2,12 @@ import mongoose from "mongoose";
 import VehicleManufacturer from "../../../models/vehiclemanufacturerModel.js";
 
 export const getVehicleManufacturer=async (req,res) => {
-  const user = req.user;
-     
+
      try {
       const vehicleManufacturer= await VehicleManufacturer.find({})
       if (!vehicleManufacturer) {
          return res.status(404).json({
-            message: "Vlt Device Not Found",
+            message: "Vehicle Make Not Found",
             });
       }
         res.status(200).json({
@@ -23,7 +22,7 @@ export const getVehicleManufacturer=async (req,res) => {
      }
 }
 export const addVehicleManufacturer =async (req,res) => {
-  const user=req.user
+
   const {make,shortName}=req.body
 
   
@@ -49,8 +48,13 @@ export const addVehicleManufacturer =async (req,res) => {
         data:vehicle
       }) 
      } catch (error) {
+      if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Already exists"
+      });
+    }
         res.status(500).json({
-        message:error.errmsg
+        message:error.message
          })
      }
 }
@@ -96,6 +100,11 @@ export const updateVehicleManufacturer = async (req, res) => {
       data: updatedManufacturer
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Already exists"
+      });
+    }
     console.error(error);
     return res.status(500).json({
       message: error.message || "Server Error"

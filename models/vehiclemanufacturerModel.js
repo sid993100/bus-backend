@@ -10,7 +10,8 @@ const vehicleManufacturerSchema = new Schema({
   shortName: {
     type: String,
     required: true,
-    uppercase: true
+    uppercase: true,
+    unique:true
   }
 }, {
   timestamps: true

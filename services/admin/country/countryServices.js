@@ -101,6 +101,11 @@ export const updateCountry = async (req, res) => {
       data: country,
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Already exists"
+      });
+    }
     console.error(error);
     return res.status(500).json({
       message: "Server Error",
