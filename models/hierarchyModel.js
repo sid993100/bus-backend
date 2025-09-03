@@ -16,12 +16,7 @@ const hierarchySchema = new Schema({
     min: 1,
     max: 4
   },
-  description: {
-    type: String,
-    trim: true,
-    maxlength: 200,
-    uppercase: true
-  },
+ 
  
 }, {
   timestamps: true

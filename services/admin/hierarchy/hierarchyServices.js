@@ -131,7 +131,7 @@ export const updateHierarchy = async (req, res) => {
     const { id } = req.params;
     console.log("Updating hierarchy:", id);
 
-    const { name, level, description, isActive } = req.body;
+    const { name } = req.body;
 
     if (!id) {
       return res.status(400).json({
@@ -139,7 +139,7 @@ export const updateHierarchy = async (req, res) => {
       });
     }
 
-    if (!name && level === undefined && description === undefined && isActive === undefined) {
+    if (!name ) {
       return res.status(400).json({
         message: "At least one field is required to update"
       });
@@ -158,26 +158,12 @@ export const updateHierarchy = async (req, res) => {
       }
     }
 
-    // Check for duplicate level (excluding current record)
-    if (level !== undefined) {
-      const existingLevel = await Hierarchy.findOne({
-        level,
-        _id: { $ne: id }
-      });
-      if (existingLevel) {
-        return res.status(409).json({
-          message: "Hierarchy level already exists"
-        });
-      }
-    }
+    
 
     const updatedHierarchy = await Hierarchy.findByIdAndUpdate(
       id,
       {
-        ...(name && { name: name.trim() }),
-        ...(level !== undefined && { level }),
-        ...(description !== undefined && { description: description?.trim() }),
-        ...(isActive !== undefined && { isActive })
+        ...(name && { name: name.trim() })
       },
       { new: true, runValidators: true }
     );

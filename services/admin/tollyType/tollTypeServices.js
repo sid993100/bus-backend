@@ -2,7 +2,7 @@ import TollType from "../../../models/tollTypeModel.js";
 
 
 export const getTollType= async(req,res)=>{
-     const user = req.user;
+
      try {
         const tollType=await TollType.find({})
         if (!tollType||tollType.length===0) {

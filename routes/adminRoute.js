@@ -32,7 +32,7 @@ router.get("/ownertype",isLogin,getOwnerType)
 router.get("/department",isLogin,roleBaseAuth( "ADMIN"),getDepartment)
 router.get("/subscription",isLogin,roleBaseAuth( "ADMIN"),getSubscription)
 router.get("/incident",isLogin,roleBaseAuth( "ADMIN"),checkPermission("incident","read"),getIncident)
-// router.get("/hierarchy",isLogin,getHierarchy)
+router.get("/hierarchy",isLogin,getHierarchy)
 
 
 
@@ -47,7 +47,7 @@ router.post("/addvltmodel",isLogin,addVltModel)
 router.post("/ownerType",isLogin,addOwnerType)
 router.post("/department",isLogin,roleBaseAuth( "ADMIN"),addDepartment)
 router.post("/subscription",isLogin,roleBaseAuth( "ADMIN"),addSubscription)
-router.post("/hierarchy",isLogin,addHierarchy)
+// router.post("/hierarchy",isLogin,addHierarchy)
 
 
 
@@ -60,7 +60,7 @@ router.put("/vltmanufacturer/:id",isLogin,roleBaseAuth( "ADMIN"), updateVltdManu
 router.put("/vltmodel/:id",isLogin,roleBaseAuth( "ADMIN"), updateVltModel); 
 router.put('/pisreg/:id', isLogin,roleBaseAuth( "ADMIN"),updatePisRegistration)
 router.put("/seatlayout/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("seatLayout","update"), updateSeatLayout);
-router.put("hierarchy/:id",isLogin,updateHierarchy)
+router.put("/hierarchy/:id",isLogin,updateHierarchy)
 
 
 
