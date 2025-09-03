@@ -2,20 +2,26 @@ import { model, Schema } from "mongoose";
 
 const seatSchema = new Schema({
   seatIndex: { type: Number, required: true },
-  visible:   { type: Boolean, default: true },
-  seatType:  { type: String },            // "Seater" or "Sleeper"
-  seatNumber:{ type: String },            // Custom seat number
-  emergency: { type: Boolean, default: false },
-  lock:      { type: Boolean, default: false },
-  female:    { type: Boolean, default: false },
-  serviceCategory: { type: String },      // E.g. "Ordinary", "AC 1X2"
-}, { _id: false }); // Disable _id unless you want it for each seat
+  seatNumber: { type: String, default: '' },
+  seatType: { type: String, enum: ['SITTING', 'SLEEPER'], default: 'SITTING' },
+  visible: { type: Boolean, default: true },
+  isVip: { type: Boolean, default: false },
+  isFemale: { type: Boolean, default: false },
+  isConductor: { type: Boolean, default: false },
+  isEmergencyExit: { type: Boolean, default: false },
+  serviceId: { type: String, default: '' }, // Storing the service _id
+}, { _id: false });
 
 const layerSchema = new Schema({
-  name:    { type: String, required: true },   // "Lower", "Upper"
-  rows:    { type: Number, required: true },
-  columns: { type: Number, required: true },
-  seats:   [ seatSchema ]
+  name: { type: String, required: true, enum: ['LOWER', 'UPPER'] },
+  rows: { type: Number, required: true, min: 1 },
+  columns: { type: Number, required: true, min: 1 },
+  seats: [seatSchema]
+}, { _id: false });
+
+const floorSchema = new Schema({
+  floorNumber: { type: Number, required: true, enum: [1, 2] },
+  layers: [layerSchema]
 }, { _id: false });
 
 const seatLayoutSchema = new Schema({
@@ -34,19 +40,19 @@ const seatLayoutSchema = new Schema({
     type: String,
     required: true,
     uppercase: true,
-    enum:["PUBLICTRANSPORT","ENFORCEMENT","STORE"],
-    default:"PUBLICTRANSPORT"
+    enum: ["PUBLICTRANSPORT", "ENFORCEMENT", "STORE"],
+    default: "PUBLICTRANSPORT"
   },
   servicesLinked: [{
-    type: String,
-    uppercase: true
+    type: Schema.Types.ObjectId,
+    ref: 'ServiceType',
+    required: true
   }],
   fci: {
     type: Number,
     required: true
   },
-  // <-- Embed layers and seats directly in the layout document
-  layers: [ layerSchema ]
+  floors: [floorSchema]
 }, {
   timestamps: true
 });
