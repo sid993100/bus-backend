@@ -2,7 +2,9 @@
 
 export const roleBaseAuth=(...allowedRole)=>{
     return (req,res,next)=>{
-        if(req.user.hierarchy === "SUPERADMIN"){
+        console.log(req.user.hierarchy.level===1);
+        
+        if(req.user.hierarchy.level === 1){
             return next()
         }
         if(!allowedRole.includes(req.user.hierarchy)){

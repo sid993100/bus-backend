@@ -18,7 +18,7 @@ export const isLogin=async(req,res,next)=>{
                 message:"Invalide"
             })
         }
-        const user=await User.findOne({_id:tokenUser.id}).populate("roleName").select("-password")
+        const user=await User.findOne({_id:tokenUser.id}).populate("roleName").populate("hierarchy").select("-password")
         if(!user){
             res.status(401).json({
                 message:"Not Found"

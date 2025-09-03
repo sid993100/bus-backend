@@ -24,9 +24,8 @@ const UserSchema = new Schema(
       unique: true,
     },
     hierarchy: {
-      type: String,
-      enum: ["SUPERADMIN", "ADMIN", "DEPORT", "CUSTOMER"],
-      default: "CUSTOMER",
+      type: Schema.Types.ObjectId,
+      ref:"Hierarchy"
     },
     region: {
       type: String,

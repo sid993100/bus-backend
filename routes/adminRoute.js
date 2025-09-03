@@ -4,20 +4,17 @@ import { addVltDevices, getVltDevices, updateVltDevices } from "../services/admi
 import { addPisRegistration, getpisReg, updatePisRegistration } from "../services/admin/pisReg/pisRegService.js";
 import { addDuty, getDuty } from "../services/admin/duty/dutyServices.js";
 import { addSeatLayout, getSeatLayout, updateSeatLayout } from "../services/admin/seatLayout/seatLayoutServices.js";
-import { addVehicleManufacturer, getVehicleManufacturer, updateVehicleManufacturer } from "../services/admin/vehicleManufacturer/vehicleManufacturerServices.js";
 import { addSim, getSim, updateSim } from "../services/admin/sim/simServices.js";
 import { addPlan, getPlan, updatePlan } from "../services/admin/plan/planServices.js";
 import { addVltdManufacturer, getVltdManufacturer, updateVltdManufacturer } from "../services/admin/vltManufacturer/vltManufacturerServices.js";
 import { addVltModel, getVltModel, updateVltModel } from "../services/admin/vltModel/vltModelServices.js";
 import { addOwnerType, getOwnerType, updateOwnerType } from "../services/admin/owner/ownerServices.js";
-import { addVehicle, getVehicle, updateVehicle } from "../services/admin/vehicle/vehicleServices.js";
 import { roleBaseAuth } from "../middleWares/rolebaseAuth.js";
 import { addDepartment, getDepartment } from "../services/admin/department/departmentServices.js";
-import { addRoute, getRoute } from "../services/admin/route/routeService.js";
-import { addTrip, getTrip, updateTrip } from "../services/admin/trip/tripServices.js";
 import { addSubscription, getSubscription } from "../services/admin/subscription/subscriptionServices.js";
 import { checkPermission } from "../middleWares/checkPermission.js";
 import { getIncident } from "../services/admin/Incident/IncidentService.js";
+import { addHierarchy, getHierarchy, updateHierarchy } from "../services/admin/hierarchy/hierarchyServices.js";
 
 
 const router = Router();
@@ -35,7 +32,7 @@ router.get("/ownertype",isLogin,getOwnerType)
 router.get("/department",isLogin,roleBaseAuth( "ADMIN"),getDepartment)
 router.get("/subscription",isLogin,roleBaseAuth( "ADMIN"),getSubscription)
 router.get("/incident",isLogin,roleBaseAuth( "ADMIN"),checkPermission("incident","read"),getIncident)
-
+// router.get("/hierarchy",isLogin,getHierarchy)
 
 
 
@@ -50,6 +47,7 @@ router.post("/addvltmodel",isLogin,addVltModel)
 router.post("/ownerType",isLogin,addOwnerType)
 router.post("/department",isLogin,roleBaseAuth( "ADMIN"),addDepartment)
 router.post("/subscription",isLogin,roleBaseAuth( "ADMIN"),addSubscription)
+router.post("/hierarchy",isLogin,addHierarchy)
 
 
 
@@ -62,6 +60,7 @@ router.put("/vltmanufacturer/:id",isLogin,roleBaseAuth( "ADMIN"), updateVltdManu
 router.put("/vltmodel/:id",isLogin,roleBaseAuth( "ADMIN"), updateVltModel); 
 router.put('/pisreg/:id', isLogin,roleBaseAuth( "ADMIN"),updatePisRegistration)
 router.put("/seatlayout/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("seatLayout","update"), updateSeatLayout);
+router.put("hierarchy/:id",isLogin,updateHierarchy)
 
 
 

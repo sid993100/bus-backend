@@ -1,20 +1,34 @@
-import { model, Schema } from "mongoose";
+import { Schema, model } from 'mongoose';
 
-const hierarchySchma = new Schema({
-  hierarchyName: {
+const hierarchySchema = new Schema({
+  name: {
     type: String,
     required: true,
     unique: true,
-    uppercase: true,
-    enum: ['SUPERADMIN', 'ADMIN', "DEPOT","REGION"]
+    trim: true,
+    maxlength: 50,
+    uppercase: true
+  },
+  level: {
+    type: Number,
+    required: true,
+    unique: true,
+    min: 1,
+    max: 4
   },
   description: {
     type: String,
-    trim: true
+    trim: true,
+    maxlength: 200,
+    uppercase: true
   },
+ 
 }, {
   timestamps: true
 });
 
-const Hierarchy = model("Hierarchy", hierarchySchma);
+// Compound index for performance
+hierarchySchema.index({ level: 1, isActive: 1 });
+
+const Hierarchy = model('Hierarchy', hierarchySchema);
 export default Hierarchy;
