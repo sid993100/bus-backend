@@ -1,13 +1,10 @@
 import Account from "../../../models/accountModel.js";
 import consoleManager from "../../../utils/consoleManager.js";
-import responseManager from "../../../utils/responseManager.js";
+
 
 
 export const addAccount=async (req,res) => {
-  const user=req.user
   const {accountCode,name,description}=req.body
-  consoleManager.log(accountCode,name,description);
-  
 
      if(!accountCode||!name){
        return res.status(404).json({
@@ -24,7 +21,7 @@ export const addAccount=async (req,res) => {
       
       if(!account){
          res.status(500).json({
-                 message:"Somthing went Wrong while Creating A Account "
+                 message:"Somthing went Wrong while Creating A Department "
              })
       }
       res.status(201).json({
@@ -32,11 +29,10 @@ export const addAccount=async (req,res) => {
         data:account
       }) 
      } catch (error) {
-      consoleManager.log(error);
       
        if (error.code === 11000) {
       return res.status(409).json({
-        message: "Account already exists"
+        message: "Department already exists"
       });
     }
     
@@ -48,9 +44,9 @@ export const addAccount=async (req,res) => {
 export const getAccount = async (req, res) => {
  try {
       const accounts = await Account.find({});
-      if (!accounts) {
+      if (!accounts||accounts.length===0) {
         return res.status(404).json({
-           message: "Account Not Found",
+           message: "Department Not Found",
          });
       }
    
@@ -73,7 +69,7 @@ export const updateAccount = async (req, res) => {
     // Validation
     if (!id) {
       return res.status(400).json({
-        message: "Account ID is required",
+        message: "Department ID is required",
       });
     }
 
@@ -96,12 +92,12 @@ export const updateAccount = async (req, res) => {
 
     if (!updatedAccount) {
       return res.status(404).json({
-        message: "Account not found",
+        message: "Department not found",
       });
     }
 
     res.status(200).json({
-      message: "Account updated successfully",
+      message: "Department updated successfully",
       data: updatedAccount,
     });
   } catch (error) {

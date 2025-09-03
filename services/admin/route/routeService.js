@@ -1,16 +1,16 @@
 import Route from "../../../models/routemodel.js";
 
 const populatedFields = [
-    { path: 'source', select: 'stopName' },
-    { path: 'destination', select: 'stopName' },
-    { path: 'via', select: 'stopName' },
-    { path: 'stops.stop', select: 'stopName' },
+    { path: 'source', select: 'stopName stopCode' },
+    { path: 'destination', select: 'stopName stopCode' },
+    { path: 'via', select: 'stopName stopCode' },
+    { path: 'stops.stop', select: 'stopName stopCode' },
     { path: 'stops.toll', select: 'tollName' }
 ];
 
 export const getRoutes = async (req, res) => {
     try {
-        const routes = await Route.find({}).populate(populatedFields).sort({ routeCode: 1 });
+        const routes = await Route.find({}).populate(populatedFields).sort({ routeCode: -1 });
         if (!routes) {
             return res.status(404).json({ message: "Routes Not Found" });
         }
@@ -35,19 +35,19 @@ export const getRoute = async (req, res) => {
 };
 
 export const addRoute = async (req, res) => {
-    const { source, destination, via, routeName, routeLength, stops } = req.body;
+    let { source, destination, via, routeName, routeLength, stops } = req.body;
     
-    if (!source || !destination || !routeLength || !routeName) {
-
-        return res.status(400).json({ message: "Required fields are missing: source, destination, routeLength, routeName" });
-
+    if (!source || !destination  || !routeName) {
         return res.status(400).json({
-            message: "Required fields are missing: source, destination, routeLength, routeName"
+            message: "Required fields are missing: source, destination, routeName"
         });
+    }
+    if(routeLength === undefined || routeLength === null){
+        routeLength=0;
     }
     
     try {
-        const validStops = stops ? stops.filter(s => s.stop) : [];
+        const validStops = stops ? stops.filter(s => s.stop || s.toll) : [];
         let newRoute = await Route.create({
             source,
             destination,
@@ -76,12 +76,12 @@ export const updateRoute = async (req, res) => {
     const { id } = req.params;
     const { source, destination, via, routeName, routeCode, routeLength, stops } = req.body;
     
-    if (!source || !destination || !routeLength || !routeName) {
+    if (!source || !destination || routeLength === undefined || routeLength === null || !routeName) {
         return res.status(400).json({ message: "All details Required" });
     }
     
     try {
-        const validStops = stops ? stops.filter(s => s.stop) : [];
+        const validStops = stops ? stops.filter(s => s.stop || s.toll) : [];
         const updatedRoute = await Route.findByIdAndUpdate(
             id,
             { source, destination, via, routeName, routeCode, routeLength, stops: validStops },
@@ -104,7 +104,6 @@ export const updateRoute = async (req, res) => {
     }
 };
 
-// DELETE ROUTE
 export const deleteRoute = async (req, res) => {
     const user = req.user;
     const { id } = req.params;
@@ -135,7 +134,6 @@ export const deleteRoute = async (req, res) => {
     }
 };
 
-// GET ROUTES BY SOURCE
 export const getRoutesBySource = async (req, res) => {
     const user = req.user;
     const { source } = req.params;
@@ -169,7 +167,6 @@ export const getRoutesBySource = async (req, res) => {
     }
 };
 
-// GET ROUTES BY DESTINATION
 export const getRoutesByDestination = async (req, res) => {
     const user = req.user;
     const { destination } = req.params;
@@ -203,7 +200,6 @@ export const getRoutesByDestination = async (req, res) => {
     }
 };
 
-// SEARCH ROUTES (by source to destination)
 export const searchRoutes = async (req, res) => {
     const user = req.user;
     const { source, destination } = req.query;
@@ -224,7 +220,7 @@ export const searchRoutes = async (req, res) => {
         const routes = await Route.find({
             source: source.toUpperCase(),
             destination: destination.toUpperCase()
-        }).sort({ routeLength: 1 }); // Sort by shortest route first
+        }).sort({ routeLength: 1 });
         
         if (!routes || routes.length === 0) {
             return res.status(404).json({
