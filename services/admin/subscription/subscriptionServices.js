@@ -5,7 +5,7 @@ export const getSubscription=async (req,res) => {
   
      try {
       const subscription= await Subscription.find({})
-      if (!subscription||subscription.length==0) {
+      if (!subscription) {
          return res.status(404).json({
             message: "Subscription Not Found",
             });

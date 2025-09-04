@@ -2,11 +2,10 @@ import mongoose from "mongoose";
 import VltdModel from "../../../models/vltdModelModel.js";
 
 export const getVltModel=async (req,res) => {
-  const user = req.user;
-     
+
      try {
       const vltModel= await VltdModel.find({})
-      if (!vltModel||vltModel.length===0) {
+      if (!vltModel) {
          return res.status(404).json({
             message: "Vlt Model Not Found",
             });

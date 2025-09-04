@@ -4,7 +4,7 @@ const scheduleConfigurationSchema = new Schema({
 
   depot: {
     type: Schema.Types.ObjectId,
-    ref: "Depot",
+    ref: "DepotCustomer",
     required: true,
 
   },
@@ -21,7 +21,7 @@ const scheduleConfigurationSchema = new Schema({
   },
   busService: {
     type: Schema.Types.ObjectId,
-    ref: "BusService",
+    ref: "BusStop",
     required: true,
 
   },

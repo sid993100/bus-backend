@@ -5,7 +5,7 @@ import Region from "../../models/regionModel.js";
 export const getRegions = async (req, res) => {
   try {
     const regions = await Region.find({});
-    if (!regions || regions.length === 0) {
+    if (!regions) {
       return res.status(404).json({ message: 'No regions found' });
     }
     return res.status(200).json({ data: regions });

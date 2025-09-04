@@ -55,7 +55,7 @@ export const getPhotoIdCard = async (req, res) => {
   try {
     const genders = await PhotoIdCard.find({}).sort({ name: 1 });
     
-    if (!genders || genders.length === 0) {
+    if (!genders) {
       return res.status(404).json({
         message: "Photo Id Card Not Found"
       });

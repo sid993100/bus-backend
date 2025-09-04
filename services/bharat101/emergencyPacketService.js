@@ -41,7 +41,6 @@ export const addEmergencyPacket = async (req, res) => {
 export const getAllEmergencyPackets = async (req, res) => {
   try {
     const rows = await EmergencyPacket.find({})
-console.log("................................",rows);
 
     if (!rows || rows.length === 0) {
       return res.status(404).json({ message: "No emergency packets found" });}

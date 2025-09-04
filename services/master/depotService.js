@@ -10,7 +10,7 @@ export const getDepotCustomers = async (req, res) => {
             .populate('region', 'name communicationAddress location')
             .sort({ depotCustomer: 1 });
         
-        if (!depotCustomers || depotCustomers.length === 0) {
+        if (!depotCustomers) {
             return res.status(404).json({
                 message: "Depot/Customers Not Found",
             });

@@ -53,7 +53,7 @@ export const getVehicleModels = async (req, res) => {
   try {
     const vehicleModels = await VehicalModel.find({}).sort({ make: 1, vehicleType: 1 });
     
-    if (!vehicleModels || vehicleModels.length === 0) {
+    if (!vehicleModels ) {
       return res.status(404).json({
         message: "Vehicle Models Not Found"
       });

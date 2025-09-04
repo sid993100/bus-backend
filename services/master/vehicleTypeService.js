@@ -7,7 +7,7 @@ export const getVehicleTypes = async (req, res) => {
     try {
         const vehicleTypes = await VehicleType.find({});
         
-        if (!vehicleTypes||vehicleTypes.length === 0) {
+        if (!vehicleTypes) {
             return res.status(404).json({
                 message: "Vehicle Types Not Found",
             });

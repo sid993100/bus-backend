@@ -79,7 +79,7 @@ export const getHierarchy = async (req, res) => {
     const hierarchies = await Hierarchy.find()
       .sort({ level: 1 });
 
-    if (!hierarchies || hierarchies.length === 0) {
+    if (!hierarchies) {
       return res.status(404).json({
         message: "Hierarchy Not Found"
       });

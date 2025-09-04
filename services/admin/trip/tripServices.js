@@ -83,7 +83,7 @@ export const getTrip = async (req, res) => {
   try {
     const trips = await TripConfig.find()
 
-  if (trips.length === 0) {
+  if (!trips) {
       return res.status(404).json({
         message: "No trips found",
       });

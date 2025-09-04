@@ -6,7 +6,7 @@ export const getDepartment=async (req,res) => {
   
      try {
       const department= await Department.find({})
-      if (!department||department.length==0) {
+      if (!department) {
          return res.status(404).json({
             message: "Department Not Found",
             });

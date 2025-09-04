@@ -44,7 +44,7 @@ export const addAccount=async (req,res) => {
 export const getAccount = async (req, res) => {
  try {
       const accounts = await Account.find({});
-      if (!accounts||accounts.length===0) {
+      if (!accounts) {
         return res.status(404).json({
            message: "Department Not Found",
          });

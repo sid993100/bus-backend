@@ -10,7 +10,7 @@ export const getConductor = async (req, res) => {
 
     const conductors = await Conductor.find({});
 
-    if (!conductors || conductors.length === 0) {
+    if (!conductors ) {
       return res.status(404).json({
         message: "No conductors found"
       });

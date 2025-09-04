@@ -5,7 +5,7 @@ export const getTollType= async(req,res)=>{
 
      try {
         const tollType=await TollType.find({})
-        if (!tollType||tollType.length===0) {
+        if (!tollType) {
         return res.status(404).json({
            message: "Toll Type Not Found",
          });

@@ -6,7 +6,7 @@ export const roleBaseAuth=(...allowedRole)=>{
         if(req.user.hierarchy.level === 1){
             return next()
         }
-        if(!allowedRole.includes(req.user.hierarchy)){
+        if(!allowedRole.includes(req.user.hierarchy.name)){
             return res.status(403).json({message:"Access Denied"})
         }
         next()

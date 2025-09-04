@@ -13,7 +13,7 @@ export const getUsers = async (req, res) => {
             .select('-password') // Exclude password from response
             .sort({ username: 1 });
         
-        if (!users || users.length === 0) {
+        if (!users ) {
             return res.status(404).json({
                 message: "Users Not Found",
             });

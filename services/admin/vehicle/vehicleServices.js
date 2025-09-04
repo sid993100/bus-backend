@@ -5,7 +5,7 @@ export const getVehicle=async (req,res) => {
      
      try {
       const vehicles= await Vehicle.find({})
-      if (!vehicles||vehicles.length===0) {
+      if (!vehicles) {
          return res.status(404).json({
             message: "Vehicle Not Found",
             });

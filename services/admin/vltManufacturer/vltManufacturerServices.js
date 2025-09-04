@@ -5,7 +5,7 @@ export const getVltdManufacturer=async (req,res) => {
      
      try {
       const vltdManufacturer= await VltdManufacturer.find({})
-      if (!vltdManufacturer|| vltdManufacturer.length===0) {
+      if (!vltdManufacturer) {
          return res.status(404).json({
             message: "Vltd Manufacturer Not Found",
             });

@@ -4,7 +4,7 @@ export const getOwnerType=async (req,res) => {
 
      try {
       const owners= await OwnerType.find({})
-      if (!owners||owners.length===0) {
+      if (!owners) {
          return res.status(404).json({
             message: "Owners Not Found",
             });

@@ -8,7 +8,7 @@ export const getDuty = async (req, res) => {
             .populate('supportDriver', 'name')
             .sort({ createdAt: -1 });
             
-        if (!duty || duty.length === 0) {
+        if (!duty ) {
             return res.status(404).json({
                 message: "Duty Not Found"
             });
