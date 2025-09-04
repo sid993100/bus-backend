@@ -183,7 +183,7 @@ export const addUser = async (req, res) => {
 
 // UPDATE USER
 export const updateUser = async (req, res) => {
-    const user = req.user;
+   
     const { id } = req.params;
     const {
         username,
@@ -195,12 +195,7 @@ export const updateUser = async (req, res) => {
         account,
         roleName
     } = req.body;
-    
-    if (user.hierarchy !== "ADMIN" && user.hierarchy !== "SUPERADMIN") {
-        return res.status(403).json({
-            message: "Not Authorized",
-        });
-    }
+
     
     if (!username || !email || !phone) {
         return res.status(400).json({
