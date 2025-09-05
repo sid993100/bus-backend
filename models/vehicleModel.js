@@ -15,23 +15,21 @@ const vehicleSchema = new Schema(
       required: true,
     },
     hierarchy: {
-      type: String,
-      uppercase: true,
+      type: Schema.Types.ObjectId,
+      ref:"Hierarchy"
     },
     regionZone: {
-      type: String,
-
-      uppercase: true,
+     type: Schema.Types.ObjectId,
+      ref:"Region"
     },
     depotCustomer: {
-      type: String,
-
-      uppercase: true,
+      type: Schema.Types.ObjectId,
+      ref:"DepotCustomer"
     },
     serviceType: {
-      type: String,
-
-      uppercase: true,
+      type: Schema.Types.ObjectId,
+      ref:"BusService",
+    
     },
     seatCapacity: {
       type: Number,
@@ -40,17 +38,17 @@ const vehicleSchema = new Schema(
       type: Date,
     },
     vehicleManufacturer: {
-      type: String,
-
-      uppercase: true,
+      type:Schema.Types.ObjectId,
+      ref:"VehicleManufacturer"
+    
     },
     vehicleType: {
-      type: String,
-      uppercase: true,
+      type: Schema.Types.ObjectId,
+      ref:"VehicleType"
     },
     vehicleModel: {
-      type: String,
-      uppercase: true,
+      type:Schema.Types.ObjectId,
+      ref:"VehicleModel"
     },
     ownerType: {
       type: String,
@@ -92,7 +90,8 @@ const vehicleSchema = new Schema(
       uppercase: true,
     },
     vltdDevice: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: "VLTDevice",
     },
   },
   {

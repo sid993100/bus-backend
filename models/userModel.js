@@ -20,32 +20,27 @@ const UserSchema = new Schema(
     phone: {
       type: Number,
       required: true,
-      uppercase: true,
       unique: true,
     },
     hierarchy: {
       type: Schema.Types.ObjectId,
-      ref:"Hierarchy"
+      ref: "Hierarchy",
+      required: true,
     },
     region: {
-      type: String,
-      uppercase: true,
+      type: Schema.Types.ObjectId,
+      ref: "Region",
     },
     account: {
       type: Schema.Types.ObjectId,
       ref: "Account",
     },
-
     roleName: {
       type: Schema.Types.ObjectId,
       ref: "Role",
     },
     resetCode: { type: String, default: null },
     resetCodeExpires: { type: Date, default: null },
-    // role:{
-    //     type:String,
-    //     enum:["DEIVER","CONDUCTOR"]
-    // }
   },
   { timestamps: true }
 );

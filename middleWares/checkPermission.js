@@ -34,7 +34,7 @@ export const checkPermission = (resource, action) => {
       next();
     } catch (err) {
       console.error(err);
-      res.status(500).json({ message: "Server error" });
+      res.status(500).json({ message: err.message });
     }
   };
 };

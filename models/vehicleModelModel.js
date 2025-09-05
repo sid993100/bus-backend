@@ -3,14 +3,15 @@ import { model, Schema } from "mongoose";
 
 const vehicleModelSchema = new Schema({
   make: {
-    type: String,
+     type:Schema.Types.ObjectId,
+      ref:"VehicleManufacturer",
     required: true,
-    uppercase: true
+ 
   },
   vehicleType: {
-    type: String,
+       type: Schema.Types.ObjectId,
+      ref:"VehicleType",
     required: true,
-    uppercase: true
   },
   vehicleModel: {
     type: String,

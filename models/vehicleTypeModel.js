@@ -2,7 +2,8 @@ import { model, Schema } from "mongoose";
 
 const vehicleTypeSchema = new Schema({
   make: {
-    type: String,
+    type: Schema.Types.ObjectId,
+    ref:"VehicleManufacturer",
     required: true,
   },
   vehicleType: {
