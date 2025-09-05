@@ -1,16 +1,17 @@
 import VehicleType from "../../models/vehicleTypeModel.js";
+import VehicleManufacturer from "../../models/vehiclemanufacturerModel.js";
 
+const populateType = (query) => {
+    return query.populate('make', 'make shortName');
+};
 
-// GET ALL VEHICLE TYPES
 export const getVehicleTypes = async (req, res) => {
-    
     try {
-        const vehicleTypes = await VehicleType.find({});
+        const typeQuery = VehicleType.find({}).sort({ make: 1 });
+        const vehicleTypes = await populateType(typeQuery);
         
         if (!vehicleTypes) {
-            return res.status(404).json({
-                message: "Vehicle Types Not Found",
-            });
+            return res.status(404).json({ message: "Vehicle Types Not Found" });
         }
         
         return res.status(200).json({
@@ -18,120 +19,65 @@ export const getVehicleTypes = async (req, res) => {
             data: vehicleTypes
         });
     } catch (error) {
-        return res.status(500).json({
-            message: "Backend Error"
-        });
+        return res.status(500).json({ message: "Server Error", error: error.message });
     }
 };
 
-// GET SINGLE VEHICLE TYPE BY ID
-export const getVehicleType = async (req, res) => {
-    const { id } = req.params;
-
-    try {
-        const vehicleType = await VehicleType.findById(id);
-        
-        if (!vehicleType) {
-            return res.status(404).json({
-                message: "Vehicle Type Not Found",
-            });
-        }
-        
-        return res.status(200).json({
-            message: "Vehicle Type Retrieved Successfully",
-            data: vehicleType
-        });
-    } catch (error) {
-        return res.status(500).json({
-            message: "Backend Error"
-        });
-    }
-};
-
-// ADD NEW VEHICLE TYPE
 export const addVehicleType = async (req, res) => {
     const { make, vehicleType } = req.body;
     
-   
-    
     if (!make || !vehicleType) {
-        return res.status(400).json({
-            message: "All details Required"
-        });
+        return res.status(400).json({ message: "Make and Vehicle Type are required" });
     }
     
     try {
-        // Check if combination already exists
-        const existingVehicleType = await VehicleType.findOne({
-            make: make.toUpperCase(),
-            vehicleType: vehicleType.toUpperCase()
-        });
-        
+        const foundMake = await VehicleManufacturer.findById(make);
+        if (!foundMake) {
+            return res.status(404).json({ message: "Vehicle Manufacturer (Make) not found" });
+        }
+
+        const existingVehicleType = await VehicleType.findOne({ make, vehicleType });
         if (existingVehicleType) {
-            return res.status(409).json({
-                message: "Vehicle Type with this Make already exists"
-            });
+            return res.status(409).json({ message: "This Vehicle Type already exists for the selected Make" });
         }
         
-        const newVehicleType = await VehicleType.create({
-            make,
-            vehicleType
-        });
-        
-        if (!newVehicleType) {
-            return res.status(500).json({
-                message: "Something went Wrong while Creating Vehicle Type"
-            });
-        }
+        const newVehicleType = new VehicleType({ make, vehicleType });
+        await newVehicleType.save();
+
+        const typeQuery = VehicleType.findById(newVehicleType._id);
+        const populatedType = await populateType(typeQuery);
         
         return res.status(201).json({
             message: "Vehicle Type Created Successfully",
-            data: newVehicleType
+            data: populatedType
         });
     } catch (error) {
-        return res.status(500).json({
-            message: "Server Error"
-        });
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({ message: error.message });
+        }
+        return res.status(500).json({ message: "Server Error", error: error.message });
     }
 };
 
-// UPDATE VEHICLE TYPE
 export const updateVehicleType = async (req, res) => {
-
     const { id } = req.params;
     const { make, vehicleType } = req.body;  
    
-    
     if (!make || !vehicleType) {
-        return res.status(400).json({
-            message: "All details Required"
-        });
+        return res.status(400).json({ message: "Make and Vehicle Type are required" });
     }
     
     try {
-        // Check if combination already exists (excluding current record)
-        const existingVehicleType = await VehicleType.findOne({
-            _id: { $ne: id },
-            make: make.toUpperCase(),
-            vehicleType: vehicleType.toUpperCase()
-        });
-        
-        if (existingVehicleType) {
-            return res.status(409).json({
-                message: "Vehicle Type with this Make already exists"
-            });
+        const foundMake = await VehicleManufacturer.findById(make);
+        if (!foundMake) {
+            return res.status(404).json({ message: "Vehicle Manufacturer (Make) not found" });
         }
-        
-        const updatedVehicleType = await VehicleType.findByIdAndUpdate(
-            id,
-            { make, vehicleType },
-            { new: true, runValidators: true }
-        );
+
+        const typeQuery = VehicleType.findByIdAndUpdate(id, { make, vehicleType }, { new: true, runValidators: true });
+        const updatedVehicleType = await populateType(typeQuery);
         
         if (!updatedVehicleType) {
-            return res.status(404).json({
-                message: "Vehicle Type Not Found"
-            });
+            return res.status(404).json({ message: "Vehicle Type Not Found" });
         }
         
         return res.status(200).json({
@@ -139,34 +85,23 @@ export const updateVehicleType = async (req, res) => {
             data: updatedVehicleType
         });
     } catch (error) {
-        return res.status(500).json({
-            message: "Server Error"
-        });
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({ message: error.message });
+        }
+        return res.status(500).json({ message: "Server Error", error: error.message });
     }
 };
 
-// DELETE VEHICLE TYPE
 export const deleteVehicleType = async (req, res) => {
-    const user = req.user;
     const { id } = req.params;
-   
     try {
         const vehicleType = await VehicleType.findByIdAndDelete(id);
-        
         if (!vehicleType) {
-            return res.status(404).json({
-                message: "Vehicle Type Not Found"
-            });
+            return res.status(404).json({ message: "Vehicle Type Not Found" });
         }
-        
-        return res.status(200).json({
-            message: "Vehicle Type Deleted Successfully",
-            data: vehicleType
-        });
+        return res.status(200).json({ message: "Vehicle Type Deleted Successfully", data: vehicleType });
     } catch (error) {
-        return res.status(500).json({
-            message: "Server Error"
-        });
+        return res.status(500).json({ message: "Server Error", error: error.message });
     }
 };
 

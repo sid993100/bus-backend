@@ -90,7 +90,7 @@ router.put('/department/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("dep
 router.put('/department/name/:departmentName',isLogin,roleBaseAuth( "ADMIN"),checkPermission("department","update"), updateDepartmentByName);
 router.put('/stoparea/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("area","update"), updateArea);
 router.put('/area/name/:name',isLogin,roleBaseAuth( "ADMIN"),checkPermission("area","update"), updateAreaByName);
-router.put('/vehiclemodel/:name',isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleModel","update"), updateVehicleModel);
+router.put('/vehiclemodel/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleModel","update"), updateVehicleModel);
 router.put('/vehicletype/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleType","update"), updateVehicleType);
 router.put('/state/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("state","update"), updateState);
 router.put('/gender/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("gender","update"),updateGender );
