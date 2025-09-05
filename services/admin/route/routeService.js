@@ -1,12 +1,21 @@
 import Route from "../../../models/routemodel.js";
 
 const populatedFields = [
-    { path: 'source', select: 'stopName stopCode' },
-    { path: 'destination', select: 'stopName stopCode' },
-    { path: 'via', select: 'stopName stopCode' },
-    { path: 'stops.stop', select: 'stopName stopCode' },
-    { path: 'stops.toll', select: 'tollName' }
+  { path: 'source', select: 'stopName stopCode' },
+  { path: 'destination', select: 'stopName stopCode' },
+  { path: 'via', select: 'stopName stopCode' },
+  {
+    path: 'stops.stop',
+    select: 'stopName stopCode country state border stopGrade',
+    populate: [
+      { path: 'country', select: 'countryCode country' },
+      { path: 'state', select: 'stateCode state stateType' },
+      { path: 'stopGrade', select: 'stopGradeName' }
+    ]
+  },
+  { path: 'stops.toll', select: 'tollName' }
 ];
+
 
 export const getRoutes = async (req, res) => {
     try {
