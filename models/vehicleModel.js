@@ -28,8 +28,7 @@ const vehicleSchema = new Schema(
     },
     serviceType: {
       type: Schema.Types.ObjectId,
-      ref:"BusService",
-    
+      ref:"ServiceType",
     },
     seatCapacity: {
       type: Number,

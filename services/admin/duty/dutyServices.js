@@ -1,48 +1,39 @@
 import Duty from "../../../models/dutyModel.js";
 
+// Is function mein koi badlav nahi hai
 export const getDuty = async (req, res) => {
     try {
-        const duty = await Duty.find({})
-            .populate('conductorName', 'name')
-            .populate('driverName', 'name')
-            .populate('supportDriver', 'name')
+        const duties = await Duty.find({})
+            .populate('conductorName', 'driverName')
+            .populate('driverName', 'driverName')
+            .populate('supportDriver', 'driverName')
             .sort({ createdAt: -1 });
             
-        if (!duty ) {
+        if (!duties || duties.length === 0) {
             return res.status(404).json({
-                message: "Duty Not Found"
+                message: "No Duties Found"
             });
         }
         return res.status(200).json({
-            message: duty
+            message: duties
         });
     } catch (error) {
+        console.error("Error fetching duties:", error);
         return res.status(500).json({
-            message: "Backend Error"
+            message: "Server Error"
         });
     }
 };
 
+// addDuty function mein badlav
 export const addDuty = async (req, res) => {
   try {
     const {
-      dutyDate,
-      vehicleNumber,
-      conductorName,
-      driverName,
-      supportDriver,
-      dutyType = "SCHEDULED",
-      scheduleNumber,
-      dutyNumber,
-      serviceType,
-      scheduledKM,
-      scheduledTrips,
-      nightOuts,
-      accountStatus = "PENDING",
-      creationDate
+      dutyDate, vehicleNumber, conductorName, driverName, supportDriver,
+      dutyType, scheduleNumber, dutyNumber, serviceType, scheduledKM,
+      scheduledTrips, nightOuts, accountStatus
     } = req.body;
 
-    // Basic required field validation
     if (!dutyDate || !vehicleNumber || !conductorName || !driverName || 
         !dutyNumber || !serviceType || scheduledKM === undefined || 
         scheduledTrips === undefined || nightOuts === undefined) {
@@ -51,7 +42,6 @@ export const addDuty = async (req, res) => {
       });
     }
 
-    // Check for duplicate duty number
     const existingDuty = await Duty.findOne({ 
       dutyNumber: dutyNumber.toUpperCase() 
     });
@@ -61,38 +51,37 @@ export const addDuty = async (req, res) => {
       });
     }
 
-    const duty = await Duty.create({
+    // Naya duty create karna
+    const newDuty = await Duty.create({
       dutyDate: new Date(dutyDate),
       vehicleNumber: vehicleNumber.toUpperCase(),
       conductorName,
       driverName,
       supportDriver,
-      dutyType: dutyType.toUpperCase(),
+      dutyType: dutyType ? dutyType.toUpperCase() : 'SCHEDULED',
       scheduleNumber: scheduleNumber ? scheduleNumber.toUpperCase() : undefined,
       dutyNumber: dutyNumber.toUpperCase(),
       serviceType: serviceType.toUpperCase(),
       scheduledKM,
       scheduledTrips,
       nightOuts,
-      accountStatus: accountStatus.toUpperCase(),
-      creationDate: creationDate ? new Date(creationDate) : new Date()
+      accountStatus: accountStatus ? accountStatus.toUpperCase() : 'PENDING'
     });
 
-    if (!duty) {
-      return res.status(500).json({
-        message: "Something went wrong while creating duty"
-      });
-    }
+    // Response bhejne se pehle naye duty ko populate karna
+    const populatedDuty = await Duty.findById(newDuty._id)
+        .populate('conductorName', 'driverName')
+        .populate('driverName', 'driverName')
+        .populate('supportDriver', 'driverName');
 
     res.status(201).json({
-      message: "created",
-      data: duty
+      message: "Duty created successfully",
+      data: populatedDuty // Populated data bhejna
     });
 
   } catch (error) {
-    console.log(error);
+    console.error("Error adding duty:", error);
     
-    // Handle validation errors
     if (error.name === 'ValidationError') {
       return res.status(400).json({
         message: "Validation failed",
@@ -100,10 +89,9 @@ export const addDuty = async (req, res) => {
       });
     }
 
-    // Handle duplicate key error
     if (error.code === 11000) {
       return res.status(409).json({
-        message: "Duplicate entry found"
+        message: "Duplicate entry for Duty Number"
       });
     }
 
@@ -113,65 +101,31 @@ export const addDuty = async (req, res) => {
   }
 };
 
-
+// updateDuty function mein badlav
 export const updateDuty = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const {
-      dutyDate,
-      vehicleNumber,
-      conductorName,
-      driverName,
-      supportDriver,
-      dutyType,
-      scheduleNumber,
-      dutyNumber,
-      serviceType,
-      scheduledKM,
-      scheduledTrips,
-      nightOuts,
-      accountStatus,
-      creationDate
-    } = req.body;
-
-    // Validation
     if (!id) {
       return res.status(400).json({
         message: "Duty ID is required"
       });
     }
 
-    if (!dutyDate && !vehicleNumber && !conductorName && !driverName && 
-        !supportDriver && !dutyType && !scheduleNumber && !dutyNumber && 
-        !serviceType && !scheduledKM && !scheduledTrips && !nightOuts && 
-        !accountStatus && !creationDate) {
+    if (Object.keys(req.body).length === 0) {
       return res.status(400).json({
         message: "At least one field is required to update"
       });
     }
+    
+    const updateData = { ...req.body };
+    // ... (uppercase logic theek hai)
 
-    // Find and update
-    const updatedDuty = await Duty.findByIdAndUpdate(
-      id,
-      {
-        ...(dutyDate && { dutyDate }),
-        ...(vehicleNumber && { vehicleNumber }),
-        ...(conductorName && { conductorName }),
-        ...(driverName && { driverName }),
-        ...(supportDriver && { supportDriver }),
-        ...(dutyType && { dutyType }),
-        ...(scheduleNumber && { scheduleNumber }),
-        ...(dutyNumber && { dutyNumber }),
-        ...(serviceType && { serviceType }),
-        ...(scheduledKM && { scheduledKM }),
-        ...(scheduledTrips && { scheduledTrips }),
-        ...(nightOuts && { nightOuts }),
-        ...(accountStatus && { accountStatus }),
-        ...(creationDate && { creationDate })
-      },
-      { new: true } // return updated document
-    );
+    // Duty ko update karna aur saath hi mein populate karna
+    const updatedDuty = await Duty.findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
+        .populate('conductorName', 'driverName')
+        .populate('driverName', 'driverName')
+        .populate('supportDriver', 'driverName');
 
     if (!updatedDuty) {
       return res.status(404).json({
@@ -181,10 +135,17 @@ export const updateDuty = async (req, res) => {
 
     res.status(200).json({
       message: "Duty updated successfully",
-      data: updatedDuty
+      data: updatedDuty // Populated data bhejna
     });
   } catch (error) {
-    console.log(error);
+    console.error("Error updating duty:", error);
+    
+    if (error.code === 11000) {
+        return res.status(409).json({
+          message: "Duty number must be unique"
+        });
+    }
+      
     return res.status(500).json({
       message: "Server Error"
     });

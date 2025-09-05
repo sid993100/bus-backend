@@ -2,9 +2,9 @@ import Hierarchy from "../../../models/hierarchyModel.js";
 
 export const addHierarchy = async (req, res) => {
   try {
-    const user =req.user
+  
     const { name, level, description } = req.body;
-    console.log("Adding hierarchy:", name, level);
+ 
 
     if (!name || level === undefined) {
       return res.status(400).json({
@@ -99,7 +99,7 @@ export const getHierarchy = async (req, res) => {
 export const getHierarchyById = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log("Getting hierarchy by ID:", id);
+   
 
     if (!id) {
       return res.status(400).json({
@@ -129,7 +129,7 @@ export const getHierarchyById = async (req, res) => {
 export const updateHierarchy = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log("Updating hierarchy:", id);
+  
 
     const { name } = req.body;
 
@@ -209,7 +209,7 @@ export const updateHierarchy = async (req, res) => {
 export const deleteHierarchy = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log("Deleting hierarchy:", id);
+
 
     if (!id) {
       return res.status(400).json({
@@ -240,7 +240,7 @@ export const deleteHierarchy = async (req, res) => {
 export const getHierarchyByLevel = async (req, res) => {
   try {
     const { level } = req.params;
-    console.log("Getting hierarchy by level:", level);
+ 
 
     if (!level) {
       return res.status(400).json({

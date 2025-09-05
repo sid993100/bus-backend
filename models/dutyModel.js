@@ -1,10 +1,9 @@
-import mongoose, { model, Schema } from "mongoose";
+import { model, Schema } from "mongoose";
 
 const dutySchema = new Schema({
   dutyDate: {
     type: Date,
     required: true,
-    default: Date.now
   },
   vehicleNumber: {
     type: String,
@@ -13,27 +12,24 @@ const dutySchema = new Schema({
   },
   conductorName: {
     type: Schema.Types.ObjectId,
-    ref:"Conductor",
-    required: true,
-    uppercase: true
+    ref: "Conductor",
+    required: true
   },
   driverName: {
     type: Schema.Types.ObjectId,
-    ref:"Driver",
-    required: true,
-    uppercase: true
+    ref: "Driver",
+    required: true
   },
   supportDriver: {
-     type: Schema.Types.ObjectId,
-    ref:"Driver",
-    uppercase: true
+    type: Schema.Types.ObjectId,
+    ref: "Driver"
   },
   dutyType: {
     type: String,
     required: true,
     uppercase: true,
     enum: ['SCHEDULED', 'EXTRA DUTY'],
-    default:"SCHEDULED"
+    default: "SCHEDULED"
   },
   scheduleNumber: {
     type: String,
@@ -70,16 +66,12 @@ const dutySchema = new Schema({
     required: true,
     uppercase: true,
     enum: ['APPROVED', 'PENDING', 'CANCELLED'],
-    default:"PENDING"
-  },
-  creationDate: {
-    type: Date,
-    default: Date.now
+    default: "PENDING"
   }
 }, {
-  timestamps: true
+  timestamps: true // Yeh createdAt aur updatedAt fields automatic add karega
 });
 
-const Duty=model("Duty",dutySchema)
+const Duty = model("Duty", dutySchema);
 
-export default Duty
+export default Duty;
