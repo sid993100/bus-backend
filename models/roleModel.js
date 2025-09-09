@@ -59,6 +59,10 @@ const roleSchema = new Schema({
         zone: { type: permissionSchema, default: defaultPermission },
         gender:{ type: permissionSchema, default: defaultPermission },//new
         photoIdCard:{ type: permissionSchema, default: defaultPermission },//new
+        pismanuf:{ type: permissionSchema, default: defaultPermission },//new
+        pisType:{ type: permissionSchema, default: defaultPermission },//new
+        pisModel:{ type: permissionSchema, default: defaultPermission },//new
+        employType:{ type: permissionSchema, default: defaultPermission },//new
     },
     hierarchy: {
         type: String,

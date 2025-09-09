@@ -1,5 +1,15 @@
 import { model, Schema } from "mongoose";
 
+const configuredStopSchema = new Schema({
+  stop: { type: Schema.Types.ObjectId, ref: 'BusStop', required: true },
+  halt: { type: Boolean, default: false },
+  boarding: { type: Boolean, default: false },
+  alighting: { type: Boolean, default: false },
+  arrivalTime: { type: String, default: null },
+  departureTime: { type: String, default: null },
+  arrivalDay: { type: Number, default: 1 }
+}, { _id: false });
+
 const tripConfigSchema = new Schema({
   tripId: {
     type: String,
@@ -54,7 +64,7 @@ const tripConfigSchema = new Schema({
   cycleDay: {
     type: String,
     required: true,
-    enum: ['Daily', 'Weekly', 'Monthly'],
+    enum: ['Daily', 'Alternative', 'Weekly'],
     default: 'Daily'
   },
   reservation: {
@@ -72,34 +82,31 @@ const tripConfigSchema = new Schema({
   fareType: {
     type: String,
     required: true,
-    enum: ['KM Based', 'Fixed', 'Distance Based'],
+    enum: ['KM Based', 'Stage KM'],
     default: 'KM Based'
   },
+  configuredStops: [configuredStopSchema],
   status: {
     type: String,
     required: true,
     uppercase: true,
-    enum: ['APPROVED', 'PENDING', 'CANCELLED'],
+    enum: ['APPROVED', 'PENDING', 'REJECTED', 'CANCELLED'],
     default: "PENDING"
   }
 }, {
   timestamps: true
 });
 
-// Simple pre-save hook to generate tripId
 tripConfigSchema.pre('save', async function(next) {
   if (this.isNew && !this.tripId) {
     try {
-      // Get depot code from depot reference
       const depot = await model('DepotCustomer').findById(this.depot);
-      let depotCode = 'DEF'; // default
+      let depotCode = 'DEF';
       
       if (depot && depot.depotCustomer) {
-        // Extract first 3 characters as code
         depotCode = depot.depotCustomer.substring(0, 3).toUpperCase();
       }
       
-      // Find highest existing tripId for this depot
       const lastTrip = await model('TripConfig')
         .findOne({ tripId: { $regex: `^${depotCode}` } })
         .sort({ tripId: -1 })
@@ -107,13 +114,13 @@ tripConfigSchema.pre('save', async function(next) {
       
       let nextNumber = 1;
       if (lastTrip && lastTrip.tripId) {
-        const lastNumber = parseInt(lastTrip.tripId.replace(depotCode, ''));
-        nextNumber = lastNumber + 1;
+        const lastNumberStr = lastTrip.tripId.replace(depotCode, '');
+        if (!isNaN(parseInt(lastNumberStr))) {
+            nextNumber = parseInt(lastNumberStr) + 1;
+        }
       }
       
-      // Generate tripId: depotCode + 4-digit number
       this.tripId = depotCode + nextNumber.toString().padStart(4, '0');
-      
       next();
     } catch (error) {
       next(error);

@@ -125,9 +125,9 @@ export const getAllScheduleConfigurations = async (req, res) => {
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
     const schedules = await ScheduleConfiguration.find(filter)
-      .populate('depot', 'depotName depotCode location')
+      .populate('depot', 'depotCustomer depotCode location')
       .populate('seatLayout', 'layoutName totalSeats seatConfiguration')
-      .populate('busService', 'serviceName serviceType fare')
+      .populate('busService', 'name serviceType fare')
       .populate('routeName', 'routeName routeCode source destination routeLength')
       .sort(sort)
       .skip(skip)

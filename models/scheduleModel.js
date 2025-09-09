@@ -21,7 +21,7 @@ const scheduleConfigurationSchema = new Schema({
   },
   busService: {
     type: Schema.Types.ObjectId,
-    ref: "BusStop",
+    ref: "ServiceType",
     required: true,
 
   },

@@ -9,9 +9,14 @@ const planSchema = new Schema({
   },
   vltdManufacturer: {
     type: Schema.Types.ObjectId,
-    ref:"VltdModel",
+    ref:"VltdManufacturer",
     required: true,
     
+  },
+  vltdModel:{
+     type: Schema.Types.ObjectId,
+    ref:"VltdModel",
+    required: true,
   },
   durationDays: {
     type: Number,

@@ -25,10 +25,10 @@ router.get("/pisreg", isLogin, getpisReg);
 router.get("/vltdevice", isLogin, getVltDevices);
 
 router.get("/sim",isLogin,getSim)
-router.get("/plan",isLogin,getPlan)
+router.get("/plan",isLogin,checkPermission("plain","read"),getPlan)
 router.get("/vltdmanufacturer",isLogin,getVltdManufacturer)
 router.get("/vltmodel",isLogin,getVltModel)
-router.get("/ownertype",isLogin,getOwnerType)
+router.get("/ownertype",isLogin,checkPermission("ownerType","read"),getOwnerType)
 // router.get("/department",isLogin,roleBaseAuth( "ADMIN"),getDepartment)
 router.get("/subscription",isLogin,roleBaseAuth( "ADMIN"),getSubscription)
 router.get("/incident",isLogin,roleBaseAuth( "ADMIN"),checkPermission("incident","read"),getIncident)
@@ -41,10 +41,10 @@ router.post("/addduty",isLogin,addDuty);
 router.post("/pisreg",isLogin,roleBaseAuth( "ADMIN"),addPisRegistration);
 router.post("/addvltdevice",isLogin,addVltDevices);
 router.post("/addsim",isLogin,addSim);
-router.post("/addplan",isLogin,addPlan)
+router.post("/addplan",isLogin,checkPermission("plain","create"),addPlan)
 router.post("/addvltdmanufacturer",isLogin,addVltdManufacturer)
 router.post("/addvltmodel",isLogin,addVltModel)
-router.post("/ownerType",isLogin,addOwnerType)
+router.post("/ownertype",isLogin,checkPermission("ownerType","create"),addOwnerType)
 router.post("/department",isLogin,roleBaseAuth( "ADMIN"),addDepartment)
 router.post("/subscription",isLogin,roleBaseAuth( "ADMIN"),addSubscription)
 // router.post("/hierarchy",isLogin,addHierarchy)
@@ -61,6 +61,9 @@ router.put("/vltmodel/:id",isLogin,roleBaseAuth( "ADMIN"), updateVltModel);
 router.put('/pisreg/:id', isLogin,roleBaseAuth( "ADMIN"),updatePisRegistration)
 router.put("/seatlayout/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("seatLayout","update"), updateSeatLayout);
 router.put("/hierarchy/:id",isLogin,updateHierarchy)
+router.put("/ownertype/:id",isLogin,checkPermission("ownerType","update"),updateOwnerType)
+router.put("/addplan/:id",isLogin,checkPermission("plain","update"),updatePlan)
+
 
 
 

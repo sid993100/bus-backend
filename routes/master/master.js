@@ -23,6 +23,10 @@ import { updateDepartment, updateDepartmentByName } from "../../services/admin/d
 import { addVehicleModel, getVehicleModels, updateVehicleModel } from "../../services/master/vehicleModelService.js";
 import { addGender, getGender, updateGender } from "../../services/otc/genderServices.js";
 import { addPhotoIdCard, getPhotoIdCard, updatePhotoIdCard } from "../../services/otc/photoIdCardServices.js";
+import { addPisManufacturer, getPisManufacturer, updatePisManufacturer } from "../../services/otc/pisManufacturerService.js";
+import { addPisType, getPisTypes, updatepisType } from "../../services/otc/pisTypeService.js";
+import { addPisModel, getAllPisModels, updatePisModel } from "../../services/otc/pisModelService.js";
+import { createEmployType, getAllEmployTypes, updateEmployType } from "../../services/master/empolyType/empolyTypeService.js";
 
 
 
@@ -46,6 +50,11 @@ router.get("/depot",isLogin,roleBaseAuth( "ADMIN"),checkPermission("depot","read
 router.get("/vehiclemodel",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleModel","read"),getVehicleModels)
 router.get("/gender",isLogin,roleBaseAuth( "ADMIN"),checkPermission("gender","read"),getGender)
 router.get("/photoidcard",isLogin,roleBaseAuth( "ADMIN"),checkPermission("photoIdCard","read"),getPhotoIdCard)
+router.get("/pismanufacturer",isLogin,roleBaseAuth( "ADMIN"),checkPermission("pismanuf","read"),getPisManufacturer)
+router.get("/pistype",isLogin,roleBaseAuth( "ADMIN"),checkPermission("pisType","read"),getPisTypes)
+router.get("/pismodel",isLogin,roleBaseAuth( "ADMIN"),checkPermission("pisModel","read"),getAllPisModels)
+router.get("/employtype",isLogin,roleBaseAuth( "ADMIN"),checkPermission("employType","read"),getAllEmployTypes)
+
 
 
 
@@ -68,6 +77,10 @@ router.post("/depot",isLogin,roleBaseAuth( "ADMIN"),checkPermission("depot","cre
 router.post("/vehiclemodel",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleModel","create"),addVehicleModel);
 router.post("/gender",isLogin,roleBaseAuth( "ADMIN"),checkPermission("gender","create"),addGender);
 router.post("/photoidcard",isLogin,roleBaseAuth( "ADMIN"),checkPermission("photoIdCard","create"),addPhotoIdCard);
+router.post("/pismanufacturer",isLogin,roleBaseAuth( "ADMIN"),checkPermission("pismanuf","create"),addPisManufacturer);
+router.post("/pistype",isLogin,roleBaseAuth( "ADMIN"),checkPermission("pisType","create"),addPisType);
+router.post("/pismodel",isLogin,roleBaseAuth( "ADMIN"),checkPermission("pisModel","create"),addPisModel);
+router.post("/employtype",isLogin,roleBaseAuth( "ADMIN"),checkPermission("empolyType","create"),createEmployType);
 
 
 
@@ -95,5 +108,9 @@ router.put('/vehicletype/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("ve
 router.put('/state/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("state","update"), updateState);
 router.put('/gender/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("gender","update"),updateGender );
 router.put('/photoidcard/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("photoIdCard","update"),updatePhotoIdCard);
+router.put('/pismanufacturer/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("pismanuf","update"),updatePisManufacturer);
+router.put('/pistype/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("pisType","update"),updatepisType);
+router.put('/pismodel/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("pisModel","update"),updatePisModel);
+router.put('/employtype/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("employType","update"),updateEmployType);
 
 export default router

@@ -1,67 +1,37 @@
-
 import TripConfig from "../../../models/tripModel.js";
-
 
 export const addTrip = async (req, res) => {
   const {
-    tripId,
-    scheduleLabel,
-    depot,
-    seatLayout,
-    busService,
-    route,
-    origin,
-    destination,
-    originTime,
-    destinationTime,
-    arrivalDay,
-    cycleDay,
-    reservation,
-    currentBooking,
-    fareType,
+    depot, seatLayout, busService, route, origin, destination,
+    originTime, destinationTime, arrivalDay, cycleDay,
+    reservation, currentBooking, fareType, configuredStops
   } = req.body;
 
-  // Updated validation to include all required fields from schema
-  if (
-    // !tripId ||
-    !depot ||
-    !seatLayout ||
-    !busService ||
-    !route ||
-    !origin ||
-    !destination ||
-    !originTime ||
-    !destinationTime
-  ) {
-    return res.status(400).json({
-      message: "All required details must be provided",
-    });
+  if (!depot || !seatLayout || !busService || !route || !origin || !destination || !originTime || !destinationTime || !configuredStops) {
+    return res.status(400).json({ message: "All required details must be provided" });
   }
 
   try {
-    const trip = await TripConfig.create({
-      tripId: tripId,
-      scheduleLabel: scheduleLabel?.toUpperCase(),
-      depot,
-      seatLayout,
+    const existingTrip = await TripConfig.findOne({
       busService,
-      route,
-      origin,
-      destination,
       originTime,
-      destinationTime,
-      arrivalDay: arrivalDay || 1,
-      cycleDay: cycleDay || 'Daily',
-      reservation: reservation || 'Yes',
-      currentBooking: currentBooking || 'Yes',
-      fareType: fareType || 'KM Based',
+      origin,
+      destination
+    });
+
+    if (existingTrip) {
+      return res.status(409).json({ message: `A trip with service ${busService} already exists for ${origin} to ${destination} at ${originTime}.` });
+    }
+
+    const trip = await TripConfig.create({
+      depot, seatLayout, busService, route, origin, destination,
+      originTime, destinationTime, arrivalDay, cycleDay,
+      reservation, currentBooking, fareType, configuredStops,
       status: 'PENDING'
     });
 
     if (!trip) {
-      return res.status(500).json({
-        message: "Something went wrong while creating the trip",
-      });
+      return res.status(500).json({ message: "Something went wrong while creating the trip" });
     }
 
     return res.status(201).json({
@@ -70,7 +40,6 @@ export const addTrip = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-
     return res.status(500).json({
       message: error.message || "Internal server error",
       error: process.env.NODE_ENV === 'development' ? error : {}
@@ -78,15 +47,15 @@ export const addTrip = async (req, res) => {
   }
 };
 
-// Get all trips
-export const getTrip = async (req, res) => {
+export const getTrips = async (req, res) => {
   try {
     const trips = await TripConfig.find()
+      .populate('depot', 'depotCustomer')
+      .populate('seatLayout', 'layoutName')
+      .populate('route', 'routeName');
 
-  if (!trips) {
-      return res.status(404).json({
-        message: "No trips found",
-      });
+    if (!trips) {
+      return res.status(404).json({ message: "No trips found" });
     }
 
     return res.status(200).json({
@@ -95,58 +64,23 @@ export const getTrip = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({
-      message: error.message || "Internal server error",
-    });
+    return res.status(500).json({ message: error.message || "Internal server error" });
   }
 };
 
-// Get trip by ID
-export const getTripById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    const trip = await TripConfig.findById(id)
 
-
-    if (!trip) {
-      return res.status(404).json({
-        message: "Trip not found",
-      });
-    }
-
-    return res.status(200).json({
-      message: "Trip retrieved successfully",
-      data: trip,
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      message: error.message || "Internal server error",
-    });
-  }
-};
-
-// Update trip
 export const updateTrip = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
 
-    // Convert strings to uppercase if needed
-    if (updateData.tripId) updateData.tripId = updateData.tripId.toUpperCase();
-    if (updateData.scheduleLabel) updateData.scheduleLabel = updateData.scheduleLabel.toUpperCase();
-
     const trip = await TripConfig.findByIdAndUpdate(id, updateData, {
       new: true,
       runValidators: true,
-    })
-      
+    });
 
     if (!trip) {
-      return res.status(404).json({
-        message: "Trip not found",
-      });
+      return res.status(404).json({ message: "Trip not found" });
     }
 
     return res.status(200).json({
@@ -155,9 +89,7 @@ export const updateTrip = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({
-      message: error.message || "Internal server error",
-    });
+    return res.status(500).json({ message: error.message || "Internal server error" });
   }
 };
 

@@ -4,7 +4,7 @@ import { roleBaseAuth } from "../../middleWares/rolebaseAuth.js";
 import { checkPermission } from "../../middleWares/checkPermission.js";
 // import { getRoutes } from "../../services/userServices.js";
 import { addSeatLayout, getSeatLayout, updateSeatLayout } from "../../services/admin/seatLayout/seatLayoutServices.js";
-import { addTrip, getTrip, updateTrip } from "../../services/admin/trip/tripServices.js";
+import { addTrip, getTrips, updateTrip } from "../../services/admin/trip/tripServices.js";
 import { addRoute, updateRoute ,getRoutes} from "../../services/admin/route/routeService.js";
 import { addDuty, getDuty, updateDuty } from "../../services/admin/duty/dutyServices.js";
 import { createScheduleConfiguration, getAllScheduleConfigurations, updateScheduleConfiguration } from "../../services/admin/sheduleSercives.js";
@@ -14,7 +14,7 @@ const router = Router();
 
 router.get("/route",isLogin,roleBaseAuth( "ADMIN"),checkPermission("route","read"),getRoutes)
 router.get("/seatlayout",isLogin,roleBaseAuth( "ADMIN"),checkPermission("seatLayout","read"),getSeatLayout)
-router.get("/trip",isLogin,roleBaseAuth( "ADMIN"),checkPermission("trip","read"),getTrip)
+router.get("/trip",isLogin,roleBaseAuth( "ADMIN"),checkPermission("trip","read"),getTrips)
 router.get("/duty", isLogin,roleBaseAuth( "ADMIN"),checkPermission("duty","read"), getDuty);
 router.get("/scheduleconfig", isLogin,roleBaseAuth( "ADMIN"),checkPermission("scheduleConfig","read"), getAllScheduleConfigurations);
 

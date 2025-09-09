@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 export const getSeatLayout = async (req, res) => {
   try {
     // Populate the servicesLinked field to get service details
-    const seatLayouts = await SeatLayout.find({}).populate('servicesLinked', 'name');
+    const seatLayouts = await SeatLayout.find({}).populate('servicesLinked', 'name').populate("department","name");
     if (!seatLayouts) {
       return res.status(200).json({
         message: [], // Return empty array if not found

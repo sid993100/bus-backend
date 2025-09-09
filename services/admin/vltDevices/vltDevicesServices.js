@@ -3,10 +3,16 @@ import VltDevice from "../../../models/vltDeviceModel.js";
 import consoleManager from "../../../utils/consoleManager.js";
 
 export const getVltDevices=async (req,res) => {
-  const user = req.user;
-     
+
+      //  const populatedFields=[
+      //   {path:"vlt",select:"manufacturerName modelName" },
+      //   {path:"region",select:"regionName" },
+      //   {path:"customer",select:"depotCustomer" }
+      //  ]
+
      try {
       const vltDevice= await VltDevice.find({})
+      // .populate(populatedFields)
       if (!vltDevice) {
          return res.status(404).json({
             message: "Vlt Device Not Found",

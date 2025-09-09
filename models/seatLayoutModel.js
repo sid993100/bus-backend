@@ -37,11 +37,9 @@ const seatLayoutSchema = new Schema({
     min: 1
   },
   department: {
-    type: String,
+    type: Schema.Types.ObjectId,
+    ref:"Account",
     required: true,
-    uppercase: true,
-    enum: ["PUBLICTRANSPORT", "ENFORCEMENT", "STORE"],
-    default: "PUBLICTRANSPORT"
   },
   servicesLinked: [{
     type: Schema.Types.ObjectId,

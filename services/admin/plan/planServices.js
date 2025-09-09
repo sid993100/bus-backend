@@ -4,10 +4,12 @@ import Plan from "../../../models/planModel.js";
 import consoleManager from "../../../utils/consoleManager.js";
 
 export const getPlan=async (req,res) => {
-  const user = req.user;
-       
+       const populatedFields=[
+        {path:"vltdManufacturer",select:"manufacturerName modelName" },
+        {path:"vltdModel",select:"modelName" }
+       ]
      try {
-      const plan= await Plan.find({})
+      const plan= await Plan.find({}).populate(populatedFields)
       if (!plan) {
          return res.status(404).json({
             message: "Plan Not Found",
@@ -98,8 +100,10 @@ export const updatePlan = async (req, res) => {
     if (vltdManufacturer !== undefined) updateData.vltdManufacturer = vltdManufacturer;
     if (durationDays !== undefined) updateData.durationDays = durationDays;
 
-    const updatedPlan = await Plan.findByIdAndUpdate(id, updateData, { new: true });
-
+    const updatedPlan = await Plan.findByIdAndUpdate(id, updateData, { new: true })
+    .populate([{path:"vltdManufacturer",select:"manufacturerName modelName" },
+      {path:"vltdModel",select:"modelName" }
+    ])
     if (!updatedPlan) {
       return res.status(404).json({
         message: "Plan not found",

@@ -69,7 +69,7 @@ const dutySchema = new Schema({
     default: "PENDING"
   }
 }, {
-  timestamps: true // Yeh createdAt aur updatedAt fields automatic add karega
+  timestamps: true
 });
 
 const Duty = model("Duty", dutySchema);
