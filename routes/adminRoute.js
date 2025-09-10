@@ -10,7 +10,7 @@ import { addVltModel, getVltModel, updateVltModel } from "../services/admin/vltM
 import { addOwnerType, getOwnerType, updateOwnerType } from "../services/admin/owner/ownerServices.js";
 import { roleBaseAuth } from "../middleWares/rolebaseAuth.js";
 
-import { addSubscription, getSubscription } from "../services/admin/subscription/subscriptionServices.js";
+import { addSubscription, getSubscription, updateSubscription } from "../services/admin/subscription/subscriptionServices.js";
 import { checkPermission } from "../middleWares/checkPermission.js";
 import { getIncident } from "../services/admin/Incident/IncidentService.js";
 import { addHierarchy, getHierarchy, updateHierarchy } from "../services/admin/hierarchy/hierarchyServices.js";
@@ -57,6 +57,7 @@ router.put('/pisreg/:id', isLogin,roleBaseAuth( "ADMIN"),updatePisRegistration)
 router.put("/hierarchy/:id",isLogin,updateHierarchy)
 router.put("/ownertype/:id",isLogin,checkPermission("ownerType","update"),updateOwnerType)
 router.put("/addplan/:id",isLogin,checkPermission("plain","update"),updatePlan)
+router.put("/subscription/:id",isLogin,roleBaseAuth( "ADMIN"),updateSubscription);
 
 
 
