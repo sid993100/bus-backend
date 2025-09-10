@@ -37,9 +37,9 @@ const seatLayoutSchema = new Schema({
     min: 1
   },
   department: {
-    type: Schema.Types.ObjectId,
-    ref:"Account",
+    type: String,
     required: true,
+    uppercase:true
   },
   servicesLinked: [{
     type: Schema.Types.ObjectId,

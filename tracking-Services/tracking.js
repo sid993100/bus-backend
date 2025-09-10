@@ -11,7 +11,7 @@ import axios from "axios";
 dotenv.config();
 
 const vehicles = [];
-let sockitId;
+let socketId;
 const axiosApi = process.env.MY_AXIOS_URL || "http://localhost:5000";
 const parser = new BharatDeviceParser();
 
@@ -109,14 +109,12 @@ connectKafka().catch(console.error);
 
 // WebSocket events
 io.on("connection", (socket) => {
-  sockitId = socket.id;
+  socketId = socket.id;
 
   socket.on("trackBus", (data) => {
-    // socket.join(`bus_${data.id}`)
-
-    if (vehicles.some((v) => v.imei === data.id)) {
+ 
       socket.to(socket.id).emit("track", data);
-    }
+    
   });
 
   socket.on("stopTracking", (busId) => {
