@@ -50,7 +50,7 @@ export const addSim = async (req, res) => {
 
     const savedSim = await newSim.save();
 
-    const updatedVlt=await VltDevice.findOneAndUpdate({imeiNumber},{sim:savedSim._id},{new:true}).populate('sim');
+    const updatedVlt=await VltDevice.findOneAndUpdate({iccid},{sim:savedSim._id},{new:true}).populate('sim');
     if(!updatedVlt){
          return res.status(404).json({
         success: false,
@@ -75,11 +75,12 @@ export const updateSim = async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
 
+
     const updatedSim = await Sim.findByIdAndUpdate(
       id,
       updateData,
       { new: true, runValidators: true }
-    ).populate('sim');
+    ).populate('sim').populate({path:"imeiNumber",select:"imeiNumber iccid"});
 
     if (!updatedSim) {
       return res.status(404).json({

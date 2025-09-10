@@ -69,13 +69,13 @@ export const updateRole = async (req, res) => {
     if (!isValidObjectId(id)) {
       return res.status(400).json({ success: false, error: 'Invalid role ID format' });
     }
-    if (role && (!role.trim() || typeof role !== 'string')) {
+    if (!role && (!role.trim() || typeof role !== 'string')) {
       return res.status(400).json({ success: false, error: 'Invalid role name' });
     }
-    if (department && !isValidObjectId(department)) {
+    if (!department && !isValidObjectId(department) ) {
       return res.status(400).json({ success: false, error: 'Invalid department ID format' });
     }
-    if (hierarchy && !isValidObjectId(hierarchy)) {
+    if (!hierarchy && !isValidObjectId(hierarchy)) {
       return res.status(400).json({ success: false, error: 'Invalid hierarchy ID format' });
     }
 

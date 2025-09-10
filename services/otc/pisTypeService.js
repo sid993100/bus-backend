@@ -74,7 +74,7 @@ export const updatepisType = async (req, res) => {
             return res.status(404).json({ message: "Pis Manufacturer (Make) not found" });
         }
 
-        const typeQuery = PisType.findByIdAndUpdate(id, { make },{name}, { new: true, runValidators: true });
+        const typeQuery = PisType.findByIdAndUpdate(id, { make , name }, { new: true, runValidators: true });
         const updatedPisType = await populateType(typeQuery);
         
         if (!updatedPisType) {
