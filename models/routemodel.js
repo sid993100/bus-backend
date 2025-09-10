@@ -30,7 +30,7 @@ const routeSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "BusStop"
   },
-  stops: [{ 
+ stops: [{ 
     km: {
       type: Number,
       required: true,

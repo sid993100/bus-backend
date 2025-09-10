@@ -28,10 +28,10 @@ export const getPlan=async (req,res) => {
 }
 export const addPlan =async (req,res) => {
 
-  const {planName,vltdManufacturer,durationDays}=req.body
+  const {planName,vltdManufacturer,vltdModel,durationDays}=req.body
 
     
-     if(!planName||!vltdManufacturer||!durationDays){
+     if(!planName||!vltdManufacturer||!durationDays||!vltdModel){
        return res.status(404).json({
             message:"All details Required"
          })
@@ -41,7 +41,8 @@ export const addPlan =async (req,res) => {
         const plan = await Plan.create({
         planName,
         vltdManufacturer,
-        durationDays
+        durationDays,
+        vltdModel
       })
       
       if(!plan){
@@ -70,7 +71,7 @@ export const addPlan =async (req,res) => {
 export const updatePlan = async (req, res) => {
   try {
     const { id } = req.params; // Plan ID from URL
-    const { planName, vltdManufacturer, durationDays } = req.body;
+    const { planName, vltdManufacturer, durationDays, vltdModel } = req.body;
 
     // Validate ID
     if (!id) {
@@ -87,7 +88,8 @@ export const updatePlan = async (req, res) => {
       if (
       planName === undefined &&
       vltdManufacturer === undefined &&
-      durationDays === undefined
+      durationDays === undefined &&
+      vltdModel === undefined
     ) {
       return res.status(400).json({
         message: "At least one field is required to update",
@@ -99,6 +101,7 @@ export const updatePlan = async (req, res) => {
     if (planName !== undefined) updateData.planName = planName;
     if (vltdManufacturer !== undefined) updateData.vltdManufacturer = vltdManufacturer;
     if (durationDays !== undefined) updateData.durationDays = durationDays;
+    if (vltdModel !== undefined) updateData.vltdModel = vltdModel;
 
     const updatedPlan = await Plan.findByIdAndUpdate(id, updateData, { new: true })
     .populate([{path:"vltdManufacturer",select:"manufacturerName modelName" },
