@@ -2,7 +2,8 @@ import { Schema,model } from "mongoose";
 
 const simVltSchema= new Schema({
     imeiNumber:{
-        type:Number,
+        type:Schema.Types.ObjectId,
+        ref:"VltDevice",
         required:true,
     },
     iccid:{

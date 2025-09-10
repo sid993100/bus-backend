@@ -5,7 +5,7 @@ import VltDevice from '../../../models/vltDeviceModel.js';
 // GET ALL (with populate)
 export const getAllSims = async (req, res) => {
   try {
-    const sims = await Sim.find().populate('sim'); // Populates SimService reference
+    const sims = await Sim.find().populate('sim').populate({path:"imeiNumber",select:"imeiNumber iccid"}); // Populates SimService reference
     res.status(200).json({
       success: true,
       data: sims
@@ -50,7 +50,7 @@ export const addSim = async (req, res) => {
 
     const savedSim = await newSim.save();
 
-    const updatedVlt=await VltDevice.findAndUpdate({imeiNumber},{sim:savedSim._id},{new:true}).populate('sim');
+    const updatedVlt=await VltDevice.findOneAndUpdate({imeiNumber},{sim:savedSim._id},{new:true}).populate('sim');
     if(!updatedVlt){
          return res.status(404).json({
         success: false,
