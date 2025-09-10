@@ -63,6 +63,7 @@ const roleSchema = new Schema({
         pisType:{ type: permissionSchema, default: defaultPermission },//new
         pisModel:{ type: permissionSchema, default: defaultPermission },//new
         employType:{ type: permissionSchema, default: defaultPermission },//new
+        vltSim:{ type: permissionSchema, default: defaultPermission },//new
     },
     hierarchy: {
         type: String,

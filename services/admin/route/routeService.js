@@ -13,7 +13,9 @@ const populatedFields = [
       { path: 'stopGrade', select: 'stopGradeName' }
     ]
   },
-  { path: 'stops.toll', select: 'tollName' }
+  { path: 'stops.toll', select: 'tollName' },
+  {path:"region",select:"regionName Code"},
+  {path:"depot",select:"depotCustomer code"}
 ];
 
 

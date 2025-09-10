@@ -30,6 +30,14 @@ const routeSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "BusStop"
   },
+  region:[{
+    type:Schema.Types.ObjectId,
+    ref:"Region"
+  }],
+  depot:[{
+    type:Schema.Types.ObjectId,
+    ref:"DepotCustomer"
+  }],
  stops: [{ 
     km: {
       type: Number,

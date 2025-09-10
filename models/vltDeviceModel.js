@@ -14,6 +14,10 @@ const vltDeviceSchema=new Schema({
         type:Number,
         required:true
     },
+    sim:{
+        type:Schema.Types.ObjectId,
+        ref:"Sim"
+    },
     region:{
         type:Schema.Types.ObjectId,
         ref:"Region",
