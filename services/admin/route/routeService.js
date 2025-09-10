@@ -85,7 +85,7 @@ export const addRoute = async (req, res) => {
 
 export const updateRoute = async (req, res) => {
     const { id } = req.params;
-    const { source, destination, via, routeName, routeCode, routeLength, stops } = req.body;
+    const { source, destination, via, routeName, routeCode, routeLength, stops,depot,region } = req.body;
     
     if (!source || !destination || routeLength === undefined || routeLength === null || !routeName) {
         return res.status(400).json({ message: "All details Required" });
@@ -95,7 +95,7 @@ export const updateRoute = async (req, res) => {
         const validStops = stops ? stops.filter(s => s.stop || s.toll) : [];
         const updatedRoute = await Route.findByIdAndUpdate(
             id,
-            { source, destination, via, routeName, routeCode, routeLength, stops: validStops },
+            { source, destination, via, routeName, routeCode, routeLength, stops: validStops,depot,region },
             { new: true, runValidators: true }
         ).populate(populatedFields);
         

@@ -82,8 +82,8 @@ const tripConfigSchema = new Schema({
   fareType: {
     type: String,
     required: true,
-    enum: ['KM Based', 'Stage KM'],
-    default: 'KM Based'
+    enum: ['KM BASED', 'STAGE BASED',"MIXED FARE"],
+    default: 'KM BASED'
   },
   configuredStops: [configuredStopSchema],
   status: {
