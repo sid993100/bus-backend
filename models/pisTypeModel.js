@@ -5,11 +5,13 @@ const pisTypeSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref:"PisManufacturer",
     required: true,
+
   },
   name: {
     type: String,
     required: true,
-    uppercase: true
+    uppercase: true,
+    
   }
 }, {
   timestamps: true

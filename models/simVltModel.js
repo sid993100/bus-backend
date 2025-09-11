@@ -19,7 +19,8 @@ const simVltSchema= new Schema({
         type:String
     },
     fallbackSim:{
-        type:String
+        type:Schema.Types.ObjectId,
+        ref:"SimService",
     },
     fallbackMISIDN:{
         trype:String

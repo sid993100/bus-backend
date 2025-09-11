@@ -10,11 +10,23 @@ export const addPisModel = async (req, res) => {
       return res.status(400).json({ success: false, error: 'All fields are required' });
     }
 
+    const existsPisMoel=await PisModel.findOne({vehicleModel})
+    if(existsPisMoel){
+      return res.status(409).json({
+        message: "Pis Model already exists"
+      })
+    }
+
     const pisModel = new PisModel({ make, vehicleType, vehicleModel });
     const savedModel = await pisModel.save();
 
     res.status(201).json({ success: true, data: savedModel });
   } catch (error) {
+     if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Pis Model already exists"
+      });
+    }
     res.status(500).json({ success: false, error: error.message });
   }
 };
@@ -53,6 +65,14 @@ export const updatePisModel = async (req, res) => {
   try {
     const { id } = req.params;
     const { make, vehicleType, vehicleModel } = req.body;
+
+
+     const existsPisMoel=await PisModel.findOne({vehicleModel})
+    if(existsPisMoel&& existsPisMoel._id!=id ){
+      return res.status(409).json({
+        message: "Pis Model already exists"
+      })
+    }
 
     const updated = await PisModel.findByIdAndUpdate(
       id,

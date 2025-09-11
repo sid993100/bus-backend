@@ -16,7 +16,8 @@ const pisModelSchema = new Schema({
   vehicleModel: {
     type: String,
     required: true,
-    uppercase: true
+    uppercase: true,
+    unique:true
   }
 }, {
   timestamps: true
