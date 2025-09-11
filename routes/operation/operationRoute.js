@@ -35,4 +35,5 @@ router.put("/duty/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("duty","up
 router.put("/scheduleConfig/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("scheduleConfig","update"), updateScheduleConfiguration);
 router.put("/vltsim/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vltSim","update"), updateSim);
 
+
 export default router;

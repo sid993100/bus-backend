@@ -1,20 +1,20 @@
+// controllers/simVltController.js
 import Sim from '../../../models/simVltModel.js';
 import VltDevice from '../../../models/vltDeviceModel.js';
-
 
 // GET ALL (with populate)
 export const getAllSims = async (req, res) => {
   try {
-    const sims = await Sim.find().populate('sim').populate({path:"imeiNumber",select:"imeiNumber iccid"},{path:"fallbackSim",select:"serviceProviderName"}); // Populates SimService reference
-    res.status(200).json({
-      success: true,
-      data: sims
-    });
+    const sims = await Sim.find()
+      .populate('sim')
+      .populate([
+        { path: 'imeiNumber', select: 'imeiNumber iccid' },
+        { path: 'fallbackSim', select: 'serviceProviderName' },
+      ]);
+
+    res.status(200).json({ success: true, data: sims });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
@@ -33,11 +33,9 @@ export const addSim = async (req, res) => {
     if (!imeiNumber || !iccid || !sim) {
       return res.status(400).json({
         success: false,
-        error: "imeiNumber, iccid and sim are required"
+        error: "imeiNumber, iccid and sim are required",
       });
     }
-  
-    
 
     const newSim = new Sim({
       imeiNumber,
@@ -45,27 +43,29 @@ export const addSim = async (req, res) => {
       sim,
       primeryMSISDN,
       fallbackSim,
-      fallbackMISIDN
+      fallbackMISIDN,
     });
 
     const savedSim = await newSim.save();
 
-    const updatedVlt=await VltDevice.findOneAndUpdate({iccid},{sim:savedSim._id},{new:true}).populate('sim');
-    if(!updatedVlt){
-         return res.status(404).json({
+    const updatedVlt = await VltDevice
+      .findOneAndUpdate(
+        { iccid },
+        { sim: savedSim._id },
+        { new: true }
+      )
+      .populate('sim');
+
+    if (!updatedVlt) {
+      return res.status(404).json({
         success: false,
-        error: "VLT Device not found with provided vltId"
+        error: "VLT Device not found with provided vltId",
       });
     }
-    res.status(201).json({
-      success: true,
-      data: savedSim
-    });
+
+    res.status(201).json({ success: true, data: savedSim });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
@@ -75,28 +75,23 @@ export const updateSim = async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
 
-
     const updatedSim = await Sim.findByIdAndUpdate(
       id,
       updateData,
       { new: true, runValidators: true }
-    ).populate('sim').populate({path:"imeiNumber",select:"imeiNumber iccid"});
+    )
+    .populate('sim')
+    .populate([
+      { path: 'imeiNumber', select: 'imeiNumber iccid' },
+      { path: 'fallbackSim', select: 'serviceProviderName' },
+    ]);
 
     if (!updatedSim) {
-      return res.status(404).json({
-        success: false,
-        error: "Sim not found"
-      });
+      return res.status(404).json({ success: false, error: "Sim not found" });
     }
 
-    res.status(200).json({
-      success: true,
-      data: updatedSim
-    });
+    res.status(200).json({ success: true, data: updatedSim });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 };

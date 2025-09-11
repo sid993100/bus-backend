@@ -23,7 +23,7 @@ const simVltSchema= new Schema({
         ref:"SimService",
     },
     fallbackMISIDN:{
-        trype:String
+        type:String
     }
 })
 

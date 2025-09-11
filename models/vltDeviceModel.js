@@ -11,7 +11,7 @@ const vltDeviceSchema=new Schema({
         required:true,
     },
     iccid:{
-        type:Number,
+        type:String,
         required:true
     },
     sim:{

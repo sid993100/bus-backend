@@ -69,6 +69,10 @@ export const updatepisType = async (req, res) => {
     }
     
     try {
+         const existingPisType = await PisType.findOne({ make, name });
+        if (existingPisType) {
+            return res.status(409).json({ message: "This Pis Type already exists for the selected Make" });
+        }
         const foundMake = await PisManufacturer.findById(make);
         if (!foundMake) {
             return res.status(404).json({ message: "Pis Manufacturer (Make) not found" });

@@ -117,5 +117,32 @@ export const deleteTrip = async (req, res) => {
   }
 };
 
+// export const delayTrip = async(req,res)=>{
+
+//  try {
+//     const { id } = req.params;
+//     const updateData = req.body;
+
+//     const trip = await TripConfig.findByIdAndUpdate(id, updateData, {
+//       new: true,
+//       runValidators: true,
+//     });
+
+//     if (!trip) {
+//       return res.status(404).json({ message: "Trip not found" });
+//     }
+
+//     return res.status(200).json({
+//       message: "Trip Delay successfully",
+//       data: trip,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ message: error.message || "Internal server error" });
+//   }
+
+  
+// }
+
 
 

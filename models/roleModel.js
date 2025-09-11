@@ -64,6 +64,15 @@ const roleSchema = new Schema({
         pisModel:{ type: permissionSchema, default: defaultPermission },//new
         employType:{ type: permissionSchema, default: defaultPermission },//new
         vltSim:{ type: permissionSchema, default: defaultPermission },//new
+        liveTrack:{ type: permissionSchema, default: defaultPermission },//new
+        journey:{ type: permissionSchema, default: defaultPermission },//new
+        event:{ type: permissionSchema, default: defaultPermission },//new
+        rawData:{ type: permissionSchema, default: defaultPermission },//new
+        journeyHistory:{ type: permissionSchema, default: defaultPermission },//new
+        incident:{ type: permissionSchema, default: defaultPermission },//new
+        vehicleActivity:{ type: permissionSchema, default: defaultPermission },//new
+        crowedManagement:{ type: permissionSchema, default: defaultPermission },//new
+        idlingSummary:{ type: permissionSchema, default: defaultPermission },//new
     },
     hierarchy: {
         type: String,
