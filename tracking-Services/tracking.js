@@ -10,7 +10,8 @@ import axios from "axios";
 
 dotenv.config();
 
-const vehicles = [];
+let vehicleId
+
 let socketId;
 const axiosApi = process.env.MY_AXIOS_URL || "http://localhost:5000";
 const parser = new BharatDeviceParser();
@@ -94,12 +95,9 @@ async function connectKafka() {
 
       // Emit to WebSocket
       if (topic === "bharatBusTrack") {
-        if (!vehicles.some((v) => v.imei === parsed.imei)) {
-          vehicles.push({ ...parsed });
-        }
-        io.emit("track", parsed);
+          io.to(socketId).emit("track",parsed)
       } else if (topic === "acuteBusTrack") {
-        io.emit("track", parsed);
+        io.to(socketId).emit("track", parsed);
       }
     },
   });
@@ -111,14 +109,13 @@ connectKafka().catch(console.error);
 io.on("connection", (socket) => {
   socketId = socket.id;
 
-  socket.on("trackBus", (data) => {
- 
-      socket.to(socket.id).emit("track", data);
-    
+  socket.on("trackBus", (busId) => {
+      console.log(busId);
+      io.to(socketId).emit("join",busId)
   });
 
   socket.on("stopTracking", (busId) => {
-    socket.leave(`bus_${busId}`);
+    socket.leave(`bus_${vehicleId}`);
     consoleManager.log(`Client ${socket.id} stopped tracking bus ${busId}`);
   });
 

@@ -10,7 +10,6 @@ export const getSeatLayout = async (req, res) => {
         message: [], // Return empty array if not found
       });
     }
-    console.log(seatLayouts);
     
     res.status(200).json({
       message: seatLayouts
