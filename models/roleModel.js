@@ -74,6 +74,7 @@ const roleSchema = new Schema({
         crowedManagement:{ type: permissionSchema, default: defaultPermission },//new
         idlingSummary:{ type: permissionSchema, default: defaultPermission },//new
         rawData:{ type: permissionSchema, default: defaultPermission },//new
+        vehicleActivity:{ type: permissionSchema, default: defaultPermission },//new
     },
     hierarchy: {
         type: String,
