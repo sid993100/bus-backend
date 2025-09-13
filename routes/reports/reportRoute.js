@@ -7,6 +7,8 @@ import { vehicleActivity } from '../../services/reports/vehicleActivityServices.
 import { journeyHistory } from '../../services/reports/journeyHistoryService.js';
 import { latestFirmware } from '../../services/reports/firmwareVersionServices.js';
 import { idlingSummary } from '../../services/reports/idlingSummaryService.js';
+import { getDistanceTravelled } from '../../services/reports/distanceTravelledServices.js';
+import { getVehicleUtilization } from '../../services/reports/vehicleUtilizationServices.js';
 
 const router = Router();
 
@@ -16,6 +18,8 @@ router.get('/vehicleactivity',isLogin,roleBaseAuth( "ADMIN"),checkPermission("ve
 router.get('/journeyhistory/:vehicleNumber',isLogin,roleBaseAuth( "ADMIN"),checkPermission("journeyHistory","read"),journeyHistory)
 router.get('/firmware/:search',isLogin,roleBaseAuth( "ADMIN"),checkPermission("firmware","read"),latestFirmware)
 router.get('/idlingsummary',isLogin,roleBaseAuth( "ADMIN"),checkPermission("idlingSummary","read"),idlingSummary)
+router.get('/distancetravelled',isLogin,roleBaseAuth( "ADMIN"),checkPermission("distanceTravelled","read"),getDistanceTravelled)
+router.get('/vehicleutilization',isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleUtilization","read"),getVehicleUtilization)
 
 
 
