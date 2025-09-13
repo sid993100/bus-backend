@@ -1,6 +1,5 @@
 import Vehicle from '../../models/vehicleModel.js';
 import TrackingPacket from '../../models/trackingPacketModel.js';
-import VLTDevice from '../../models/vltDeviceModel.js';
 import { parseISO, differenceInMilliseconds, isValid } from 'date-fns';
 import axios from 'axios';
 
@@ -44,10 +43,60 @@ export const idlingSummary = async (req, res) => {
     const start = parseISO(startDate);
     const end = parseISO(endDate);
 
-    if (!isValid(start) || !isValid(end) || start >= end) {
+    // **FIX: Validate date format first**
+    if (!isValid(start) || !isValid(end)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid date format or range. Use ISO format and ensure startDate is before endDate.',
+        message: 'Invalid date format. Use ISO format (e.g., 2025-09-13T10:00:00Z)',
+      });
+    }
+
+    // **FIX: Get current time for validation**
+    const now = new Date();
+
+    // **FIX: Check if dates are in the future**
+    if (start > now) {
+      return res.status(400).json({
+        success: false,
+        message: 'Start date cannot be in the future',
+      });
+    }
+
+    if (end > now) {
+      return res.status(400).json({
+        success: false,
+        message: 'End date cannot be in the future',
+      });
+    }
+
+    // **FIX: Check date range validity**
+    if (start >= end) {
+      return res.status(400).json({
+        success: false,
+        message: 'Start date must be before end date',
+      });
+    }
+
+    // **FIX: Optional - limit maximum date range (e.g., 30 days)**
+    const maxRangeDays = 30;
+    const maxRangeMs = maxRangeDays * 24 * 60 * 60 * 1000;
+    const dateRangeMs = differenceInMilliseconds(end, start);
+    
+    if (dateRangeMs > maxRangeMs) {
+      return res.status(400).json({
+        success: false,
+        message: `Date range cannot exceed ${maxRangeDays} days`,
+      });
+    }
+
+    // **FIX: Optional - limit how far back in time we can query (e.g., 90 days)**
+    const maxPastDays = 90;
+    const maxPastTime = new Date(now.getTime() - (maxPastDays * 24 * 60 * 60 * 1000));
+    
+    if (start < maxPastTime) {
+      return res.status(400).json({
+        success: false,
+        message: `Start date cannot be more than ${maxPastDays} days in the past`,
       });
     }
 
@@ -101,7 +150,7 @@ export const idlingSummary = async (req, res) => {
       for (let i = 0; i < packets.length; i++) {
         const currentPacket = packets[i];
         
-        // --- THIS IS THE ONLY LINE THAT CHANGED ---
+        // Check for idling condition (ignition off and speed = 0)
         const conditionMet = !currentPacket.ignition && currentPacket.speed_kmh === IDLE_SPEED_THRESHOLD;
 
         if (!isIdling && conditionMet) {
@@ -181,6 +230,7 @@ export const idlingSummary = async (req, res) => {
       filters: {
           startDate: start.toISOString(),
           endDate: end.toISOString(),
+          dateRangeDays: Math.ceil(dateRangeMs / (24 * 60 * 60 * 1000)),
           ...(regionId && { regionId }),
           ...(depotId && { depotId }),
           ...(vehicleNumber && { vehicleNumber }),

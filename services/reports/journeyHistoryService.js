@@ -1,8 +1,7 @@
-
 import axios from 'axios';
 import TrackingPacket from '../../models/trackingPacketModel.js';
 
-export const journeyHistory= async (req, res) => {
+export const journeyHistory = async (req, res) => {
   try {
     const { vehicleNumber } = req.params;
     const { 
@@ -77,7 +76,7 @@ export const journeyHistory= async (req, res) => {
       heading: record.heading || 0
     }));
 
-    // Add location information if requested (similar to Maharajganj format)
+    // Add location information if requested
     if (includeLocation === 'true') {
       formattedData = await addLocationData(formattedData);
     }
@@ -112,7 +111,7 @@ export const journeyHistory= async (req, res) => {
 };
 
 /**
- * Calculate date range based on period
+ * Calculate date range based on period - FIXED VERSION
  */
 function calculateDateRange(period, startDate, endDate) {
   const now = new Date();
@@ -152,6 +151,21 @@ function calculateDateRange(period, startDate, endDate) {
           message: 'Invalid date format. Use ISO format (e.g., 2024-03-03T14:04:20Z)'
         };
       }
+
+      // **FIX: Check if dates are in the future**
+      if (start > now) {
+        return {
+          success: false,
+          message: 'Start date cannot be in the future'
+        };
+      }
+
+      if (end > now) {
+        return {
+          success: false,
+          message: 'End date cannot be in the future'
+        };
+      }
       
       // Validate 24-hour limit for custom range
       const hoursDiff = (end - start) / (1000 * 60 * 60);
@@ -168,6 +182,18 @@ function calculateDateRange(period, startDate, endDate) {
           message: 'Start date must be before end date'
         };
       }
+
+      // **FIX: Additional validation for reasonable date ranges**
+      const maxPastDays = 90; // Allow maximum 90 days in the past
+      const maxPastTime = new Date(now.getTime() - (maxPastDays * 24 * 60 * 60 * 1000));
+      
+      if (start < maxPastTime) {
+        return {
+          success: false,
+          message: `Start date cannot be more than ${maxPastDays} days in the past`
+        };
+      }
+
       break;
     
     default:
@@ -175,6 +201,15 @@ function calculateDateRange(period, startDate, endDate) {
         success: false,
         message: 'Invalid period. Use: last1hour, last2hours, last6hours, last12hours, or custom'
       };
+  }
+
+  // **FIX: Final validation to ensure dates are not in future for predefined periods**
+  if (start > now) {
+    start = new Date(now.getTime() - (1 * 60 * 60 * 1000)); // Default to 1 hour ago
+  }
+  
+  if (end > now) {
+    end = now;
   }
 
   return {
@@ -216,7 +251,7 @@ async function addLocationData(data) {
         
         // Rate limiting - wait between requests
         if (i < maxGeocode - 1) {
-          await new Promise(resolve => setTimeout(resolve, 200)); // Increased delay
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
       } catch (error) {
         console.error(`Geocoding failed for ${record.latitude}, ${record.longitude}:`, error.message);
@@ -240,18 +275,16 @@ async function addLocationData(data) {
   return data;
 }
 
-
 /**
  * Reverse geocode coordinates to address - Improved version
  */
 async function reverseGeocode(lat, lon) {
   try {
-    // Use JSON format instead of geocodejson for better compatibility
     const url = `http://nominatim.locationtrack.in/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
     const response = await axios.get(url, { 
       timeout: 5000,
       headers: {
-        'User-Agent': 'VehicleTrackingApp/1.0' // Always use a proper User-Agent
+        'User-Agent': 'VehicleTrackingApp/1.0'
       }
     });
     
@@ -259,7 +292,6 @@ async function reverseGeocode(lat, lon) {
       return response.data.display_name;
     }
     
-    // If display_name is not available, construct from address components
     if (response.data?.address) {
       const addr = response.data.address;
       const parts = [
@@ -280,5 +312,3 @@ async function reverseGeocode(lat, lon) {
     return null;
   }
 }
-
-

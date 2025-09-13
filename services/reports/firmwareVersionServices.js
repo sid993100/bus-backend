@@ -22,7 +22,7 @@ export const latestFirmware = async (req, res) => {
     res.json({
       serialNo: 1,
       imeiNumber: device.imei,
-      deviceMake: device.vendor_id || 'iTriangle',
+      deviceMake: device.vendor_id ,
       deviceModel: 'TM100',
       mappedVehicle: device.vehicle_reg_no,
       lastReportedDateTime: new Date(device.timestamp).toLocaleString('en-IN').replace(',', ''),

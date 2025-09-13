@@ -22,6 +22,63 @@ export const getDistanceTravelled = async (req, res) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
 
+    // **FIX: Validate date format**
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return res.status(400).json({
+        error: 'Invalid date format',
+        message: 'Please provide valid dates in ISO format (e.g., 2025-09-13T00:00:00Z)'
+      });
+    }
+
+    // **FIX: Get current time for validation**
+    const now = new Date();
+
+    // **FIX: Check if dates are in the future**
+    if (start > now) {
+      return res.status(400).json({
+        error: 'Invalid start date',
+        message: 'Start date cannot be in the future'
+      });
+    }
+
+    if (end > now) {
+      return res.status(400).json({
+        error: 'Invalid end date',
+        message: 'End date cannot be in the future'
+      });
+    }
+
+    // **FIX: Check date range validity**
+    if (start >= end) {
+      return res.status(400).json({
+        error: 'Invalid date range',
+        message: 'Start date must be before end date'
+      });
+    }
+
+    // **FIX: Optional - limit maximum date range (e.g., 7 days for distance calculation)**
+    const maxRangeDays = 7;
+    const dateRangeMs = end.getTime() - start.getTime();
+    const maxRangeMs = maxRangeDays * 24 * 60 * 60 * 1000;
+    
+    if (dateRangeMs > maxRangeMs) {
+      return res.status(400).json({
+        error: 'Date range too large',
+        message: `Date range cannot exceed ${maxRangeDays} days for distance calculation`
+      });
+    }
+
+    // **FIX: Optional - limit how far back in time (e.g., 30 days)**
+    const maxPastDays = 30;
+    const maxPastTime = new Date(now.getTime() - (maxPastDays * 24 * 60 * 60 * 1000));
+    
+    if (start < maxPastTime) {
+      return res.status(400).json({
+        error: 'Start date too old',
+        message: `Start date cannot be more than ${maxPastDays} days in the past`
+      });
+    }
+
     // Get tracking data for the vehicle in date range
     const trackingData = await TrackingPacket.find({
       vehicle_reg_no: vehicleNumber,
@@ -81,12 +138,15 @@ export const getDistanceTravelled = async (req, res) => {
         currentJourney.endLat = point.latitude;
         currentJourney.endLon = point.longitude;
         
-        // Get location names
+        // Get location names (with rate limiting for API calls)
         if (currentJourney.startLat && currentJourney.startLon) {
           currentJourney.startLocation = await getLocationName(currentJourney.startLat, currentJourney.startLon);
+          // Small delay to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
         if (currentJourney.endLat && currentJourney.endLon) {
           currentJourney.endLocation = await getLocationName(currentJourney.endLat, currentJourney.endLon);
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
         
         // Calculate journey time
@@ -109,7 +169,7 @@ export const getDistanceTravelled = async (req, res) => {
       }
     }
 
-    // Response matching your table format
+    // **FIX: Enhanced response with validation info**
     res.json({
       success: true,
       summary: {
@@ -117,7 +177,9 @@ export const getDistanceTravelled = async (req, res) => {
         startTime: formatDateTime(start),
         endTime: formatDateTime(end),
         totalDistance: `${Math.round(totalDistance * 10) / 10} KM`,
-        totalJourneys: journeySegments.length
+        totalJourneys: journeySegments.length,
+        dateRangeDays: Math.ceil(dateRangeMs / (24 * 60 * 60 * 1000)),
+        dataPoints: trackingData.length
       },
       journeys: journeySegments
     });
@@ -146,18 +208,42 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 /**
- * Get location name from coordinates
+ * Get location name from coordinates - Enhanced with better error handling
  */
 async function getLocationName(lat, lon) {
+  if (!lat || !lon || lat === 0 || lon === 0) {
+    return 'Invalid Coordinates';
+  }
+  
   try {
     const url = `http://nominatim.locationtrack.in/reverse?format=json&lat=${lat}&lon=${lon}`;
-    const response = await axios.get(url, { timeout: 3000 });
+    const response = await axios.get(url, { 
+      timeout: 5000,
+      headers: {
+        'User-Agent': 'DistanceTrackingApp/1.0'
+      }
+    });
     
     if (response.data?.display_name) {
       return response.data.display_name;
     }
+    
+    // Fallback to address components
+    if (response.data?.address) {
+      const addr = response.data.address;
+      const parts = [
+        addr.road,
+        addr.city || addr.town || addr.village,
+        addr.state,
+        addr.country
+      ].filter(Boolean);
+      
+      return parts.length > 0 ? parts.join(', ') : `${lat}, ${lon}`;
+    }
+    
     return `${lat}, ${lon}`;
   } catch (error) {
+    console.error('Geocoding error:', error.message);
     return `${lat}, ${lon}`;
   }
 }

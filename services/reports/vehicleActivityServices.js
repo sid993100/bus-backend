@@ -28,7 +28,7 @@ export const vehicleActivity = async (req, res) => {
     } catch (error) {
       return res.status(400).json({
         error: 'Invalid date format',
-        message: 'Dates must be in ISO format (e.g., 2024-04-17T00:00:00Z)'
+        message: 'Dates must be in ISO format (e.g., 2025-09-13T17:00:00Z)'
       });
     }
 
@@ -39,10 +39,52 @@ export const vehicleActivity = async (req, res) => {
       });
     }
 
+    // **FIX: Get current time for validation**
+    const now = new Date();
+
+    // **FIX: Check if dates are in the future**
+    if (start > now) {
+      return res.status(400).json({
+        error: 'Invalid start date',
+        message: 'Start date cannot be in the future'
+      });
+    }
+
+    if (end > now) {
+      return res.status(400).json({
+        error: 'Invalid end date',
+        message: 'End date cannot be in the future'
+      });
+    }
+
+    // **FIX: Check date range validity**
     if (start >= end) {
       return res.status(400).json({
         error: 'Invalid date range',
         message: 'Start date must be before end date'
+      });
+    }
+
+    // **FIX: Optional - limit maximum date range (e.g., 7 days for comprehensive analytics)**
+    const maxRangeDays = 7;
+    const dateRangeMs = end.getTime() - start.getTime();
+    const maxRangeMs = maxRangeDays * 24 * 60 * 60 * 1000;
+    
+    if (dateRangeMs > maxRangeMs) {
+      return res.status(400).json({
+        error: 'Date range too large',
+        message: `Date range cannot exceed ${maxRangeDays} days for comprehensive analytics`
+      });
+    }
+
+    // **FIX: Optional - limit how far back in time (e.g., 30 days)**
+    const maxPastDays = 30;
+    const maxPastTime = new Date(now.getTime() - (maxPastDays * 24 * 60 * 60 * 1000));
+    
+    if (start < maxPastTime) {
+      return res.status(400).json({
+        error: 'Start date too old',
+        message: `Start date cannot be more than ${maxPastDays} days in the past`
       });
     }
 
@@ -82,16 +124,22 @@ export const vehicleActivity = async (req, res) => {
       analytics = calculateComprehensiveAnalytics(trackingData);
     }
 
-    // Response
+    // **FIX: Enhanced response with validation info**
     res.status(200).json({
       success: true,
       vehicleNumber: vehicleNumber.toUpperCase(),
       dateRange: {
         startDate: start.toISOString(),
         endDate: end.toISOString(),
-        durationHours: differenceInHours(end, start)
+        durationHours: differenceInHours(end, start),
+        dateRangeDays: Math.ceil(dateRangeMs / (24 * 60 * 60 * 1000))
       },
       totalRecords: trackingData.length,
+      queryLimits: {
+        maxRangeDays: maxRangeDays,
+        maxPastDays: maxPastDays,
+        dataPointLimit: 5000
+      },
       ...(includeAnalytics === 'true' && { analytics }),
       data: trackingData
     });

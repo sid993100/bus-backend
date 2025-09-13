@@ -21,6 +21,63 @@ export const getVehicleUtilization = async (req, res) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
 
+    // **FIX: Validate date format**
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return res.status(400).json({
+        error: 'Invalid date format',
+        message: 'Please provide valid dates in ISO format (e.g., 2025-09-13T00:00:00Z)'
+      });
+    }
+
+    // **FIX: Get current time for validation**
+    const now = new Date();
+
+    // **FIX: Check if dates are in the future**
+    if (start > now) {
+      return res.status(400).json({
+        error: 'Invalid start date',
+        message: 'Start date cannot be in the future'
+      });
+    }
+
+    if (end > now) {
+      return res.status(400).json({
+        error: 'Invalid end date',
+        message: 'End date cannot be in the future'
+      });
+    }
+
+    // **FIX: Check date range validity**
+    if (start >= end) {
+      return res.status(400).json({
+        error: 'Invalid date range',
+        message: 'Start date must be before end date'
+      });
+    }
+
+    // **FIX: Optional - limit maximum date range (e.g., 31 days)**
+    const maxRangeDays = 31;
+    const dateRangeMs = end.getTime() - start.getTime();
+    const maxRangeMs = maxRangeDays * 24 * 60 * 60 * 1000;
+    
+    if (dateRangeMs > maxRangeMs) {
+      return res.status(400).json({
+        error: 'Date range too large',
+        message: `Date range cannot exceed ${maxRangeDays} days`
+      });
+    }
+
+    // **FIX: Optional - limit how far back in time (e.g., 90 days)**
+    const maxPastDays = 90;
+    const maxPastTime = new Date(now.getTime() - (maxPastDays * 24 * 60 * 60 * 1000));
+    
+    if (start < maxPastTime) {
+      return res.status(400).json({
+        error: 'Start date too old',
+        message: `Start date cannot be more than ${maxPastDays} days in the past`
+      });
+    }
+
     // Get tracking data grouped by date
     const utilizationData = await TrackingPacket.aggregate([
       {
@@ -141,7 +198,7 @@ export const getVehicleUtilization = async (req, res) => {
       return sum + parseInt(day.journeyTravelled.replace(' KM', ''));
     }, 0);
 
-    // Response matching your table format
+    // **FIX: Enhanced response with validation info**
     res.json({
       success: true,
       summary: {
@@ -149,7 +206,8 @@ export const getVehicleUtilization = async (req, res) => {
         startTime: formatDateOnly(start),
         endTime: formatDateOnly(end),
         totalDays: dailyUtilization.length,
-        totalJourneyTravelled: `${totalJourneyTravelled} KM`
+        totalJourneyTravelled: `${totalJourneyTravelled} KM`,
+        dateRangeDays: Math.ceil(dateRangeMs / (24 * 60 * 60 * 1000))
       },
       utilization: dailyUtilization
     });
