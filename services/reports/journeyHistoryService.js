@@ -242,15 +242,36 @@ async function addLocationData(data) {
 
 
 /**
- * Reverse geocode coordinates to address
+ * Reverse geocode coordinates to address - Improved version
  */
 async function reverseGeocode(lat, lon) {
   try {
-    const url = `http://nominatim.locationtrack.in/reverse?format=geocodejson&lat=${lat}&lon=${lon}`;
-    const response = await axios.get(url);
+    // Use JSON format instead of geocodejson for better compatibility
+    const url = `http://nominatim.locationtrack.in/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
+    const response = await axios.get(url, { 
+      timeout: 5000,
+      headers: {
+        'User-Agent': 'VehicleTrackingApp/1.0' // Always use a proper User-Agent
+      }
+    });
     
-    if (response.data?.features?.properties?.display_name) {
-      return response.data.features.properties.display_name;
+    if (response.data?.display_name) {
+      return response.data.display_name;
+    }
+    
+    // If display_name is not available, construct from address components
+    if (response.data?.address) {
+      const addr = response.data.address;
+      const parts = [
+        addr.house_number,
+        addr.road,
+        addr.suburb || addr.neighbourhood,
+        addr.city || addr.town || addr.village,
+        addr.state,
+        addr.country
+      ].filter(Boolean);
+      
+      return parts.join(', ');
     }
     
     return null;
@@ -259,4 +280,5 @@ async function reverseGeocode(lat, lon) {
     return null;
   }
 }
+
 
