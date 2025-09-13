@@ -1,10 +1,9 @@
-
 import { isValid, differenceInHours, parseISO } from 'date-fns';
 import TrackingPacket from '../../models/trackingPacketModel.js';
 
-export const vehicleActivity= async (req, res) => {
+export const vehicleActivity = async (req, res) => {
   try {
-    const { vehicleNumber, startDate, endDate, includeAnalytics = false } = req.query;
+    const { vehicleNumber, startDate, endDate, includeAnalytics = true } = req.query;
 
     // Validation
     if (!vehicleNumber) {
@@ -47,7 +46,7 @@ export const vehicleActivity= async (req, res) => {
       });
     }
 
-    // Query tracking data by vehicle number
+    // Query tracking data by vehicle number - Updated with all fields
     const trackingData = await TrackingPacket.find({
       vehicle_reg_no: vehicleNumber,
       timestamp: {
@@ -59,7 +58,13 @@ export const vehicleActivity= async (req, res) => {
       vehicle_reg_no imei timestamp latitude longitude speed_kmh heading
       ignition main_power emergency_status satellites fix_status
       gsm_signal battery_voltage main_voltage operator_name
-      raw_data formatted_datetime
+      raw_data formatted_datetime altitude_m pdop hdop
+      tamper_alert mcc mnc lac cell_id
+      neighbor_cell_1_signal neighbor_cell_2_signal neighbor_cell_3_signal neighbor_cell_4_signal
+      digital_inputs digital_outputs analog_input_1 analog_input_2
+      delta_distance frame_number protocol packet_type
+      header vendor_id firmware_version message_type message_id message_description
+      date time location
     `)
     .sort({ timestamp: 1 })
     .limit(5000); // Safety limit
@@ -71,10 +76,10 @@ export const vehicleActivity= async (req, res) => {
       });
     }
 
-    // Calculate analytics if requested
+    // Calculate comprehensive analytics if requested
     let analytics = {};
     if (includeAnalytics === 'true') {
-      analytics = calculateTripAnalytics(trackingData);
+      analytics = calculateComprehensiveAnalytics(trackingData);
     }
 
     // Response
@@ -101,9 +106,10 @@ export const vehicleActivity= async (req, res) => {
 };
 
 /**
- * Calculate trip analytics from tracking data
+ * Calculate comprehensive trip analytics from tracking data
+ * Including alerts and status monitoring as per iTriangle specifications
  */
-function calculateTripAnalytics(data) {
+function calculateComprehensiveAnalytics(data) {
   if (data.length === 0) return {};
 
   const speeds = data.map(d => d.speed_kmh || 0);
@@ -114,43 +120,151 @@ function calculateTripAnalytics(data) {
   let maxSpeed = Math.max(...speeds);
   let avgSpeed = speeds.reduce((a, b) => a + b, 0) / speeds.length;
 
-  // Calculate distance between consecutive points
-  for (let i = 1; i < data.length; i++) {
-    const prev = data[i - 1];
+  // Alert counters based on iTriangle Message & Alerts
+  let alertCounts = {
+    locationUpdates: 0,
+    disconnectedAlerts: 0,
+    lowBatteryAlerts: 0,
+    connectionAlerts: 0,
+    ignitionOnEvents: 0,
+    ignitionOffEvents: 0,
+    gpsBoxOpenedEvents: 0,
+    emergencyAlerts: 0,
+    overTheAirAlerts: 0,
+    harshBrakingEvents: 0,
+    harshAccelerationEvents: 0,
+    harshTurningEvents: 0,
+    emergencyButtonEvents: 0
+  };
+
+  // Power and connectivity metrics
+  let powerMetrics = {
+    mainPowerOnDuration: 0,
+    mainPowerOffDuration: 0,
+    avgBatteryVoltage: 0,
+    avgMainVoltage: 0,
+    avgGsmSignal: 0,
+    avgSatellites: 0
+  };
+
+  // GPS and location metrics
+  let locationMetrics = {
+    validGpsFixes: 0,
+    invalidGpsFixes: 0,
+    avgAltitude: 0,
+    avgPdop: 0,
+    avgHdop: 0
+  };
+
+  // Calculate distance between consecutive points and analyze data
+  for (let i = 0; i < data.length; i++) {
     const curr = data[i];
     
-    if (prev.latitude && prev.longitude && curr.latitude && curr.longitude) {
-      const dist = calculateDistance(
-        prev.latitude, prev.longitude,
-        curr.latitude, curr.longitude
-      );
-      distances.push(dist);
-      totalDistance += dist;
+    // Distance calculation
+    if (i > 0) {
+      const prev = data[i - 1];
+      if (prev.latitude && prev.longitude && curr.latitude && curr.longitude) {
+        const dist = calculateDistance(
+          prev.latitude, prev.longitude,
+          curr.latitude, curr.longitude
+        );
+        distances.push(dist);
+        totalDistance += dist;
+      }
+
+      // Time-based calculations (assuming regular intervals)
+      const timeDiff = 10; // minutes between packets
+      if (curr.speed_kmh > 5) {
+        runTime += timeDiff;
+      } else {
+        idleTime += timeDiff;
+      }
     }
 
-    // Calculate run vs idle time (assuming 10-minute intervals)
-    const timeDiff = 10; // minutes between packets
-    if (curr.speed_kmh > 5) {
-      runTime += timeDiff;
-    } else {
-      idleTime += timeDiff;
+    // Alert analysis based on iTriangle specifications
+    if (curr.emergency_status) alertCounts.emergencyAlerts++;
+    if (curr.ignition && (!data[i-1] || !data[i-1].ignition)) alertCounts.ignitionOnEvents++;
+    if (!curr.ignition && data[i-1] && data[i-1].ignition) alertCounts.ignitionOffEvents++;
+    if (curr.battery_voltage && curr.battery_voltage < 3.7) alertCounts.lowBatteryAlerts++;
+    if (!curr.main_power) alertCounts.disconnectedAlerts++;
+    if (curr.tamper_alert) alertCounts.gpsBoxOpenedEvents++;
+
+    // Harsh behavior detection
+    if (i > 0) {
+      const speedDiff = Math.abs(curr.speed_kmh - data[i-1].speed_kmh);
+      const timeDiffSeconds = (new Date(curr.timestamp) - new Date(data[i-1].timestamp)) / 1000;
+      if (timeDiffSeconds > 0) {
+        const acceleration = speedDiff / (timeDiffSeconds / 3600); // km/h per hour
+        if (acceleration > 10) alertCounts.harshAccelerationEvents++;
+        if (acceleration < -10) alertCounts.harshBrakingEvents++;
+      }
+
+      // Harsh turning detection based on heading change
+      if (curr.heading && data[i-1].heading) {
+        const headingDiff = Math.abs(curr.heading - data[i-1].heading);
+        if (headingDiff > 30 && curr.speed_kmh > 20) alertCounts.harshTurningEvents++;
+      }
     }
+
+    // Power metrics
+    if (curr.main_power) powerMetrics.mainPowerOnDuration++;
+    else powerMetrics.mainPowerOffDuration++;
+    
+    if (curr.battery_voltage) powerMetrics.avgBatteryVoltage += curr.battery_voltage;
+    if (curr.main_voltage) powerMetrics.avgMainVoltage += curr.main_voltage;
+    if (curr.gsm_signal) powerMetrics.avgGsmSignal += curr.gsm_signal;
+    if (curr.satellites) powerMetrics.avgSatellites += curr.satellites;
+
+    // GPS metrics
+    if (curr.fix_status) locationMetrics.validGpsFixes++;
+    else locationMetrics.invalidGpsFixes++;
+    
+    if (curr.altitude_m) locationMetrics.avgAltitude += curr.altitude_m;
+    if (curr.pdop) locationMetrics.avgPdop += curr.pdop;
+    if (curr.hdop) locationMetrics.avgHdop += curr.hdop;
+
+    alertCounts.locationUpdates++;
   }
 
+  // Calculate averages
+  const dataLength = data.length;
+  powerMetrics.avgBatteryVoltage = Math.round((powerMetrics.avgBatteryVoltage / dataLength) * 100) / 100;
+  powerMetrics.avgMainVoltage = Math.round((powerMetrics.avgMainVoltage / dataLength) * 100) / 100;
+  powerMetrics.avgGsmSignal = Math.round((powerMetrics.avgGsmSignal / dataLength) * 100) / 100;
+  powerMetrics.avgSatellites = Math.round((powerMetrics.avgSatellites / dataLength) * 100) / 100;
+  locationMetrics.avgAltitude = Math.round((locationMetrics.avgAltitude / dataLength) * 100) / 100;
+  locationMetrics.avgPdop = Math.round((locationMetrics.avgPdop / dataLength) * 100) / 100;
+  locationMetrics.avgHdop = Math.round((locationMetrics.avgHdop / dataLength) * 100) / 100;
+
   return {
+    // Basic trip analytics
     maxSpeed: Math.round(maxSpeed * 100) / 100,
     averageSpeed: Math.round(avgSpeed * 100) / 100,
     totalDistance: Math.round(totalDistance * 100) / 100,
     runTimeMinutes: runTime,
     idleTimeMinutes: idleTime,
     runTimeHours: Math.round((runTime / 60) * 100) / 100,
-    idleTimeHours: Math.round((idleTime / 60) * 100) / 100
+    idleTimeHours: Math.round((idleTime / 60) * 100) / 100,
+    
+    // Alert analytics based on iTriangle specifications
+    alerts: alertCounts,
+    
+    // Power and connectivity metrics
+    powerStatus: powerMetrics,
+    
+    // GPS and location quality
+    locationQuality: locationMetrics,
+    
+    // Device performance
+    devicePerformance: {
+      totalPackets: dataLength,
+      dataCompleteness: Math.round((locationMetrics.validGpsFixes / dataLength) * 100),
+      signalQuality: powerMetrics.avgGsmSignal > 15 ? 'Good' : 'Poor',
+      gpsAccuracy: locationMetrics.avgHdop < 2 ? 'High' : locationMetrics.avgHdop < 5 ? 'Medium' : 'Low'
+    }
   };
 }
 
-/**
- * Calculate distance between two GPS coordinates (Haversine formula)
- */
 function calculateDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // Earth's radius in km
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -161,5 +275,3 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   return R * c;
 }
-
-
