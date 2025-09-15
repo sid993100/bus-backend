@@ -85,9 +85,11 @@ const tripConfigSchema = new Schema({
     enum: ['KM BASED', 'STAGE BASED',"MIXED FARE"],
     default: 'KM BASED'
   },
-  // day:[{
-
-  // }],
+  day: [{
+  type: String,
+  enum: ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'],
+  uppercase: true
+}],
   configuredStops: [configuredStopSchema],
   status: {
     type: String,

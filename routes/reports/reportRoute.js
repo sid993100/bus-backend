@@ -9,6 +9,7 @@ import { latestFirmware } from '../../services/reports/firmwareVersionServices.j
 import { idlingSummary } from '../../services/reports/idlingSummaryService.js';
 import { getDistanceTravelled } from '../../services/reports/distanceTravelledServices.js';
 import { getVehicleUtilization } from '../../services/reports/vehicleUtilizationServices.js';
+import { stoppageDetailedReport } from '../../services/reports/stoppageDetailedReportService.js';
 
 const router = Router();
 
@@ -20,6 +21,7 @@ router.get('/firmware/:search',isLogin,roleBaseAuth( "ADMIN"),checkPermission("f
 router.get('/idlingsummary',isLogin,roleBaseAuth( "ADMIN"),checkPermission("idlingSummary","read"),idlingSummary)
 router.get('/distancetravelled',isLogin,roleBaseAuth( "ADMIN"),checkPermission("distanceTravelled","read"),getDistanceTravelled)
 router.get('/vehicleutilization',isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleUtilization","read"),getVehicleUtilization)
+router.get('/stoppagedetailed',isLogin,roleBaseAuth( "ADMIN"),checkPermission("stoppageDetailedReport","read"),stoppageDetailedReport)
 
 
 

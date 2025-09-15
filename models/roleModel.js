@@ -80,6 +80,7 @@ const roleSchema = new Schema({
         idlingSummary:{ type: permissionSchema, default: defaultPermission },//new
         distanceTravelled:{ type: permissionSchema, default: defaultPermission },//new
         vehicleUtilization:{ type: permissionSchema, default: defaultPermission },//new
+        stoppageDetailedReport:{ type: permissionSchema, default: defaultPermission },//new
     },
     hierarchy: {
         type: String,

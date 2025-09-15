@@ -39,9 +39,31 @@ const UserSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "Role",
     },
+    emergencyContact:{
+      type:Number,
+      required:true
+    },
+    aadhar:{
+      type:Number,
+      required:true
+    },  
+    address:{
+      type:String,
+      required:true
+    },  
+    state:{
+      type:String,
+      required:true
+    },  
+    pinCode:{
+      type:Number,
+      required:true
+    },  
     resetCode: { type: String, default: null },
     resetCodeExpires: { type: Date, default: null },
+
   },
+
   { timestamps: true }
 );
 
