@@ -1,4 +1,5 @@
 import { model, Schema } from "mongoose";
+import Counter from "./countryModel.js"
 
 const routeSchema = new Schema({
   routeCode: {
@@ -56,10 +57,6 @@ const routeSchema = new Schema({
 }, {
   timestamps: true
 });
-
-// Simple counter schema for atomic sequence increments
-const counterSchema = new Schema({ _id: String, seq: { type: Number, default: 0 } });
-const Counter = model('Counter', counterSchema);
 
 // Pre-save middleware to auto-generate routeCode using a counter document
 routeSchema.pre('save', async function(next) {
