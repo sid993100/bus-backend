@@ -15,7 +15,7 @@ const pisRegistrationSchema = new Schema({
     uppercase: true
   },
   serialNumber: {
-    type: String,
+    type: Number,
     required: true,
     uppercase: true
   },
@@ -31,19 +31,20 @@ const pisRegistrationSchema = new Schema({
     max: 65535
   },
   pisManufacturer: {
-    type: String,
+    type: Schema.Types.ObjectId,
+    ref:"PisManufacturer",
     required: true,
-    uppercase: true
+   
   },
   pisType: {
-    type: String,
+    type: Schema.Types.ObjectId,
+    ref:"PisType",
     required: true,
-    uppercase: true
   },
   pisModel: {
-    type: String,
+    type: Schema.Types.ObjectId,
+    ref:"PisModel",
     required: true,
-    uppercase: true
   },
   recordsFrame: {
     type: Number,

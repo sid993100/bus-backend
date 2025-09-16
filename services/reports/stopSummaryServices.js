@@ -3,8 +3,8 @@ import TrackingPacket from '../../models/trackingPacketModel.js';
 import { parseISO, differenceInMilliseconds, isValid } from 'date-fns';
 import axios from 'axios';
 
-const IDLE_SPEED_THRESHOLD = 0; 
-const MIN_IDLE_DURATION_MS = 5 * 60 * 1000;
+const STOP_SPEED_THRESHOLD = 0; 
+const MIN_STOP_DURATION_MS = 5 * 60 * 1000; // 5 minutes minimum stop duration
 
 const formatDuration = (ms) => {
   if (ms < 0) ms = 0;
@@ -29,7 +29,7 @@ const reverseGeocode = async (lat, lon) => {
   }
 };
 
-export const idlingSummary = async (req, res) => {
+export const stopSummary = async (req, res) => {
   try {
     const { startDate, endDate, regionId, depotId, vehicleNumber } = req.query;
 
@@ -119,7 +119,7 @@ export const idlingSummary = async (req, res) => {
 
     const vehicleNumbers = vehicles.map(v => v.vehicleNumber);
 
-    // **FIXED: Get IMEI from TrackingPacket and use correct idling condition**
+    // Get IMEI from TrackingPacket and use stop condition (Ignition OFF + Speed 0)
     const trackingData = await TrackingPacket.find({
       vehicle_reg_no: { $in: vehicleNumbers },
       timestamp: { $gte: start, $lte: end },
@@ -142,68 +142,68 @@ export const idlingSummary = async (req, res) => {
       const packets = dataByVehicle[vehicle.vehicleNumber] || [];
       if (packets.length === 0) continue;
 
-      // **FIXED: Get IMEI from the first available tracking packet**
+      // Get IMEI from the first available tracking packet
       const imeiNumber = packets.find(p => p.imei)?.imei || 'N/A';
 
-      let isIdling = false;
-      let idleStartTime = null;
-      let idleStartLocation = null;
-      const idleEvents = [];
+      let isStopped = false;
+      let stopStartTime = null;
+      let stopStartLocation = null;
+      const stopEvents = [];
 
       for (let i = 0; i < packets.length; i++) {
         const currentPacket = packets[i];
         
-        // **FIXED: Idling condition is Ignition ON and Speed = 0**
-        const conditionMet = currentPacket.ignition && currentPacket.speed_kmh === IDLE_SPEED_THRESHOLD;
+        // **STOP CONDITION: Ignition OFF and Speed = 0**
+        const conditionMet = !currentPacket.ignition && currentPacket.speed_kmh === STOP_SPEED_THRESHOLD;
 
-        if (!isIdling && conditionMet) {
-          isIdling = true;
-          idleStartTime = currentPacket.timestamp;
-          idleStartLocation = {
+        if (!isStopped && conditionMet) {
+          isStopped = true;
+          stopStartTime = currentPacket.timestamp;
+          stopStartLocation = {
             latitude: currentPacket.latitude,
             longitude: currentPacket.longitude,
           };
-        } else if (isIdling && !conditionMet) {
-          isIdling = false;
-          const idleEndTime = packets[i-1].timestamp;
-          const duration = differenceInMilliseconds(idleEndTime, idleStartTime);
+        } else if (isStopped && !conditionMet) {
+          isStopped = false;
+          const stopEndTime = packets[i-1].timestamp;
+          const duration = differenceInMilliseconds(stopEndTime, stopStartTime);
 
-          if (duration >= MIN_IDLE_DURATION_MS) {
-            idleEvents.push({
-              startTime: idleStartTime,
-              endTime: idleEndTime,
+          if (duration >= MIN_STOP_DURATION_MS) {
+            stopEvents.push({
+              startTime: stopStartTime,
+              endTime: stopEndTime,
               durationMs: duration,
-              location: idleStartLocation,
+              location: stopStartLocation,
             });
           }
         }
       }
       
-      // Handle case where vehicle is still idling at the end of the period
-      if (isIdling) {
+      // Handle case where vehicle is still stopped at the end of the period
+      if (isStopped) {
         const lastPacketTime = packets[packets.length - 1].timestamp;
-        const duration = differenceInMilliseconds(lastPacketTime, idleStartTime);
-        if (duration >= MIN_IDLE_DURATION_MS) {
-          idleEvents.push({
-            startTime: idleStartTime,
+        const duration = differenceInMilliseconds(lastPacketTime, stopStartTime);
+        if (duration >= MIN_STOP_DURATION_MS) {
+          stopEvents.push({
+            startTime: stopStartTime,
             endTime: lastPacketTime,
             durationMs: duration,
-            location: idleStartLocation,
+            location: stopStartLocation,
           });
         }
       }
 
-      if (idleEvents.length > 0) {
-        const totalIdleDurationMs = idleEvents.reduce((sum, event) => sum + event.durationMs, 0);
+      if (stopEvents.length > 0) {
+        const totalStopDurationMs = stopEvents.reduce((sum, event) => sum + event.durationMs, 0);
         
         const detailedEvents = [];
-        for (const event of idleEvents) {
+        for (const event of stopEvents) {
           detailedEvents.push({
             vehicleNumber: vehicle.vehicleNumber,
-            idlingStartTime: event.startTime.toISOString(),
-            idlingEndTime: event.endTime.toISOString(),
-            totalIdleDuration: formatDuration(event.durationMs),
-            idlingLocation: await reverseGeocode(event.location.latitude, event.location.longitude)
+            stopStartTime: event.startTime.toISOString(),
+            stopEndTime: event.endTime.toISOString(),
+            totalStopDuration: formatDuration(event.durationMs),
+            stopLocation: await reverseGeocode(event.location.latitude, event.location.longitude)
           });
         }
         
@@ -212,11 +212,11 @@ export const idlingSummary = async (req, res) => {
           region: vehicle.regionZone?.name || 'N/A',
           depot: vehicle.depotCustomer?.depotCustomer || 'N/A',
           vehicleNumber: vehicle.vehicleNumber,
-          imeiNumber: imeiNumber, // **FIXED: IMEI from TrackingPacket**
+          imeiNumber: imeiNumber,
           serviceType: vehicle.serviceType?.name || 'N/A',
           ownerType: vehicle.ownerType,
-          totalIdleDuration: formatDuration(totalIdleDurationMs),
-          idleEventCount: idleEvents.length,
+          totalStopDuration: formatDuration(totalStopDurationMs),
+          stopEventCount: stopEvents.length,
           details: detailedEvents
         });
       }
@@ -225,13 +225,13 @@ export const idlingSummary = async (req, res) => {
     if (reportData.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'No idling activity found for the given criteria and time period.'
+        message: 'No stop activity found for the given criteria and time period.'
       });
     }
 
     res.status(200).json({
       success: true,
-      message: 'Idling summary report generated successfully.',
+      message: 'Stop summary report generated successfully.',
       filters: {
         startDate: start.toISOString(),
         endDate: end.toISOString(),
@@ -242,14 +242,15 @@ export const idlingSummary = async (req, res) => {
       },
       summary: {
         totalVehiclesAnalyzed: vehicles.length,
-        totalVehiclesWithIdling: reportData.length,
-        totalIdleEvents: reportData.reduce((sum, vehicle) => sum + vehicle.idleEventCount, 0)
+        totalVehiclesWithStops: reportData.length,
+        totalStopEvents: reportData.reduce((sum, vehicle) => sum + vehicle.stopEventCount, 0),
+        averageStopsPerVehicle: Math.round((reportData.reduce((sum, vehicle) => sum + vehicle.stopEventCount, 0) / reportData.length) * 100) / 100
       },
       data: reportData
     });
 
   } catch (error) {
-    console.error('Error generating idling summary report:', error);
+    console.error('Error generating stop summary report:', error);
     res.status(500).json({
       success: false,
       message: 'An internal server error occurred.',

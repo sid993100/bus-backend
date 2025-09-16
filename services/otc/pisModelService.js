@@ -11,12 +11,13 @@ export const addPisModel = async (req, res) => {
     }
 
     const existsPisMoel=await PisModel.findOne({vehicleModel})
+
     if(existsPisMoel){
       return res.status(409).json({
         message: "Pis Model already exists"
       })
     }
-
+    
     const pisModel = new PisModel({ make, vehicleType, vehicleModel });
     const savedModel = await pisModel.save();
 

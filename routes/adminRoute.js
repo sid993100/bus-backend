@@ -8,7 +8,7 @@ import { addPlan, getPlan, updatePlan } from "../services/admin/plan/planService
 import { addVltdManufacturer, getVltdManufacturer, updateVltdManufacturer } from "../services/admin/vltManufacturer/vltManufacturerServices.js";
 import { addVltModel, getVltModel, updateVltModel } from "../services/admin/vltModel/vltModelServices.js";
 import { addOwnerType, getOwnerType, updateOwnerType } from "../services/admin/owner/ownerServices.js";
-import { roleBaseAuth } from "../middleWares/rolebaseAuth.js";
+// import { roleBaseAuth } from "../middleWares/rolebaseAuth.js";
 
 import { addSubscription, getSubscription, updateSubscription } from "../services/admin/subscription/subscriptionServices.js";
 import { checkPermission } from "../middleWares/checkPermission.js";
@@ -26,22 +26,22 @@ router.get("/plan",isLogin,checkPermission("plain","read"),getPlan)
 router.get("/vltdmanufacturer",isLogin,getVltdManufacturer)
 router.get("/vltmodel",isLogin,getVltModel)
 router.get("/ownertype",isLogin,checkPermission("ownerType","read"),getOwnerType)
-router.get("/subscription",isLogin,roleBaseAuth( "ADMIN"),getSubscription)
-router.get("/incident",isLogin,roleBaseAuth( "ADMIN"),checkPermission("incident","read"),getIncident)
+router.get("/subscription",isLogin,getSubscription)
+router.get("/incident",isLogin,checkPermission("incident","read"),getIncident)
 router.get("/hierarchy",isLogin,getHierarchy)
 
 
 
 
 
-router.post("/pisreg",isLogin,roleBaseAuth( "ADMIN"),addPisRegistration);
+router.post("/pisreg",isLogin,addPisRegistration);
 router.post("/addvltdevice",isLogin,addVltDevices);
 router.post("/addsim",isLogin,addSim);
 router.post("/addplan",isLogin,checkPermission("plain","create"),addPlan)
 router.post("/addvltdmanufacturer",isLogin,addVltdManufacturer)
 router.post("/addvltmodel",isLogin,addVltModel)
 router.post("/ownertype",isLogin,checkPermission("ownerType","create"),addOwnerType)
-router.post("/subscription",isLogin,roleBaseAuth( "ADMIN"),addSubscription)
+router.post("/subscription",isLogin,addSubscription)
 // router.post("/hierarchy",isLogin,addHierarchy)
 
 
@@ -49,15 +49,15 @@ router.post("/subscription",isLogin,roleBaseAuth( "ADMIN"),addSubscription)
 
 
 
-router.put("/sim/:id",isLogin,roleBaseAuth( "ADMIN"), updateSim);
-router.put("/vltdevice/:id",isLogin,roleBaseAuth( "ADMIN"), updateVltDevices);
-router.put("/vltmanufacturer/:id",isLogin,roleBaseAuth( "ADMIN"), updateVltdManufacturer);
-router.put("/vltmodel/:id",isLogin,roleBaseAuth( "ADMIN"), updateVltModel); 
-router.put('/pisreg/:id', isLogin,roleBaseAuth( "ADMIN"),updatePisRegistration)
+router.put("/sim/:id",isLogin, updateSim);
+router.put("/vltdevice/:id",isLogin, updateVltDevices);
+router.put("/vltmanufacturer/:id",isLogin, updateVltdManufacturer);
+router.put("/vltmodel/:id",isLogin, updateVltModel); 
+router.put('/pisreg/:id', isLogin,updatePisRegistration)
 router.put("/hierarchy/:id",isLogin,updateHierarchy)
 router.put("/ownertype/:id",isLogin,checkPermission("ownerType","update"),updateOwnerType)
 router.put("/addplan/:id",isLogin,checkPermission("plain","update"),updatePlan)
-router.put("/subscription/:id",isLogin,roleBaseAuth( "ADMIN"),updateSubscription);
+router.put("/subscription/:id",isLogin,updateSubscription);
 
 
 

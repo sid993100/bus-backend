@@ -13,10 +13,11 @@ const populatedFields = [
       { path: 'stopGrade', select: 'stopGradeName' }
     ]
   },
-  { path: 'stops.toll', select: 'tollName' },
+  { path: 'stops.toll', select: 'tollName state country' },
   {path:"region",select:"regionName Code"},
   {path:"depot",select:"depotCustomer code"}
 ];
+
 
 
 export const getRoutes = async (req, res) => {

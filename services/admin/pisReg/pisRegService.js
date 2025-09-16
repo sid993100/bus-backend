@@ -1,11 +1,17 @@
 import mongoose from "mongoose";
 import PisRegistration from "../../../models/pisRegisrationModel.js";
 
+const populatePis=[
+  {path:"pisManufacturer", select:"name"},
+  {path:"pisType", select:"name"},
+  {path:"pisModel", select:"vehicleModel"},
+]
+
+
 export const getpisReg= async (req,res) => {
-     const user = req.user;
        
      try {
-        const pisReg= await PisRegistration.find({})
+        const pisReg= await PisRegistration.find({}).populate(populatePis)
         if(!pisReg){
             return res.status(404).json({
             message: "Duty Not Found",
@@ -79,7 +85,7 @@ export const addPisRegistration = async (req, res) => {
       recordsFrame,
       numberOfServices,
       refreshTimeSeconds
-    });
+    }).populate(populatePis);
 
     res.status(201).json({
       message: "PisRegistration created successfully",
@@ -124,7 +130,7 @@ export const updatePisRegistration = async (req, res) => {
       id,
       req.body,
       { new: true }
-    );
+    ).populate(populatePis);
 
     if (!updatedPisRegistration) {
       return res.status(404).json({

@@ -3,7 +3,7 @@ import TrackingPacket from '../../models/trackingPacketModel.js';
 import { parseISO, differenceInMilliseconds, isValid } from 'date-fns';
 import axios from 'axios';
 
-const STOP_SPEED_THRESHOLD = 0;
+const IDLE_SPEED_THRESHOLD = 0;
 
 const formatDuration = (ms) => {
   if (ms < 0) ms = 0;
@@ -38,8 +38,8 @@ const reverseGeocode = async (lat, lon) => {
   }
 };
 
-// Diagnostic function to analyze data patterns
-export const stoppageDataAnalysis = async (req, res) => {
+// Diagnostic function to analyze idling data patterns
+export const idlingDataAnalysis = async (req, res) => {
   try {
     const { startDate, endDate, vehicleNumber } = req.query;
 
@@ -72,7 +72,7 @@ export const stoppageDataAnalysis = async (req, res) => {
     const sampleData = await TrackingPacket.find(query)
       .select('vehicle_reg_no timestamp ignition speed_kmh latitude longitude imei')
       .sort({ timestamp: 1 })
-      .limit(500); // Get sample records
+      .limit(500);
 
     if (sampleData.length === 0) {
       return res.status(404).json({
@@ -81,7 +81,7 @@ export const stoppageDataAnalysis = async (req, res) => {
       });
     }
 
-    // Analyze the data patterns
+    // Analyze the data patterns for idling
     const analysis = {
       totalRecords: sampleData.length,
       ignitionPatterns: {
@@ -94,11 +94,11 @@ export const stoppageDataAnalysis = async (req, res) => {
         speedGreaterThanZero: sampleData.filter(d => d.speed_kmh > 0).length,
         speedNull: sampleData.filter(d => d.speed_kmh === null || d.speed_kmh === undefined).length
       },
-      combinedPatterns: {
-        ignitionOffSpeedZero: sampleData.filter(d => d.ignition === false && d.speed_kmh === 0).length,
+      idlingPatterns: {
         ignitionOnSpeedZero: sampleData.filter(d => d.ignition === true && d.speed_kmh === 0).length,
-        ignitionOffSpeedGreaterZero: sampleData.filter(d => d.ignition === false && d.speed_kmh > 0).length,
-        ignitionOnSpeedGreaterZero: sampleData.filter(d => d.ignition === true && d.speed_kmh > 0).length
+        ignitionOffSpeedZero: sampleData.filter(d => d.ignition === false && d.speed_kmh === 0).length,
+        ignitionOnSpeedGreaterZero: sampleData.filter(d => d.ignition === true && d.speed_kmh > 0).length,
+        ignitionOffSpeedGreaterZero: sampleData.filter(d => d.ignition === false && d.speed_kmh > 0).length
       },
       vehicles: [...new Set(sampleData.map(d => d.vehicle_reg_no))],
       sampleRecords: sampleData.slice(0, 20).map(d => ({
@@ -111,41 +111,41 @@ export const stoppageDataAnalysis = async (req, res) => {
 
     // Recommendations based on analysis
     let recommendations = [];
-    if (analysis.combinedPatterns.ignitionOffSpeedZero > 0) {
-      recommendations.push("Use condition 'ignition_off_speed_zero' - this is the ideal stoppage condition");
+    if (analysis.idlingPatterns.ignitionOnSpeedZero > 0) {
+      recommendations.push("Use condition 'ignition_on_speed_zero' - this is the ideal idling condition");
     }
-    if (analysis.combinedPatterns.ignitionOnSpeedZero > 0) {
-      recommendations.push("Use condition 'ignition_on_speed_zero' - for idling scenarios");
+    if (analysis.idlingPatterns.ignitionOffSpeedZero > 0) {
+      recommendations.push("Use condition 'ignition_off_speed_zero' - for stoppage scenarios");
     }
     if (analysis.speedPatterns.speedZero > 0) {
       recommendations.push("Use condition 'speed_zero_only' - if ignition data is unreliable");
     }
-    if (analysis.ignitionPatterns.ignitionFalse > 0) {
-      recommendations.push("Use condition 'ignition_off_only' - if speed data is unreliable");
+    if (analysis.ignitionPatterns.ignitionTrue > 0) {
+      recommendations.push("Use condition 'ignition_on_only' - if speed data is unreliable");
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Data pattern analysis completed',
+      message: 'Idling data pattern analysis completed',
       analysis: analysis,
       recommendations: recommendations,
-      bestCondition: analysis.combinedPatterns.ignitionOffSpeedZero > 0 ? 'ignition_off_speed_zero' :
+      bestCondition: analysis.idlingPatterns.ignitionOnSpeedZero > 0 ? 'ignition_on_speed_zero' :
                     analysis.speedPatterns.speedZero > 0 ? 'speed_zero_only' :
-                    analysis.ignitionPatterns.ignitionFalse > 0 ? 'ignition_off_only' : 'ignition_on_speed_zero'
+                    analysis.ignitionPatterns.ignitionTrue > 0 ? 'ignition_on_only' : 'ignition_on_speed_zero'
     });
 
   } catch (error) {
-    console.error('Error in data analysis:', error);
+    console.error('Error in idling data analysis:', error);
     res.status(500).json({
       success: false,
-      message: 'Error in data analysis',
+      message: 'Error in idling data analysis',
       error: error.message
     });
   }
 };
 
-// Main stoppage detailed report function
-export const stoppageDetailedReport = async (req, res) => {
+// Main idling detailed report function
+export const idlingDetailedReport = async (req, res) => {
   try {
     const { 
       startDate, 
@@ -153,8 +153,8 @@ export const stoppageDetailedReport = async (req, res) => {
       regionId, 
       depotId, 
       vehicleNumber, 
-      stoppageDuration = 5,
-      condition = 'auto' // auto, ignition_off_speed_zero, speed_zero_only, ignition_off_only, ignition_on_speed_zero
+      idlingDuration = 5,
+      condition = 'ignition_on_speed_zero' 
     } = req.query;
 
     if (!startDate || !endDate) {
@@ -196,16 +196,16 @@ export const stoppageDetailedReport = async (req, res) => {
       });
     }
 
-    // Validate stoppage duration
-    const stoppageDurationNum = parseInt(stoppageDuration);
-    if (isNaN(stoppageDurationNum) || stoppageDurationNum < 1 || stoppageDurationNum > 1440) {
+    // Validate idling duration
+    const idlingDurationNum = parseInt(idlingDuration);
+    if (isNaN(idlingDurationNum) || idlingDurationNum < 1 || idlingDurationNum > 1440) {
       return res.status(400).json({
         success: false,
-        message: 'Stoppage duration must be between 1 and 1440 minutes (24 hours)',
+        message: 'Idling duration must be between 1 and 1440 minutes (24 hours)',
       });
     }
 
-    const minStoppageDurationMs = stoppageDurationNum * 60 * 1000;
+    const minIdlingDurationMs = idlingDurationNum * 60 * 1000;
 
     // Build vehicle filter
     const vehicleFilter = {};
@@ -247,14 +247,14 @@ export const stoppageDetailedReport = async (req, res) => {
 
     // Analyze data patterns for auto condition selection
     const dataAnalysis = {
-      ignitionOffSpeedZero: trackingData.filter(d => d.ignition === false && d.speed_kmh === 0).length,
       ignitionOnSpeedZero: trackingData.filter(d => d.ignition === true && d.speed_kmh === 0).length,
+      ignitionOffSpeedZero: trackingData.filter(d => d.ignition === false && d.speed_kmh === 0).length,
       speedZeroOnly: trackingData.filter(d => d.speed_kmh === 0).length,
-      ignitionOffOnly: trackingData.filter(d => d.ignition === false).length,
+      ignitionOnOnly: trackingData.filter(d => d.ignition === true).length,
       totalRecords: trackingData.length
     };
 
-    console.log('Data analysis:', dataAnalysis);
+    console.log('Idling data analysis:', dataAnalysis);
 
     // Group data by vehicle
     const dataByVehicle = trackingData.reduce((acc, packet) => {
@@ -265,45 +265,45 @@ export const stoppageDetailedReport = async (req, res) => {
       return acc;
     }, {});
 
-    // Define condition functions
-    const getStoppageCondition = (packet, conditionType) => {
+    // Define idling condition functions
+    const getIdlingCondition = (packet, conditionType) => {
       const hasValidIgnition = packet.ignition !== null && packet.ignition !== undefined;
       const hasValidSpeed = packet.speed_kmh !== null && packet.speed_kmh !== undefined;
 
       switch (conditionType) {
-        case 'ignition_off_speed_zero':
-          return hasValidIgnition && hasValidSpeed && packet.ignition === false && packet.speed_kmh === 0;
-        case 'speed_zero_only':
-          return hasValidSpeed && packet.speed_kmh === 0;
-        case 'ignition_off_only':
-          return hasValidIgnition && packet.ignition === false;
         case 'ignition_on_speed_zero':
           return hasValidIgnition && hasValidSpeed && packet.ignition === true && packet.speed_kmh === 0;
-        default:
+        case 'speed_zero_only':
+          return hasValidSpeed && packet.speed_kmh === 0;
+        case 'ignition_on_only':
+          return hasValidIgnition && packet.ignition === true;
+        case 'ignition_off_speed_zero':
           return hasValidIgnition && hasValidSpeed && packet.ignition === false && packet.speed_kmh === 0;
+        default:
+          return hasValidIgnition && hasValidSpeed && packet.ignition === true && packet.speed_kmh === 0;
       }
     };
 
     // Auto-select best condition if 'auto' is specified
     let finalCondition = condition;
     if (condition === 'auto') {
-      if (dataAnalysis.ignitionOffSpeedZero > 0) {
-        finalCondition = 'ignition_off_speed_zero';
+      if (dataAnalysis.ignitionOnSpeedZero > 0) {
+        finalCondition = 'ignition_on_speed_zero';
       } else if (dataAnalysis.speedZeroOnly > 0) {
         finalCondition = 'speed_zero_only';
-      } else if (dataAnalysis.ignitionOffOnly > 0) {
-        finalCondition = 'ignition_off_only';
-      } else if (dataAnalysis.ignitionOnSpeedZero > 0) {
-        finalCondition = 'ignition_on_speed_zero';
+      } else if (dataAnalysis.ignitionOnOnly > 0) {
+        finalCondition = 'ignition_on_only';
+      } else if (dataAnalysis.ignitionOffSpeedZero > 0) {
+        finalCondition = 'ignition_off_speed_zero';
       } else {
-        finalCondition = 'ignition_off_speed_zero'; // Default fallback
+        finalCondition = 'ignition_on_speed_zero'; // Default fallback
       }
     }
 
-    console.log(`Using condition: ${finalCondition}`);
+    console.log(`Using idling condition: ${finalCondition}`);
 
     const detailedReportList = [];
-    let totalStoppagesFound = 0;
+    let totalIdlingFound = 0;
 
     // Process each vehicle
     for (const vehicle of vehicles) {
@@ -315,42 +315,42 @@ export const stoppageDetailedReport = async (req, res) => {
       // Get IMEI from tracking data
       const imeiNumber = packets.find(p => p.imei)?.imei || 'N/A';
 
-      let isStopped = false;
-      let stopStartTime = null;
-      let stopStartLocation = null;
-      let vehicleStoppages = 0;
+      let isIdling = false;
+      let idleStartTime = null;
+      let idleStartLocation = null;
+      let vehicleIdlings = 0;
 
       for (let i = 0; i < packets.length; i++) {
         const currentPacket = packets[i];
         
-        const conditionMet = getStoppageCondition(currentPacket, finalCondition);
+        const conditionMet = getIdlingCondition(currentPacket, finalCondition);
 
-        if (!isStopped && conditionMet) {
-          // Start of stoppage
-          isStopped = true;
-          stopStartTime = currentPacket.timestamp;
-          stopStartLocation = {
+        if (!isIdling && conditionMet) {
+          // Start of idling
+          isIdling = true;
+          idleStartTime = currentPacket.timestamp;
+          idleStartLocation = {
             latitude: currentPacket.latitude || 0,
             longitude: currentPacket.longitude || 0,
           };
-        } else if (isStopped && !conditionMet) {
-          // End of stoppage
-          isStopped = false;
-          const stopEndTime = currentPacket.timestamp;
-          const duration = differenceInMilliseconds(stopEndTime, stopStartTime);
+        } else if (isIdling && !conditionMet) {
+          // End of idling
+          isIdling = false;
+          const idleEndTime = currentPacket.timestamp;
+          const duration = differenceInMilliseconds(idleEndTime, idleStartTime);
 
-          if (duration >= minStoppageDurationMs) {
-            vehicleStoppages++;
+          if (duration >= minIdlingDurationMs) {
+            vehicleIdlings++;
             
             // Get location with rate limiting
             let locationName = 'Location not available';
-            if (stopStartLocation.latitude !== 0 && stopStartLocation.longitude !== 0) {
+            if (idleStartLocation.latitude !== 0 && idleStartLocation.longitude !== 0) {
               try {
-                locationName = await reverseGeocode(stopStartLocation.latitude, stopStartLocation.longitude);
+                locationName = await reverseGeocode(idleStartLocation.latitude, idleStartLocation.longitude);
                 // Add delay to prevent rate limiting
                 await new Promise(resolve => setTimeout(resolve, 100));
               } catch (error) {
-                locationName = `${stopStartLocation.latitude}, ${stopStartLocation.longitude}`;
+                locationName = `${idleStartLocation.latitude}, ${idleStartLocation.longitude}`;
               }
             }
 
@@ -361,13 +361,13 @@ export const stoppageDetailedReport = async (req, res) => {
               imeiNumber: imeiNumber,
               serviceType: vehicle.serviceType?.name || 'N/A',
               ownerType: vehicle.ownerType || 'N/A',
-              stoppageStartTime: formatDateTimeForReport(stopStartTime),
-              stoppageEndTime: formatDateTimeForReport(stopEndTime),
-              totalStoppageDuration: formatDuration(duration),
-              stoppageLocation: locationName,
+              idlingStartTime: formatDateTimeForReport(idleStartTime),
+              idlingEndTime: formatDateTimeForReport(idleEndTime),
+              totalIdlingDuration: formatDuration(duration),
+              idlingLocation: locationName,
               coordinates: {
-                latitude: stopStartLocation.latitude,
-                longitude: stopStartLocation.longitude
+                latitude: idleStartLocation.latitude,
+                longitude: idleStartLocation.longitude
               },
               conditionUsed: finalCondition
             });
@@ -375,21 +375,21 @@ export const stoppageDetailedReport = async (req, res) => {
         }
       }
       
-      // Handle ongoing stoppages (vehicle still stopped at end of period)
-      if (isStopped && packets.length > 0) {
+      // Handle ongoing idling (vehicle still idling at end of period)
+      if (isIdling && packets.length > 0) {
         const lastPacketTime = packets[packets.length - 1].timestamp;
-        const duration = differenceInMilliseconds(lastPacketTime, stopStartTime);
+        const duration = differenceInMilliseconds(lastPacketTime, idleStartTime);
         
-        if (duration >= minStoppageDurationMs) {
-          vehicleStoppages++;
+        if (duration >= minIdlingDurationMs) {
+          vehicleIdlings++;
           
           let locationName = 'Location not available';
-          if (stopStartLocation.latitude !== 0 && stopStartLocation.longitude !== 0) {
+          if (idleStartLocation.latitude !== 0 && idleStartLocation.longitude !== 0) {
             try {
-              locationName = await reverseGeocode(stopStartLocation.latitude, stopStartLocation.longitude);
+              locationName = await reverseGeocode(idleStartLocation.latitude, idleStartLocation.longitude);
               await new Promise(resolve => setTimeout(resolve, 100));
             } catch (error) {
-              locationName = `${stopStartLocation.latitude}, ${stopStartLocation.longitude}`;
+              locationName = `${idleStartLocation.latitude}, ${idleStartLocation.longitude}`;
             }
           }
 
@@ -400,13 +400,13 @@ export const stoppageDetailedReport = async (req, res) => {
             imeiNumber: imeiNumber,
             serviceType: vehicle.serviceType?.name || 'N/A',
             ownerType: vehicle.ownerType || 'N/A',
-            stoppageStartTime: formatDateTimeForReport(stopStartTime),
-            stoppageEndTime: formatDateTimeForReport(lastPacketTime),
-            totalStoppageDuration: formatDuration(duration),
-            stoppageLocation: locationName,
+            idlingStartTime: formatDateTimeForReport(idleStartTime),
+            idlingEndTime: formatDateTimeForReport(lastPacketTime),
+            totalIdlingDuration: formatDuration(duration),
+            idlingLocation: locationName,
             coordinates: {
-              latitude: stopStartLocation.latitude,
-              longitude: stopStartLocation.longitude
+              latitude: idleStartLocation.latitude,
+              longitude: idleStartLocation.longitude
             },
             isOngoing: true,
             conditionUsed: finalCondition
@@ -414,32 +414,32 @@ export const stoppageDetailedReport = async (req, res) => {
         }
       }
 
-      totalStoppagesFound += vehicleStoppages;
-      console.log(`Vehicle ${vehicle.vehicleNumber}: Found ${vehicleStoppages} stoppages`);
+      totalIdlingFound += vehicleIdlings;
+      console.log(`Vehicle ${vehicle.vehicleNumber}: Found ${vehicleIdlings} idling periods`);
     }
 
-    console.log(`Total stoppages found: ${totalStoppagesFound}`);
+    console.log(`Total idling periods found: ${totalIdlingFound}`);
 
     if (detailedReportList.length === 0) {
       return res.status(404).json({
         success: false,
-        message: `No stoppage activity found for more than ${stoppageDuration} minutes using condition '${finalCondition}'.`,
+        message: `No idling activity found for more than ${idlingDuration} minutes using condition '${finalCondition}'.`,
         debug: {
           vehiclesFound: vehicles.length,
           trackingPacketsFound: trackingData.length,
           conditionUsed: finalCondition,
           dataAnalysis: dataAnalysis,
           suggestions: [
-            dataAnalysis.ignitionOffSpeedZero > 0 ? 'Try condition=ignition_off_speed_zero' : null,
+            dataAnalysis.ignitionOnSpeedZero > 0 ? 'Try condition=ignition_on_speed_zero' : null,
             dataAnalysis.speedZeroOnly > 0 ? 'Try condition=speed_zero_only' : null,
-            dataAnalysis.ignitionOffOnly > 0 ? 'Try condition=ignition_off_only' : null,
-            dataAnalysis.ignitionOnSpeedZero > 0 ? 'Try condition=ignition_on_speed_zero' : null
+            dataAnalysis.ignitionOnOnly > 0 ? 'Try condition=ignition_on_only' : null,
+            dataAnalysis.ignitionOffSpeedZero > 0 ? 'Try condition=ignition_off_speed_zero' : null
           ].filter(Boolean)
         }
       });
     }
 
-    // Sort results by vehicle number and then by stoppage start time
+    // Sort results by vehicle number and then by idling start time
     detailedReportList.sort((a, b) => {
       if (a.vehicleNumber !== b.vehicleNumber) {
         return a.vehicleNumber.localeCompare(b.vehicleNumber);
@@ -451,12 +451,12 @@ export const stoppageDetailedReport = async (req, res) => {
         return new Date(`${year}-${month}-${day}T${timePart}:00`);
       };
       
-      return parseFormattedDate(a.stoppageStartTime) - parseFormattedDate(b.stoppageStartTime);
+      return parseFormattedDate(a.idlingStartTime) - parseFormattedDate(b.idlingStartTime);
     });
 
     // Calculate summary statistics
-    const totalStoppageTime = detailedReportList.reduce((sum, record) => {
-      const [hours, minutes, seconds] = record.totalStoppageDuration.split(':').map(Number);
+    const totalIdlingTime = detailedReportList.reduce((sum, record) => {
+      const [hours, minutes, seconds] = record.totalIdlingDuration.split(':').map(Number);
       return sum + (hours * 3600 + minutes * 60 + seconds) * 1000;
     }, 0);
 
@@ -466,12 +466,12 @@ export const stoppageDetailedReport = async (req, res) => {
     // Prepare final response
     res.status(200).json({
       success: true,
-      message: 'Stoppage detailed report generated successfully.',
+      message: 'Idling detailed report generated successfully.',
       conditionUsed: finalCondition,
       filters: {
         startDate: start.toISOString(),
         endDate: end.toISOString(),
-        minDurationMinutes: stoppageDurationNum,
+        minDurationMinutes: idlingDurationNum,
         dateRangeDays: Math.ceil(dateRangeMs / (24 * 60 * 60 * 1000)),
         condition: finalCondition,
         ...(regionId && { regionId }),
@@ -483,17 +483,17 @@ export const stoppageDetailedReport = async (req, res) => {
         uniqueVehicles: uniqueVehicles.size,
         totalVehiclesAnalyzed: vehicles.length,
         totalTrackingPackets: trackingData.length,
-        totalStoppageTime: formatDuration(totalStoppageTime),
-        averageStoppagePerVehicle: uniqueVehicles.size > 0 ? 
+        totalIdlingTime: formatDuration(totalIdlingTime),
+        averageIdlingPerVehicle: uniqueVehicles.size > 0 ? 
           Math.round((detailedReportList.length / uniqueVehicles.size) * 100) / 100 : 0,
-        ongoingStoppages: detailedReportList.filter(record => record.isOngoing).length,
+        ongoingIdlings: detailedReportList.filter(record => record.isOngoing).length,
         dataAnalysis: dataAnalysis
       },
       data: detailedReportList
     });
 
   } catch (error) {
-    console.error('Error generating stoppage detailed report:', error);
+    console.error('Error generating idling detailed report:', error);
     res.status(500).json({
       success: false,
       message: 'An internal server error occurred.',

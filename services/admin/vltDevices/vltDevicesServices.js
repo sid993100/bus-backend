@@ -2,17 +2,20 @@ import mongoose from "mongoose";
 import VltDevice from "../../../models/vltDeviceModel.js";
 import consoleManager from "../../../utils/consoleManager.js";
 
+
+const populatedFields=[
+        {path:"vlt",select:"manufacturerName modelName" },
+        // {path:"region",select:"regionName" },
+        // {path:"customer",select:"depotCustomer" }
+       ]
+       
 export const getVltDevices=async (req,res) => {
 
-      //  const populatedFields=[
-      //   {path:"vlt",select:"manufacturerName modelName" },
-      //   {path:"region",select:"regionName" },
-      //   {path:"customer",select:"depotCustomer" }
-      //  ]
+       
 
      try {
       const vltDevice= await VltDevice.find({})
-      // .populate(populatedFields)
+      .populate(populatedFields)
       if (!vltDevice) {
          return res.status(404).json({
             message: "Vlt Device Not Found",
@@ -30,7 +33,7 @@ export const getVltDevices=async (req,res) => {
      }
 }
 export const addVltDevices=async (req,res) => {
-  const user=req.user
+
   const {vlt,
         imeiNumber,
         iccid,
@@ -106,7 +109,7 @@ export const updateVltDevices = async (req, res) => {
     if (customer !== undefined) updateData.customer = customer;
 
     // Update in DB
-    const updatedDevice = await VltDevice.findByIdAndUpdate(id, updateData, { new: true });
+    const updatedDevice = await VltDevice.findByIdAndUpdate(id, updateData, { new: true }).populate(populatedFields);
 
     if (!updatedDevice) {
       return res.status(404).json({
