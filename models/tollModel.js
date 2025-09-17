@@ -37,19 +37,15 @@ const tollSchema = new Schema({
     }
   },
   state: {
-    type: String,
+    type: Schema.Types.ObjectId,
+    ref:"State",
     required: true,
-    trim: true,
-    maxlength: 50,
-    index: true
+  
   },
   country: {
-    type: String,
+    type:Schema.Types.ObjectId,
+    ref:"Country",
     required: true,
-    trim: true,
-    maxlength: 50,
-    default: 'India',
-    index: true
   },
   isActive: {
     type: Boolean,

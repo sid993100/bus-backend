@@ -51,7 +51,11 @@ export const addToll = async (req, res) => {
 
 export const getToll = async (req, res) => {
   try {
-    const tolls = await Toll.find({ isActive: true });
+    const tolls = await Toll.find({ isActive: true }).populate([
+  { path: "state", select: "stateCode" },
+  { path: "country", select: "countryCode" }
+]);
+
     if (!tolls) {
       return res.status(404).json({
         message: "Toll Not Found",
@@ -62,6 +66,8 @@ export const getToll = async (req, res) => {
       message: tolls
     });
   } catch (error) {
+    console.log(error.message);
+    
     return res.status(500).json({
       message: "Backend Error"
     });
