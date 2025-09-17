@@ -6,7 +6,7 @@ export const getTrips = async (req, res) => {
     const trips = await TripConfig.find()
       .populate("depot", "depotCustomer")
       .populate("seatLayout", "layoutName")
-      .populate("route", "routeName");
+      .populate([{path:"route",select:"routeName depot" ,populate:[{path:"depot", select:"depotCustomer"}]}]);
     if (!trips) {
       return res.status(404).json({ message: "No trips found" });
     }
