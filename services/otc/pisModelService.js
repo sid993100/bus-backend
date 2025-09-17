@@ -10,9 +10,14 @@ export const addPisModel = async (req, res) => {
       return res.status(400).json({ success: false, error: 'All fields are required' });
     }
 
-    const existsPisMoel=await PisModel.findOne({vehicleModel})
+    const existsPisModel = await PisModel.findOne({
+  make: make,
+  vehicleType: vehicleType,  
+  vehicleModel: vehicleModel.toUpperCase(), 
+});
 
-    if(existsPisMoel){
+
+    if(existsPisModel){
       return res.status(409).json({
         message: "Pis Model already exists"
       })

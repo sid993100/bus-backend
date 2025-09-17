@@ -1,10 +1,9 @@
 import { model, Schema } from "mongoose";
-import Counter from "./countryModel.js"
 
 const routeSchema = new Schema({
   routeCode: {
     type: String,
-  unique: true,
+    unique: true,
     uppercase: true
   },
   routeName: {
@@ -19,7 +18,7 @@ const routeSchema = new Schema({
   },
   source: {
     type: Schema.Types.ObjectId,
-      ref: "BusStop",
+    ref: "BusStop",
     required: true,
   },
   destination: {
@@ -31,15 +30,15 @@ const routeSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "BusStop"
   },
-  region:[{
-    type:Schema.Types.ObjectId,
-    ref:"Region"
+  region: [{
+    type: Schema.Types.ObjectId,
+    ref: "Region"
   }],
-  depot:[{
-    type:Schema.Types.ObjectId,
-    ref:"DepotCustomer"
+  depot: [{
+    type: Schema.Types.ObjectId,
+    ref: "DepotCustomer"
   }],
- stops: [{ 
+  stops: [{ 
     km: {
       type: Number,
       required: true,
@@ -58,19 +57,28 @@ const routeSchema = new Schema({
   timestamps: true
 });
 
-// Pre-save middleware to auto-generate routeCode using a counter document
+// Simple auto-generate route code: 0001, 0002, 0003...
 routeSchema.pre('save', async function(next) {
   try {
     // Only generate routeCode for new documents when not provided
     if (this.isNew && !this.routeCode) {
-      const counterId = 'routeCode';
-      const updated = await Counter.findByIdAndUpdate(
-        counterId,
-        { $inc: { seq: 1 } },
-        { new: true, upsert: true }
-      );
+      // Find the route with the highest numeric route code
+      const lastRoute = await this.constructor.findOne(
+        {},
+        { routeCode: 1 }
+      ).sort({ routeCode: -1 }).lean();
 
-      const nextNumber = updated.seq || 1;
+      let nextNumber = 1;
+      
+      if (lastRoute && lastRoute.routeCode) {
+        // Convert route code to number and increment
+        const lastNumber = parseInt(lastRoute.routeCode);
+        if (!isNaN(lastNumber)) {
+          nextNumber = lastNumber + 1;
+        }
+      }
+
+      // Generate 4-digit code: 0001, 0002, 0023, 0024...
       this.routeCode = String(nextNumber).padStart(4, '0');
     }
     next();
@@ -79,16 +87,18 @@ routeSchema.pre('save', async function(next) {
   }
 });
 
-// Static method to get next route code (optional utility)
+// Simple static method to get next route code
 routeSchema.statics.getNextRouteCode = async function() {
-  // Read the counter document to determine the next route code without
-  // modifying the counter (so callers can preview). If counter doesn't exist,
-  // return '0001'.
-  const counterId = 'routeCode';
-  const CounterModel = Counter; // already defined above
-  const counterDoc = await CounterModel.findById(counterId).lean();
-  const seq = counterDoc && typeof counterDoc.seq === 'number' ? counterDoc.seq : 0;
-  const nextNumber = seq + 1;
+  const lastRoute = await this.findOne({}, { routeCode: 1 }).sort({ routeCode: -1 }).lean();
+  
+  let nextNumber = 1;
+  if (lastRoute && lastRoute.routeCode) {
+    const lastNumber = parseInt(lastRoute.routeCode);
+    if (!isNaN(lastNumber)) {
+      nextNumber = lastNumber + 1;
+    }
+  }
+  
   return String(nextNumber).padStart(4, '0');
 };
 

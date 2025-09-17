@@ -17,7 +17,6 @@ const pisModelSchema = new Schema({
     type: String,
     required: true,
     uppercase: true,
-    unique:true
   }
 }, {
   timestamps: true

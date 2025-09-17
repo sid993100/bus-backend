@@ -84,10 +84,9 @@ const roleSchema = new Schema({
         idlingDetailedReport:{ type: permissionSchema, default: defaultPermission },//new
     },
     hierarchy: {
-        type: String,
-        uppercase: true
-        // type: Schema.Types.ObjectId,
-        // ref: "Hierarchy",
+        type: Schema.Types.ObjectId,
+        ref: "Hierarchy",
+        required:true
     }
 }, {
     timestamps: true
