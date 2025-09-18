@@ -58,7 +58,13 @@ export const addVltDevices=async (req,res) => {
             message:"All details Required"
          })
      }
-     try {     
+     try { 
+      const existVltd= await VltDevice.findOne({imeiNumber})
+      if(existVltd){
+        return res.status(409).json({
+           message:"Vltd Exists"
+        })
+      }    
  
         const vltDevice= await VltDevice.create({
         vlt,
@@ -70,7 +76,7 @@ export const addVltDevices=async (req,res) => {
       
       if(!vltDevice){
          res.status(500).json({
-                 message:"Somthing went Wrong while Creating A Account "
+                 message:"Somthing went Wrong while Creating A Vlt Device "
              })
       }
       res.status(201).json({
@@ -86,11 +92,11 @@ export const addVltDevices=async (req,res) => {
      }
 }
 
+
 export const updateVltDevices = async (req, res) => {
   try {
     const { id } = req.params;
     const { vlt, imeiNumber, iccid, region, customer } = req.body;
-
 
     // Validate ObjectId format
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -99,7 +105,6 @@ export const updateVltDevices = async (req, res) => {
       });
     }
 
-    // Require at least one field to update
     if (
       vlt === undefined &&
       imeiNumber === undefined &&
@@ -119,6 +124,17 @@ export const updateVltDevices = async (req, res) => {
     if (iccid !== undefined) updateData.iccid = iccid;
     if (region !== undefined) updateData.region = region;
     if (customer !== undefined) updateData.customer = customer;
+
+    // Only check for duplicate IMEI if imeiNumber is provided in update
+    if (imeiNumber !== undefined) {
+      // Make sure no other device (with a different id) has this imeiNumber
+      const existVltd = await VltDevice.findOne({ imeiNumber, _id: { $ne: id } });
+      if (existVltd) {
+        return res.status(409).json({
+          message: "IMEI already exists for another device"
+        });
+      }
+    }
 
     // Update in DB
     const updatedDevice = await VltDevice.findByIdAndUpdate(id, updateData, { new: true }).populate(populatedFields);
@@ -141,3 +157,4 @@ export const updateVltDevices = async (req, res) => {
     });
   }
 };
+

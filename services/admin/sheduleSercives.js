@@ -128,7 +128,12 @@ export const getAllScheduleConfigurations = async (req, res) => {
       .populate('depot', 'depotCustomer depotCode location')
       .populate('seatLayout', 'layoutName totalSeats seatConfiguration')
       .populate('busService', 'name serviceType fare')
-      .populate('routeName', 'routeName routeCode source destination routeLength')
+      .populate([{path:'routeName', select:'routeName routeCode source destination routeLength',
+        populate:[
+          {path:"region",select:"name"},
+          {path:"depot",select:"depotCustomer"}
+        ]
+      }])
       .populate('scheduledTrips')
       .sort(sort)
       .skip(skip)
