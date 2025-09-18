@@ -37,14 +37,12 @@ const tollSchema = new Schema({
     }
   },
   state: {
-    type: Schema.Types.ObjectId,
-    ref:"State",
+    type: String,
     required: true,
   
   },
   country: {
-    type:Schema.Types.ObjectId,
-    ref:"Country",
+    type:String,
     required: true,
   },
   isActive: {

@@ -13,7 +13,12 @@ const populatedFields = [
       { path: 'stopGrade', select: 'stopGradeName' }
     ]
   },
-  { path: 'stops.toll', select: 'tollName state country' },
+  { path: 'stops.toll', select: 'tollName state country',
+    populate:[
+        { path: 'country', select: 'countryCode country' },
+      { path: 'state', select: 'stateCode state stateType' },
+    ]
+   },
   {path:"region",select:"regionName Code"},
   {path:"depot",select:"depotCustomer code"}
 ];

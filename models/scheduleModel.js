@@ -34,8 +34,8 @@ const scheduleConfigurationSchema = new Schema({
     required: true
   },
   nightOut: {
-    type: Number,
-    default: 0
+    type: Boolean,
+    default: false
   },
   routeName: {
     type: Schema.Types.ObjectId,

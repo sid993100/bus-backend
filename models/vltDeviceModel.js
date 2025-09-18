@@ -9,6 +9,7 @@ const vltDeviceSchema=new Schema({
     imeiNumber:{
         type:Number,
         required:true,
+        unique: true,
     },
     iccid:{
         type:String,

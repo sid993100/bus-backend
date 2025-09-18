@@ -1,5 +1,7 @@
 import Toll from "../../../models/tollModel.js";
 import consoleManager from "../../../utils/consoleManager.js";
+import Country from "../../../models/countryModel.js"
+import State from "../../../models/stateModel.js"
 
 export const addToll = async (req, res) => {
   const { code, tollName, typeA, typeB, state, country, coordinates } = req.body;
@@ -12,6 +14,8 @@ export const addToll = async (req, res) => {
       message: "All details Required (code, tollName, typeA, typeB, state)"
     });
   }
+  // const findCountry=await Country.findOne({country})
+  const findState=await State.findOne({state})
   
   try {
     const toll = await Toll.create({
@@ -19,8 +23,8 @@ export const addToll = async (req, res) => {
       tollName,
       typeA,
       typeB,
-      state,
-      country: country || "India",
+      state:findState.stateCode,
+      country,
       coordinates
     });
     
@@ -48,6 +52,7 @@ export const addToll = async (req, res) => {
     });
   }
 };
+
 
 export const getToll = async (req, res) => {
   try {
@@ -79,7 +84,7 @@ export const updateToll = async (req, res) => {
     const { id } = req.params; // toll ID from URL
     consoleManager.log(id);
     
-    const { code, tollName, typeA, typeB, state, country, coordinates } = req.body;
+    let { code, tollName, typeA, typeB, state, country, coordinates } = req.body;
 
     // Validation
     if (!id) {
@@ -93,6 +98,10 @@ export const updateToll = async (req, res) => {
         message: "At least one field is required to update",
       });
     }
+    // const findCountry=await Country.findOne({country})
+    const findState=await State.findOne({state})
+    state = findState.stateCode;
+    // country= findCountry.countryCode;
 
     // Find and update
     const updatedToll = await Toll.findByIdAndUpdate(

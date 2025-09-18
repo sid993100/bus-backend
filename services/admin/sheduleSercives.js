@@ -44,7 +44,7 @@ export const createScheduleConfiguration = async (req, res) => {
       busService,
       scheduledTrips,
       scheduledKM,
-      nightOut: nightOut || 0,
+      nightOut: nightOut ,
       routeName,
       startDate: start,
       endDate: end
@@ -129,6 +129,7 @@ export const getAllScheduleConfigurations = async (req, res) => {
       .populate('seatLayout', 'layoutName totalSeats seatConfiguration')
       .populate('busService', 'name serviceType fare')
       .populate('routeName', 'routeName routeCode source destination routeLength')
+      .populate('scheduledTrips')
       .sort(sort)
       .skip(skip)
       .limit(parseInt(limit));

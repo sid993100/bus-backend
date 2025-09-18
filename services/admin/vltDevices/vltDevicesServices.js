@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import VltDevice from "../../../models/vltDeviceModel.js";
 import consoleManager from "../../../utils/consoleManager.js";
+import VltdManufacturer from "../../../models/vltdManufacturerModel.js";
 
 
 const populatedFields=[
@@ -9,29 +10,40 @@ const populatedFields=[
         // {path:"customer",select:"depotCustomer" }
        ]
        
-export const getVltDevices=async (req,res) => {
+export const getVltDevices = async (req, res) => {
+  try {
+    const vltDevice = await VltDevice.find({}).populate(populatedFields);
 
-       
+    if (!vltDevice || vltDevice.length === 0) {
+      return res.status(404).json({
+        message: "Vlt Device Not Found",
+      });
+    }
 
-     try {
-      const vltDevice= await VltDevice.find({})
-      .populate(populatedFields)
-      if (!vltDevice) {
-         return res.status(404).json({
-            message: "Vlt Device Not Found",
-            });
-      }
-       return res.status(200).json({
-        message:vltDevice,
-        log:"ok"
-       })
+    // Await all async mapping and assign the result!
+    const newVltd = await Promise.all(
+      vltDevice.map(async v => {
+        const vltM = await VltdManufacturer.findOne({ manufacturerName: v.vlt.manufacturerName });
+        if (vltM && vltM.shortName) {
+          v.vlt.manufacturerName = vltM.shortName;
+        }
+        return v;
+      })
+    );
 
-     } catch (error) {
-       return res.status(500).json({
-        message:"Server Error"
-         })
-     }
-}
+    return res.status(200).json({
+      message: newVltd,
+      log:"ok"
+    });
+
+  } catch (error) {
+    console.log(error.message);
+    return res.status(500).json({
+      message: "Server Error"
+    });
+  }
+};
+
 export const addVltDevices=async (req,res) => {
 
   const {vlt,
