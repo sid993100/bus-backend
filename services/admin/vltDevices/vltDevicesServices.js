@@ -14,7 +14,7 @@ export const getVltDevices = async (req, res) => {
   try {
     const vltDevice = await VltDevice.find({}).populate(populatedFields);
 
-    if (!vltDevice || vltDevice.length === 0) {
+    if (!vltDevice ) {
       return res.status(404).json({
         message: "Vlt Device Not Found",
       });

@@ -1,7 +1,8 @@
 import ScheduleConfiguration from "../../models/scheduleModel.js";
-
+import TripConfig from "../../models/tripModel.js";
 
 // CREATE - Add new schedule configuration
+
 export const createScheduleConfiguration = async (req, res) => {
   try {
     const {
@@ -9,32 +10,31 @@ export const createScheduleConfiguration = async (req, res) => {
       scheduleLabel,
       seatLayout,
       busService,
-      scheduledTrips,
-      scheduledKM,
-      nightOut,
-      routeName,
+      trips,
       startDate,
-      endDate
+      endDate,
+      cycleDay
     } = req.body;
 
     // Validation
-    if (!depot || !scheduleLabel || !seatLayout || !busService || 
-        !scheduledTrips || !scheduledKM || !routeName || !startDate || !endDate) {
-      return res.status(400).json({
-        success: false,
-        error: 'All required fields must be provided'
-      });
+    if (!depot || !scheduleLabel || !seatLayout || !busService || !trips || !startDate || !endDate) {
+      return res.status(400).json({ success: false, error: 'All required fields must be provided' });
     }
 
-    // Validate dates
     const start = new Date(startDate);
     const end = new Date(endDate);
-    
     if (start >= end) {
-      return res.status(400).json({
-        success: false,
-        error: 'Start date must be before end date'
-      });
+      return res.status(400).json({ success: false, error: 'Start date must be before end date' });
+    }
+
+    // 🔹 Calculate scheduleKm
+    let totalKm = 0;
+    for (const trip of trips) {
+      const tripConfig = await TripConfig.findById(trip.trip).populate("route", "routeLength");
+      if (!tripConfig) continue;
+      if (!tripConfig.route || !tripConfig.route.routeLength) continue;
+
+      totalKm += trip.day * tripConfig.route.routeLength;
     }
 
     const scheduleConfig = new ScheduleConfiguration({
@@ -42,22 +42,23 @@ export const createScheduleConfiguration = async (req, res) => {
       scheduleLabel: scheduleLabel.toUpperCase(),
       seatLayout,
       busService,
-      scheduledTrips,
-      scheduledKM,
-      nightOut: nightOut ,
-      routeName,
+      trips,
+      scheduleKm: totalKm,
       startDate: start,
-      endDate: end
+      endDate: end,
+      cycleDay
     });
 
     const savedSchedule = await scheduleConfig.save();
 
-    // Populate the saved schedule
     const populatedSchedule = await ScheduleConfiguration.findById(savedSchedule._id)
       .populate('depot', 'depotName depotCode')
       .populate('seatLayout', 'layoutName totalSeats')
       .populate('busService', 'serviceName serviceType')
-      .populate('routeName', 'routeName routeCode source destination');
+      .populate({
+        path: "trips.trip",
+        populate: { path: "route", select: "routeName routeCode routeLength source destination" }
+      });
 
     res.status(201).json({
       success: true,
@@ -67,31 +68,7 @@ export const createScheduleConfiguration = async (req, res) => {
 
   } catch (error) {
     console.error('Error creating schedule configuration:', error);
-
-    if (error.code === 11000) {
-      return res.status(409).json({
-        success: false,
-        error: 'Schedule configuration already exists'
-      });
-    }
-
-    if (error.name === 'ValidationError') {
-      const validationErrors = Object.values(error.errors).map(err => ({
-        field: err.path,
-        message: err.message
-      }));
-
-      return res.status(400).json({
-        success: false,
-        error: 'Validation failed',
-        details: validationErrors
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      error: 'Internal server error'
-    });
+    res.status(500).json({ success: false, error: 'Internal server error' });
   }
 };
 
@@ -165,45 +142,6 @@ export const getAllScheduleConfigurations = async (req, res) => {
   }
 };
 
-// GET BY ID - Retrieve single schedule configuration
-export const getScheduleConfigurationById = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const schedule = await ScheduleConfiguration.findById(id)
-      .populate('depot', 'depotName depotCode location')
-      .populate('seatLayout', 'layoutName totalSeats seatConfiguration')
-      .populate('busService', 'serviceName serviceType fare')
-      .populate('routeName', 'routeName routeCode source destination routeLength');
-
-    if (!schedule) {
-      return res.status(404).json({
-        success: false,
-        error: 'Schedule configuration not found'
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      data: schedule
-    });
-
-  } catch (error) {
-    console.error('Error fetching schedule configuration:', error);
-    
-    if (error.name === 'CastError') {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid schedule configuration ID'
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch schedule configuration'
-    });
-  }
-};
 
 // UPDATE - Update schedule configuration
 export const updateScheduleConfiguration = async (req, res) => {
@@ -211,42 +149,46 @@ export const updateScheduleConfiguration = async (req, res) => {
     const { id } = req.params;
     const updateData = { ...req.body };
 
-    // Validate dates if provided
     if (updateData.startDate && updateData.endDate) {
       const start = new Date(updateData.startDate);
       const end = new Date(updateData.endDate);
-      
       if (start >= end) {
-        return res.status(400).json({
-          success: false,
-          error: 'Start date must be before end date'
-        });
+        return res.status(400).json({ success: false, error: 'Start date must be before end date' });
       }
     }
 
-    // Convert scheduleLabel to uppercase
     if (updateData.scheduleLabel) {
       updateData.scheduleLabel = updateData.scheduleLabel.toUpperCase();
+    }
+
+    // 🔹 Recalculate scheduleKm if trips provided
+    if (updateData.trips && updateData.trips.length > 0) {
+      let totalKm = 0;
+      for (const trip of updateData.trips) {
+        const tripConfig = await TripConfig.findById(trip.trip).populate("route", "routeLength");
+        if (!tripConfig) continue;
+        if (!tripConfig.route || !tripConfig.route.routeLength) continue;
+
+        totalKm += trip.day * tripConfig.route.routeLength;
+      }
+      updateData.scheduleKm = totalKm;
     }
 
     const updatedSchedule = await ScheduleConfiguration.findByIdAndUpdate(
       id,
       updateData,
-      { 
-        new: true, 
-        runValidators: true 
-      }
+      { new: true, runValidators: true }
     )
-    .populate('depot', 'depotName depotCode location')
-    .populate('seatLayout', 'layoutName totalSeats seatConfiguration')
-    .populate('busService', 'serviceName serviceType fare')
-    .populate('routeName', 'routeName routeCode source destination routeLength');
+      .populate('depot', 'depotName depotCode location')
+      .populate('seatLayout', 'layoutName totalSeats seatConfiguration')
+      .populate('busService', 'serviceName serviceType fare')
+      .populate({
+        path: "trips.trip",
+        populate: { path: "route", select: "routeName routeCode routeLength source destination" }
+      });
 
     if (!updatedSchedule) {
-      return res.status(404).json({
-        success: false,
-        error: 'Schedule configuration not found'
-      });
+      return res.status(404).json({ success: false, error: 'Schedule configuration not found' });
     }
 
     res.status(200).json({
@@ -257,33 +199,10 @@ export const updateScheduleConfiguration = async (req, res) => {
 
   } catch (error) {
     console.error('Error updating schedule configuration:', error);
-
-    if (error.name === 'CastError') {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid schedule configuration ID'
-      });
-    }
-
-    if (error.name === 'ValidationError') {
-      const validationErrors = Object.values(error.errors).map(err => ({
-        field: err.path,
-        message: err.message
-      }));
-
-      return res.status(400).json({
-        success: false,
-        error: 'Validation failed',
-        details: validationErrors
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      error: 'Failed to update schedule configuration'
-    });
+    res.status(500).json({ success: false, error: 'Failed to update schedule configuration' });
   }
 };
+
 
 // DELETE - Delete schedule configuration
 export const deleteScheduleConfiguration = async (req, res) => {
@@ -345,6 +264,47 @@ export const getSchedulesByDepot = async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch depot schedules'
+    });
+  }
+};
+
+
+// GET BY ID - Retrieve single schedule configuration
+export const getScheduleConfigurationById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const schedule = await ScheduleConfiguration.findById(id)
+      .populate('depot', 'depotName depotCode location')
+      .populate('seatLayout', 'layoutName totalSeats seatConfiguration')
+      .populate('busService', 'serviceName serviceType fare')
+      .populate('routeName', 'routeName routeCode source destination routeLength');
+
+    if (!schedule) {
+      return res.status(404).json({
+        success: false,
+        error: 'Schedule configuration not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: schedule
+    });
+
+  } catch (error) {
+    console.error('Error fetching schedule configuration:', error);
+    
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid schedule configuration ID'
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch schedule configuration'
     });
   }
 };

@@ -19,29 +19,31 @@ const scheduleConfigurationSchema = new Schema({
     required: true,
 
   },
+  scheduleKm:{
+    type:Number,
+  },
   busService: {
     type: Schema.Types.ObjectId,
     ref: "ServiceType",
     required: true,
 
   },
-  scheduledTrips: {
-    type: Number,
-    required: true
-  },
-  scheduledKM: {
-    type: Number,
-    required: true
+  trips: [{
+    trip:{
+    type:Schema.Types.ObjectId,
+    ref:"TripConfig",
+    required: true,
   },
   nightOut: {
     type: Boolean,
-    default: false
+    default: false,
+    required:true
   },
-  routeName: {
-    type: Schema.Types.ObjectId,
-    ref: "Route",
-    required: true,
-  },
+  day:{
+    type:Number,
+    required:true,
+  }
+ }],
   startDate: {
     type: Date,
     required: true
@@ -49,7 +51,13 @@ const scheduleConfigurationSchema = new Schema({
   endDate: {
     type: Date,
     required: true
-  }
+  },
+  cycleDay: {
+    type: String,
+    required: true,
+    enum: ['Daily', 'Alternative', 'Weekly'],
+    default: 'Daily'
+  },
 }, {
   timestamps: true
 });
