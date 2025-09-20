@@ -33,7 +33,6 @@ router.get("/hierarchy",isLogin,getHierarchy)
 
 
 
-
 router.post("/pisreg",isLogin,addPisRegistration);
 router.post("/addvltdevice",isLogin,addVltDevices);
 router.post("/addsim",isLogin,addSim);

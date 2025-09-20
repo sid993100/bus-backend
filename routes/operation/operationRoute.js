@@ -12,28 +12,28 @@ import { addSim, getAllSims, updateSim } from "../../services/master/sim/simServ
 
 const router = Router();
 
-router.get("/route",isLogin,roleBaseAuth( "ADMIN"),checkPermission("route","read"),getRoutes)
-router.get("/seatlayout",isLogin,roleBaseAuth( "ADMIN"),checkPermission("seatLayout","read"),getSeatLayout)
-router.get("/trip",isLogin,roleBaseAuth( "ADMIN"),checkPermission("trip","read"),getTrips)
-router.get("/duty", isLogin,roleBaseAuth( "ADMIN"),checkPermission("duty","read"), getDuty);
-router.get("/scheduleconfig", isLogin,roleBaseAuth( "ADMIN"),checkPermission("scheduleConfig","read"), getAllScheduleConfigurations);
-router.get("/vltsim", isLogin,roleBaseAuth( "ADMIN"),checkPermission("vltSim","read"), getAllSims);
+router.get("/route",isLogin ,checkPermission("route","read"),getRoutes)
+router.get("/seatlayout",isLogin ,checkPermission("seatLayout","read"),getSeatLayout)
+router.get("/trip",isLogin ,checkPermission("trip","read"),getTrips)
+router.get("/duty", isLogin ,checkPermission("duty","read"), getDuty);
+router.get("/scheduleconfig", isLogin ,checkPermission("scheduleConfig","read"), getAllScheduleConfigurations);
+router.get("/vltsim", isLogin ,checkPermission("vltSim","read"), getAllSims);
 
 
-router.post("/seatlayout",isLogin,roleBaseAuth( "ADMIN"),checkPermission("seatLayout","create"),addSeatLayout);
-router.post("/route",isLogin,roleBaseAuth( "ADMIN"),checkPermission("route","create"),addRoute);
-router.post("/trip",isLogin,roleBaseAuth( "ADMIN"),checkPermission("trip","create"),addTrip)
-router.post("/duty",isLogin,roleBaseAuth( "ADMIN"),checkPermission("duty","create"),addDuty);
-router.post("/scheduleconfig",isLogin,roleBaseAuth( "ADMIN"),checkPermission("scheduleConfig","create"),createScheduleConfiguration);
-router.post("/vltsim",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vltSim","create"),addSim);
+router.post("/seatlayout",isLogin ,checkPermission("seatLayout","create"),addSeatLayout);
+router.post("/route",isLogin ,checkPermission("route","create"),addRoute);
+router.post("/trip",isLogin ,checkPermission("trip","create"),addTrip)
+router.post("/duty",isLogin ,checkPermission("duty","create"),addDuty);
+router.post("/scheduleconfig",isLogin ,checkPermission("scheduleConfig","create"),createScheduleConfiguration);
+router.post("/vltsim",isLogin ,checkPermission("vltSim","create"),addSim);
 
 
-router.put("/seatlayout/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("seatLayout","update"), updateSeatLayout);
-router.put("/route/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("route","update"), updateRoute);
-router.put("/trip/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("trip","update"), updateTrip);
-router.put("/duty/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("duty","update"), updateDuty);
-router.put("/scheduleConfig/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("scheduleConfig","update"), updateScheduleConfiguration);
-router.put("/vltsim/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vltSim","update"), updateSim);
+router.put("/seatlayout/:id",isLogin ,checkPermission("seatLayout","update"), updateSeatLayout);
+router.put("/route/:id",isLogin ,checkPermission("route","update"), updateRoute);
+router.put("/trip/:id",isLogin ,checkPermission("trip","update"), updateTrip);
+router.put("/duty/:id",isLogin ,checkPermission("duty","update"), updateDuty);
+router.put("/scheduleConfig/:id",isLogin ,checkPermission("scheduleConfig","update"), updateScheduleConfiguration);
+router.put("/vltsim/:id",isLogin ,checkPermission("vltSim","update"), updateSim);
 
 
 export default router;

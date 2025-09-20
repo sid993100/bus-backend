@@ -68,9 +68,9 @@ export const addTrip = async (req, res) => {
 
     // **CONDITIONAL VALIDATION: day is only required when cycleDay is 'Weekly'**
     if (cycleDay === "Weekly") {
-      if (!day || !Array.isArray(day) || day.length === 0) {
+      if (!day ) {
         errors.day =
-          "At least one operating day is required when cycle day is Weekly";
+          "Day is required when cycle day is Weekly";
       }
     }
     //  else if (cycleDay === 'Daily') {
@@ -280,7 +280,7 @@ export const updateTrip = async (req, res) => {
     const updateData = req.body;
 
     // Validate ID
-    if (!id || !isValidObjectId(id)) {
+    if (!id) {
       return res.status(400).json({
         success: false,
         message: "Valid trip ID is required",
@@ -322,27 +322,11 @@ export const updateTrip = async (req, res) => {
 
     if (finalCycleDay === "Weekly") {
       if (updateData.day !== undefined) {
-        if (!Array.isArray(updateData.day) || updateData.day.length === 0) {
+        if (!updateData.day) {
           errors.day =
             "At least one operating day is required when cycle day is Weekly";
-        } else {
-          const validDays = [
-            "MONDAY",
-            "TUESDAY",
-            "WEDNESDAY",
-            "THURSDAY",
-            "FRIDAY",
-            "SATURDAY",
-            "SUNDAY",
-          ];
-          const invalidDays = updateData.day.filter(
-            (d) => !validDays.includes(d.toUpperCase())
-          );
-          if (invalidDays.length > 0) {
-            errors.day = `Invalid day(s): ${invalidDays.join(", ")}`;
-          }
         }
-      } else if (!existingTrip.day || existingTrip.day.length === 0) {
+      } else if (!existingTrip.day ) {
         errors.day = "Day field is required for Weekly cycle trips";
       }
     } else if (
