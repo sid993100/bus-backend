@@ -6,7 +6,7 @@ const populatedFields = [
   { path: 'via', select: 'stopName stopCode' },
   {
     path: 'stops.stop',
-    select: 'stopName stopCode country state border stopGrade',
+    select: 'stopName stopCode country state border stopGrade fareStage',
     populate: [
       { path: 'country', select: 'countryCode country' },
       { path: 'state', select: 'stateCode state stateType' },

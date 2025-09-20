@@ -13,7 +13,7 @@ import { addOwnerType, getOwnerType, updateOwnerType } from "../services/admin/o
 import { addSubscription, getSubscription, updateSubscription } from "../services/admin/subscription/subscriptionServices.js";
 import { checkPermission } from "../middleWares/checkPermission.js";
 import { getIncident } from "../services/admin/Incident/IncidentService.js";
-import { addHierarchy, getHierarchy, updateHierarchy } from "../services/admin/hierarchy/hierarchyServices.js";
+import {  getHierarchy, updateHierarchy } from "../services/admin/hierarchy/hierarchyServices.js";
 
 
 const router = Router();
