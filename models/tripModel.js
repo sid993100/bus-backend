@@ -79,16 +79,16 @@ const tripConfigSchema = new Schema({
     enum: ['Yes', 'No'],
     default: 'Yes'
   },
-  fareType: [{
+  fareType: {
     type: String,
     required: true,
     enum: ['KM BASED', 'STAGE BASED',"MIXED FARE"],
     default: 'KM BASED'
-  }],
-  day: {
+  },
+  day: [{
   type: String,
   enum: ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'],
-},
+}],
   configuredStops: [configuredStopSchema],
   status: {
     type: String,
