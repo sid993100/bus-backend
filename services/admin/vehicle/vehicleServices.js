@@ -1,26 +1,51 @@
 import mongoose from "mongoose";
 import Vehicle from "../../../models/vehicleModel.js";
 
-export const getVehicle=async (req,res) => {
-     
-     try {
-      const vehicles= await Vehicle.find({})
-      if (!vehicles) {
-         return res.status(404).json({
-            message: "Vehicle Not Found",
-            });
-      }
-        res.status(200).json({
-        message:vehicles,
-        log:"ok"
-       })
+export const getVehicle = async (req, res) => {
+  try {
+    const vehicles = await Vehicle.find({})
+      .populate('seatLayout', 'layoutName')
+      .populate('hierarchy', 'name level description')
+      .populate('regionZone', 'name code')
+      .populate('depotCustomer', 'depotCustomer depotCode location')
+      .populate('serviceType', 'name serviceType fare')
+      .populate('vehicleManufacturer', 'make shortName')
+      .populate('vehicleType', 'vehicleType')
+      // .populate('vehicleModel', 'vehicleModel')
+      .populate({
+        path: 'vltdDevice',
+        select: 'imeiNumber iccid simNumber deviceStatus',
+        populate: {
+          path: 'vlt',
+          select: 'manufacturerName modelName version'
+        }
+      })
+      .sort({ vehicleNumber: 1 });
 
-     } catch (error) {
-       return res.status(500).json({
-        message:error.errmsg
-         })
-     }
-}
+    // Check if vehicles array is empty
+    if (!vehicles || vehicles.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No vehicles found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Vehicles retrieved successfully",
+      data: vehicles,
+      count: vehicles.length
+    });
+
+  } catch (error) {
+    console.error('Error fetching vehicles:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+    });
+  }
+};
 export const addVehicle = async (req, res) => {
   try {
     
