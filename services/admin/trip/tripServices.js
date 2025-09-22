@@ -4,7 +4,7 @@ import { isValidObjectId } from "mongoose";
 export const getTrips = async (req, res) => {
   try {
     const trips = await TripConfig.find()
-      .populate("depot", "depotCustomer")
+      .populate("depot", "depotCustomer code ")
       .populate("seatLayout", "layoutName")
       .populate([{path:"route",select:"routeName depot" ,populate:[{path:"depot", select:"depotCustomer code "}]}]);
     if (!trips) {
