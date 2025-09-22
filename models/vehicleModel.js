@@ -47,7 +47,7 @@ const vehicleSchema = new Schema(
     },
     vehicleModel: {
       type:Schema.Types.ObjectId,
-      ref:"VehicleModel"
+      ref:"VehicalModel"
     },
     ownerType: {
       type: String,

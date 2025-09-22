@@ -11,7 +11,7 @@ export const getVehicle = async (req, res) => {
       .populate('serviceType', 'name serviceType fare')
       .populate('vehicleManufacturer', 'make shortName')
       .populate('vehicleType', 'vehicleType')
-      // .populate('vehicleModel', 'vehicleModel')
+      .populate('vehicleModel', 'vehicleModel')
       .populate({
         path: 'vltdDevice',
         select: 'imeiNumber iccid simNumber deviceStatus',
