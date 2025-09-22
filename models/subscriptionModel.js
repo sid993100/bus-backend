@@ -7,7 +7,8 @@ const subscriptionSchema=new Schema({
     
     },
     vltdDevice:{
-        type:Number,
+        type:Schema.Types.ObjectId,
+        ref:"VltDevice",
         required: true,
     },
     plan:{

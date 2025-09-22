@@ -7,7 +7,7 @@ export const getSubscription   = async (req, res) => {
     const subscriptions = await Subscription.find({}).populate({
       path: 'plan',
       select: 'planName durationDays'
-    });
+    },{path:"VltDevice",select:"VltDevice"});
     
     if (!subscriptions) {
       return res.status(404).json({ message: "No Subscriptions Found" });
