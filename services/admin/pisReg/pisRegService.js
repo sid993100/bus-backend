@@ -85,7 +85,7 @@ export const addPisRegistration = async (req, res) => {
       recordsFrame,
       numberOfServices,
       refreshTimeSeconds
-    }).populate(populatePis);
+    });
 
     res.status(201).json({
       message: "PisRegistration created successfully",
