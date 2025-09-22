@@ -4,10 +4,10 @@ import mongoose from "mongoose";
 
 export const getSubscription   = async (req, res) => {
   try {
-    const subscriptions = await Subscription.find({}).populate({
+    const subscriptions = await Subscription.find({}).populate([{
       path: 'plan',
       select: 'planName durationDays'
-    },{path:"VltDevice",select:"VltDevice"});
+    },{path:"vltdDevice",select:"VltDevice"}]);
     
     if (!subscriptions) {
       return res.status(404).json({ message: "No Subscriptions Found" });
