@@ -54,7 +54,7 @@ const scheduleConfigurationSchema = new Schema({
   },
   cycleDay: {
     type: String,
-    required: true,
+    // required: true,
     enum: ['Daily', 'Alternative', 'Weekly'],
     default: 'Daily'
   },

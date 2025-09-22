@@ -243,5 +243,51 @@ export const changePassword = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 }
+export const updateUserProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { emergencyContact, aadhar, address, state, pinCode } = req.body;
+
+    // Build update object with only allowed fields if defined in body
+    const updateFields = {};
+    if (emergencyContact !== undefined) updateFields.emergencyContact = emergencyContact;
+    if (aadhar !== undefined) updateFields.aadhar = aadhar;
+    if (address !== undefined) updateFields.address = address;
+    if (state !== undefined) updateFields.state = state;
+    if (pinCode !== undefined) updateFields.pinCode = pinCode;
+
+    if (Object.keys(updateFields).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No valid profile fields provided for update."
+      });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      { $set: updateFields },
+      { new: true, runValidators: true, select: "-password" }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      data: updatedUser
+    });
+  } catch (error) {
+    console.error("Profile update error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Server error"
+    });
+  }
+};
 
 

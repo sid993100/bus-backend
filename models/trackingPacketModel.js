@@ -1,5 +1,13 @@
 import { Schema, model } from 'mongoose';
 
+// Helper for IST conversion
+function utcToIST(date) {
+  if (!date) return null;
+  const d = new Date(date);
+  d.setMinutes(d.getMinutes() + 330); // 5 hours 30 minutes
+  return d;
+}
+
 const trackingPacketSchema = new Schema({
   // Top-level fields
   protocol: {
@@ -167,17 +175,16 @@ const trackingPacketSchema = new Schema({
     type: {
       type: String,
       enum: ['Point'],
-      // no default - only set when coordinates are available
     },
     coordinates: {
       type: [Number]
     } // [longitude, latitude]
   }
 }, {
-  timestamps: true
+  timestamps: true // enables createdAt and updatedAt (stored in UTC)
 });
 
-// Create location from GPS data
+// Automatically create/update location field if coordinates present
 trackingPacketSchema.pre('save', function(next) {
   try {
     const latVal = this.latitude;
@@ -192,7 +199,6 @@ trackingPacketSchema.pre('save', function(next) {
         coordinates: [lng, lat]
       };
     } else {
-      // ensure we don't save an incomplete location object
       if (this.location) delete this.location;
     }
   } catch (err) {
@@ -201,8 +207,19 @@ trackingPacketSchema.pre('save', function(next) {
   next();
 });
 
-// Add geospatial index
 trackingPacketSchema.index({ location: '2dsphere' });
+
+// Virtuals for IST time
+trackingPacketSchema.virtual('createdAtIST').get(function() {
+  return utcToIST(this.createdAt);
+});
+trackingPacketSchema.virtual('updatedAtIST').get(function() {
+  return utcToIST(this.updatedAt);
+});
+
+// Make sure virtuals are included in outputs
+trackingPacketSchema.set('toJSON', { virtuals: true });
+trackingPacketSchema.set('toObject', { virtuals: true });
 
 const TrackingPacket = model('TrackingPacket', trackingPacketSchema);
 export default TrackingPacket;

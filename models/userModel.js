@@ -58,7 +58,11 @@ const UserSchema = new Schema(
     pinCode:{
       type:Number,
      
-    },  
+    }, 
+    depot:{
+      type: Schema.Types.ObjectId,
+      ref: "DepotCustomer",
+    } ,
     resetCode: { type: String, default: null },
     resetCodeExpires: { type: Date, default: null },
 

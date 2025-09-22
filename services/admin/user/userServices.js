@@ -9,7 +9,8 @@ const populateUser = (query) => {
         .populate('account', 'account')
         .populate('roleName', 'role')
         .populate('hierarchy', 'name level')
-        .populate('region', 'name code');
+        .populate('region', 'name code')
+        .populate('depot', 'DepotCustomer');
 };
 
 
@@ -144,7 +145,7 @@ export const addUser = async (req, res) => {
   try {
     const { 
       username, email, password, phone, hierarchy, region, account, roleName,
-      emergencyContact, aadhar, address, state, pinCode
+      emergencyContact, aadhar, address, state, pinCode,depot
     } = req.body;
 
     // ✅ Required field check
@@ -249,6 +250,7 @@ export const addUser = async (req, res) => {
       region,
       account,
       roleName,
+      depot
     });
 
     await newUser.save();
@@ -292,6 +294,7 @@ export const updateUser = async (req, res) => {
         phone,
         hierarchy,
         region,
+        depot,
         account,
         roleName
     } = req.body;
@@ -369,7 +372,7 @@ export const updateUser = async (req, res) => {
             hierarchy,
             region,
             account,
-            roleName
+            roleName,depot
         };
 
         // Hash password if provided
@@ -462,3 +465,5 @@ export const deleteUser = async (req, res) => {
         });
     }
 };
+
+

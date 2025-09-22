@@ -13,7 +13,6 @@ export const createScheduleConfiguration = async (req, res) => {
       trips,
       startDate,
       endDate,
-      cycleDay
     } = req.body;
 
     // Validation
@@ -46,7 +45,6 @@ export const createScheduleConfiguration = async (req, res) => {
       scheduleKm: totalKm,
       startDate: start,
       endDate: end,
-      cycleDay
     });
 
     const savedSchedule = await scheduleConfig.save();
@@ -67,8 +65,7 @@ export const createScheduleConfiguration = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error creating schedule configuration:', error);
-    res.status(500).json({ success: false, error: 'Internal server error' });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
