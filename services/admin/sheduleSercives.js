@@ -102,10 +102,10 @@ export const getAllScheduleConfigurations = async (req, res) => {
       .populate('busService', 'name serviceType fare')
       .populate({
         path: 'trips.trip',
-        select: 'tripId origin destination originTime destinationTime cycleDay day status route'
-        .populate({
-          path:"route" , select:"routeName"
-        })
+        select: 'tripId origin destination originTime destinationTime cycleDay day status route',
+        populate:[
+         { path:"route" , select:"routeName"}
+        ]
       })
       .sort(sort)
       .skip(skip)
