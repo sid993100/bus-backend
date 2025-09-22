@@ -5,6 +5,7 @@ const populatePis=[
   {path:"pisManufacturer", select:"name"},
   {path:"pisType", select:"name"},
   {path:"pisModel", select:"vehicleModel"},
+  {path:"stopName", select:"stopName"},
 ]
 
 

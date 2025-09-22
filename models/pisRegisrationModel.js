@@ -15,7 +15,7 @@ const pisRegistrationSchema = new Schema({
     uppercase: true
   },
   serialNumber: {
-    type: Number,
+    type: String,
     required: true,
     uppercase: true
   },
