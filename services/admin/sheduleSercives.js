@@ -84,9 +84,7 @@ export const getAllScheduleConfigurations = async (req, res) => {
 
     // Build filter object
     const filter = {};
-    
     if (depot) filter.depot = depot;
-    
     if (startDate || endDate) {
       filter.startDate = {};
       if (startDate) filter.startDate.$gte = new Date(startDate);
@@ -102,13 +100,10 @@ export const getAllScheduleConfigurations = async (req, res) => {
       .populate('depot', 'depotCustomer depotCode location')
       .populate('seatLayout', 'layoutName totalSeats seatConfiguration')
       .populate('busService', 'name serviceType fare')
-      // .populate([{path:'routeName', select:'routeName routeCode source destination routeLength',
-      //   populate:[
-      //     {path:"region",select:"name"},
-      //     {path:"depot",select:"depotCustomer"}
-      //   ]
-      // }])
-      .populate('scheduledTrips')
+      .populate({
+        path: 'trips.trip',
+        select: 'tripId origin destination originTime destinationTime cycleDay day status'
+      })
       .sort(sort)
       .skip(skip)
       .limit(parseInt(limit));
@@ -138,7 +133,6 @@ export const getAllScheduleConfigurations = async (req, res) => {
     });
   }
 };
-
 
 // UPDATE - Update schedule configuration
 export const updateScheduleConfiguration = async (req, res) => {
