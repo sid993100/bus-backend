@@ -184,6 +184,12 @@ const trackingPacketSchema = new Schema({
   timestamps: true // enables createdAt and updatedAt (stored in UTC)
 });
 
+// Persist IST timestamps as separate fields to avoid colliding with virtuals
+trackingPacketSchema.add({
+  createdAtISTStored: { type: Date },
+  updatedAtISTStored: { type: Date }
+});
+
 // Automatically create/update location field if coordinates present
 trackingPacketSchema.pre('save', function(next) {
   try {
@@ -215,6 +221,36 @@ trackingPacketSchema.virtual('createdAtIST').get(function() {
 });
 trackingPacketSchema.virtual('updatedAtIST').get(function() {
   return utcToIST(this.updatedAt);
+});
+
+// Populate persisted IST fields before save (timestamps are already set by mongoose)
+trackingPacketSchema.pre('save', function(next) {
+  try {
+    if (this.createdAt) this.createdAtISTStored = utcToIST(this.createdAt);
+    if (this.updatedAt) this.updatedAtISTStored = utcToIST(this.updatedAt);
+  } catch (err) {
+    console.error('Error populating IST timestamps in pre-save:', err);
+  }
+  next();
+});
+
+// When using findOneAndUpdate, ensure updatedAtIST is set on the update document
+trackingPacketSchema.pre('findOneAndUpdate', function(next) {
+  try {
+    const update = this.getUpdate() || {};
+    const nowIST = utcToIST(new Date());
+    if (!update.$set) update.$set = {};
+    update.$set.updatedAtISTStored = nowIST;
+    // If upsert and no createdAtISTStored, set it too
+    if (this.getOptions && this.getOptions().upsert) {
+      if (!update.$setOnInsert) update.$setOnInsert = {};
+      update.$setOnInsert.createdAtISTStored = nowIST;
+    }
+    this.setUpdate(update);
+  } catch (err) {
+    console.error('Error setting IST timestamp in findOneAndUpdate:', err);
+  }
+  next();
 });
 
 // Make sure virtuals are included in outputs
