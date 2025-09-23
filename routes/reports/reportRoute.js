@@ -5,7 +5,7 @@ import { roleBaseAuth } from '../../middleWares/rolebaseAuth.js';
 import { checkPermission } from '../../middleWares/checkPermission.js';
 import { vehicleActivity } from '../../services/reports/vehicleActivityServices.js';
 import { journeyHistory } from '../../services/reports/journeyHistoryService.js';
-import { latestFirmware } from '../../services/reports/firmwareVersionServices.js';
+import { latestFirmware, latestFirmwareByImei } from '../../services/reports/firmwareVersionServices.js';
 import { idlingSummary } from '../../services/reports/idlingSummaryService.js';
 import { getDistanceTravelled } from '../../services/reports/distanceTravelledServices.js';
 import { getVehicleUtilization } from '../../services/reports/vehicleUtilizationServices.js';
@@ -19,6 +19,7 @@ router.get('/rawdata',isLogin,roleBaseAuth( "ADMIN"),checkPermission("rawData","
 router.get('/vehicleactivity',isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleActivity","read"),vehicleActivity)
 router.get('/journeyhistory/:vehicleNumber',isLogin,roleBaseAuth( "ADMIN"),checkPermission("journeyHistory","read"),journeyHistory)
 router.get('/firmware',isLogin,roleBaseAuth( "ADMIN"),checkPermission("firmware","read"),latestFirmware)
+router.get('/firmware/:search',isLogin,roleBaseAuth( "ADMIN"),checkPermission("firmware","read"),latestFirmwareByImei)
 router.get('/idlingsummary',isLogin,roleBaseAuth( "ADMIN"),checkPermission("idlingSummary","read"),idlingSummary)
 router.get('/stopsummary',isLogin,roleBaseAuth( "ADMIN"),checkPermission("stopSummary","read"),stopSummary)
 router.get('/distancetravelled',isLogin,roleBaseAuth( "ADMIN"),checkPermission("distanceTravelled","read"),getDistanceTravelled)
