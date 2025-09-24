@@ -81,6 +81,9 @@ export const login= async(req,res)=>{
                 message:"User Not Found"
             })
         }
+        if(user.isActive===false){
+          return res.status(403).json({message:"Access Denied"})
+        }
         const checkedPassword = await passwordCheck(password,user.password)
  
         

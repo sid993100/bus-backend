@@ -9,15 +9,15 @@ import { journeyHistoryReplay } from "../../services/tracking/journeyServices.js
 
 const router = Router();
 
-router.get("/login",isLogin,roleBaseAuth( "ADMIN"),getLoginPackets)
-router.get("/login/:id",isLogin,roleBaseAuth( "ADMIN"),getLoginPacketById)
-router.get("/",isLogin,roleBaseAuth( "ADMIN"),getTrackingPackets)
-router.get("/tack/:id",isLogin,roleBaseAuth( "ADMIN"),getTrackingPacketById)
-router.get("/health",isLogin,roleBaseAuth( "ADMIN"),getAllHealthPackets)
-router.get("/health/:id",isLogin,roleBaseAuth( "ADMIN"),getAllHealthPackets)
-router.get("/emergency",isLogin,roleBaseAuth( "ADMIN"),getAllEmergencyPackets)
-router.get("/emergency/:id",isLogin,roleBaseAuth( "ADMIN"),getEmergencyPacketById)
-router.get("/journey/:vehicleNumber",isLogin,roleBaseAuth( "ADMIN"),journeyHistoryReplay)
+router.get("/login",isLogin, getLoginPackets)
+router.get("/login/:id",isLogin, getLoginPacketById)
+router.get("/",isLogin, getTrackingPackets)
+router.get("/tack/:id",isLogin, getTrackingPacketById)
+router.get("/health",isLogin, getAllHealthPackets)
+router.get("/health/:id",isLogin, getAllHealthPackets)
+router.get("/emergency",isLogin, getAllEmergencyPackets)
+router.get("/emergency/:id",isLogin, getEmergencyPacketById)
+router.get("/journey/:vehicleNumber",isLogin, journeyHistoryReplay)
 
 
 

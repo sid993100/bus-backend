@@ -34,31 +34,31 @@ import { addSubscription, getSubscription, getSubscriptionsByDepot, getSubscript
 
 const router=Router()
 
-router.get("/accounts", isLogin,roleBaseAuth( "ADMIN"),checkPermission("account","read"), getAccount);
-router.get("/tolltypes", isLogin,roleBaseAuth("ADMIN"), checkPermission("tollType", "read"), getTollType);
-router.get("/toll",isLogin,roleBaseAuth("ADMIN"), checkPermission("toll", "create"),getToll);
-router.get("/servicecategory", isLogin,roleBaseAuth("ADMIN"), checkPermission("servicecategory", "read"), getServiceCategory);
-router.get("/state", isLogin,roleBaseAuth("ADMIN"), checkPermission("state", "read"), getState);
-router.get("/busstop", isLogin,roleBaseAuth( "ADMIN"),checkPermission("busStop","read"), getBusStop);
-router.get("/country", isLogin,roleBaseAuth( "ADMIN"),checkPermission("country","read"), getCountry);
-router.get("/servicetype", isLogin,roleBaseAuth("ADMIN"), checkPermission("servicetype", "read"), getServiceType);
-router.get("/stoparea",isLogin,roleBaseAuth( "ADMIN"),checkPermission("stopArea","read"),getArea)
-router.get("/stopgrade",isLogin,roleBaseAuth( "ADMIN"),checkPermission("stopGrade","read"),getStopGrade)
+router.get("/accounts", isLogin, checkPermission("account","read"), getAccount);
+router.get("/tolltypes", isLogin,  checkPermission("tollType", "read"), getTollType);
+router.get("/toll",isLogin,  checkPermission("toll", "create"),getToll);
+router.get("/servicecategory", isLogin,  checkPermission("servicecategory", "read"), getServiceCategory);
+router.get("/state", isLogin,  checkPermission("state", "read"), getState);
+router.get("/busstop", isLogin, checkPermission("busStop","read"), getBusStop);
+router.get("/country", isLogin, checkPermission("country","read"), getCountry);
+router.get("/servicetype", isLogin,  checkPermission("servicetype", "read"), getServiceType);
+router.get("/stoparea",isLogin, checkPermission("stopArea","read"),getArea)
+router.get("/stopgrade",isLogin, checkPermission("stopGrade","read"),getStopGrade)
 router.get("/vehicle/:regionId",isLogin,checkPermission("vehicle","read"),getVehiclesByRegion)
 router.get("/vehicle/:depotId",isLogin,checkPermission("vehicle","read"),getVehiclesByDepot)
-router.get("/vehicle",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicle","read"),getVehicle)
-router.get("/vehiclemanufacturer",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleM","read"),getVehicleManufacturer)
-router.get("/vehicletype",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleType","read"),getVehicleTypes)
-router.get("/zone",isLogin,roleBaseAuth( "ADMIN"),checkPermission("zone","read"),getRegions)
-router.get("/depot",isLogin,roleBaseAuth( "ADMIN"),checkPermission("depot","read"),getDepotCustomers)
+router.get("/vehicle",isLogin, checkPermission("vehicle","read"),getVehicle)
+router.get("/vehiclemanufacturer",isLogin, checkPermission("vehicleM","read"),getVehicleManufacturer)
+router.get("/vehicletype",isLogin, checkPermission("vehicleType","read"),getVehicleTypes)
+router.get("/zone",isLogin, checkPermission("zone","read"),getRegions)
+router.get("/depot",isLogin, checkPermission("depot","read"),getDepotCustomers)
 router.get("/depot/:regionId",isLogin,checkPermission("depot","read"),getDepotCustomersByRegion)
-router.get("/vehiclemodel",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleModel","read"),getVehicleModels)
-router.get("/gender",isLogin,roleBaseAuth( "ADMIN"),checkPermission("gender","read"),getGender)
-router.get("/photoidcard",isLogin,roleBaseAuth( "ADMIN"),checkPermission("photoIdCard","read"),getPhotoIdCard)
-router.get("/pismanufacturer",isLogin,roleBaseAuth( "ADMIN"),checkPermission("pismanuf","read"),getPisManufacturer)
-router.get("/pistype",isLogin,roleBaseAuth( "ADMIN"),checkPermission("pisType","read"),getPisTypes)
-router.get("/pismodel",isLogin,roleBaseAuth( "ADMIN"),checkPermission("pisModel","read"),getAllPisModels)
-router.get("/employtype",isLogin,roleBaseAuth( "ADMIN"),checkPermission("employType","read"),getAllEmployTypes)
+router.get("/vehiclemodel",isLogin, checkPermission("vehicleModel","read"),getVehicleModels)
+router.get("/gender",isLogin, checkPermission("gender","read"),getGender)
+router.get("/photoidcard",isLogin, checkPermission("photoIdCard","read"),getPhotoIdCard)
+router.get("/pismanufacturer",isLogin, checkPermission("pismanuf","read"),getPisManufacturer)
+router.get("/pistype",isLogin, checkPermission("pisType","read"),getPisTypes)
+router.get("/pismodel",isLogin, checkPermission("pisModel","read"),getAllPisModels)
+router.get("/employtype",isLogin, checkPermission("employType","read"),getAllEmployTypes)
 router.get("/vltdevice", isLogin, getVltDevices);
 router.get("/vltdevice/:regionId", isLogin, getVltDevicesByRegion);
 router.get("/vltdevice/:depotId", isLogin, getVltDevicesByDepot);
@@ -71,60 +71,60 @@ router.get("/subscription/:depotId",isLogin,getSubscriptionsByDepot)
 
 router.post("/addvltdevice",isLogin,addVltDevices);
 router.post("/subscription",isLogin,addSubscription)
-router.post("/account", isLogin,roleBaseAuth("ADMIN"), checkPermission("account", "create"), addAccount);
-router.post("/tolltype", isLogin,roleBaseAuth("ADMIN"), checkPermission("tollType", "create"), addTollType);
-router.post("/toll", isLogin, roleBaseAuth("ADMIN"), checkPermission("toll", "create"), addToll);
-router.post("/servicecategory", isLogin,roleBaseAuth("ADMIN"), checkPermission("servicecategory", "create"), addServiceCategory);
-router.post("/state",isLogin,roleBaseAuth("ADMIN"), checkPermission("state", "create"),addState);
-router.post("/servicetype", isLogin,roleBaseAuth("ADMIN"), checkPermission("servicetype", "create"), addServiceType);
-router.post("/country", isLogin,roleBaseAuth( "ADMIN"),checkPermission("country","create"),addCountry);
-router.post("/stopgrade",isLogin,roleBaseAuth( "ADMIN"),checkPermission("stopGrade","create"),addStopGrade);
-router.post("/stoparea",isLogin,roleBaseAuth( "ADMIN"),checkPermission("stopArea","create"),addArea);
-router.post("/vehicle",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicle","create"),addVehicle)
-router.post('/busstop',isLogin,roleBaseAuth( "ADMIN"),checkPermission("busStop","create"), addBusStop)
-router.post("/vehiclemanufacturer",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleM","create"),addVehicleManufacturer);
-router.post("/vehicletype",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleType","create"),addVehicleType);
-router.post("/zone",isLogin,roleBaseAuth( "ADMIN"),checkPermission("zone","create"),addRegion);
-router.post("/depot",isLogin,roleBaseAuth( "ADMIN"),checkPermission("depot","create"),addDepotCustomer);
-router.post("/vehiclemodel",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleModel","create"),addVehicleModel);
-router.post("/gender",isLogin,roleBaseAuth( "ADMIN"),checkPermission("gender","create"),addGender);
-router.post("/photoidcard",isLogin,roleBaseAuth( "ADMIN"),checkPermission("photoIdCard","create"),addPhotoIdCard);
-router.post("/pismanufacturer",isLogin,roleBaseAuth( "ADMIN"),checkPermission("pismanuf","create"),addPisManufacturer);
-router.post("/pistype",isLogin,roleBaseAuth( "ADMIN"),checkPermission("pisType","create"),addPisType);
-router.post("/pismodel",isLogin,roleBaseAuth( "ADMIN"),checkPermission("pisModel","create"),addPisModel);
-router.post("/employtype",isLogin,roleBaseAuth( "ADMIN"),checkPermission("empolyType","create"),createEmployType);
+router.post("/account", isLogin,  checkPermission("account", "create"), addAccount);
+router.post("/tolltype", isLogin,  checkPermission("tollType", "create"), addTollType);
+router.post("/toll", isLogin,   checkPermission("toll", "create"), addToll);
+router.post("/servicecategory", isLogin,  checkPermission("servicecategory", "create"), addServiceCategory);
+router.post("/state",isLogin,  checkPermission("state", "create"),addState);
+router.post("/servicetype", isLogin,  checkPermission("servicetype", "create"), addServiceType);
+router.post("/country", isLogin, checkPermission("country","create"),addCountry);
+router.post("/stopgrade",isLogin, checkPermission("stopGrade","create"),addStopGrade);
+router.post("/stoparea",isLogin, checkPermission("stopArea","create"),addArea);
+router.post("/vehicle",isLogin, checkPermission("vehicle","create"),addVehicle)
+router.post('/busstop',isLogin, checkPermission("busStop","create"), addBusStop)
+router.post("/vehiclemanufacturer",isLogin, checkPermission("vehicleM","create"),addVehicleManufacturer);
+router.post("/vehicletype",isLogin, checkPermission("vehicleType","create"),addVehicleType);
+router.post("/zone",isLogin, checkPermission("zone","create"),addRegion);
+router.post("/depot",isLogin, checkPermission("depot","create"),addDepotCustomer);
+router.post("/vehiclemodel",isLogin, checkPermission("vehicleModel","create"),addVehicleModel);
+router.post("/gender",isLogin, checkPermission("gender","create"),addGender);
+router.post("/photoidcard",isLogin, checkPermission("photoIdCard","create"),addPhotoIdCard);
+router.post("/pismanufacturer",isLogin, checkPermission("pismanuf","create"),addPisManufacturer);
+router.post("/pistype",isLogin, checkPermission("pisType","create"),addPisType);
+router.post("/pismodel",isLogin, checkPermission("pisModel","create"),addPisModel);
+router.post("/employtype",isLogin, checkPermission("empolyType","create"),createEmployType);
 
 
 
 
 router.put("/vltdevice/:id",isLogin, updateVltDevices);
 router.put("/subscription/:id",isLogin,updateSubscription);
-router.put("/account/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("account","update"),updateAccount)
-router.put("/stopgrade/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("stop","update"),updateStopGrade)
-router.put("/tolltypes/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("tollType", "update"), updateTollType);
-router.put("/toll/:id", isLogin, roleBaseAuth("ADMIN"), checkPermission("toll", "update"), updateToll);
-router.put("/country/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("country","update"), updateCountry);
-router.put("/ownertype/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("ownerType","update"), updateOwnerType);
-router.put("/plan/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("plan","update"), updatePlan);
-router.put("/servicecategory/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("sericeCategory","update"), updateServiceCategory);
-router.put("/servicetype/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("serviceType","update"), updateServiceType);
-router.put('/busstop/:id', isLogin,roleBaseAuth( "ADMIN"),checkPermission("busStop","update"),updateBusStop)
-router.put('/zone/:id', isLogin,roleBaseAuth( "ADMIN"),checkPermission("zone","update"),updateRegion)
-router.put('/depot/:id', isLogin,roleBaseAuth( "ADMIN"),checkPermission("depot","update"),updateDepotCustomer)
-router.put("/vehicle/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicle","update"), updateVehicle);
-router.put("/vehiclemanufacturer/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleM","update"), updateVehicleManufacturer);
-router.put('/department/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("department","update"), updateDepartment);
-router.put('/department/name/:departmentName',isLogin,roleBaseAuth( "ADMIN"),checkPermission("department","update"), updateDepartmentByName);
-router.put('/stoparea/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("area","update"), updateArea);
-router.put('/area/name/:name',isLogin,roleBaseAuth( "ADMIN"),checkPermission("area","update"), updateAreaByName);
-router.put('/vehiclemodel/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleModel","update"), updateVehicleModel);
-router.put('/vehicletype/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleType","update"), updateVehicleType);
-router.put('/state/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("state","update"), updateState);
-router.put('/gender/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("gender","update"),updateGender );
-router.put('/photoidcard/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("photoIdCard","update"),updatePhotoIdCard);
-router.put('/pismanufacturer/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("pismanuf","update"),updatePisManufacturer);
-router.put('/pistype/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("pisType","update"),updatepisType);
-router.put('/pismodel/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("pisModel","update"),updatePisModel);
-router.put('/employtype/:id',isLogin,roleBaseAuth( "ADMIN"),checkPermission("employType","update"),updateEmployType);
+router.put("/account/:id",isLogin, checkPermission("account","update"),updateAccount)
+router.put("/stopgrade/:id",isLogin, checkPermission("stop","update"),updateStopGrade)
+router.put("/tolltypes/:id",isLogin, checkPermission("tollType", "update"), updateTollType);
+router.put("/toll/:id", isLogin,   checkPermission("toll", "update"), updateToll);
+router.put("/country/:id",isLogin, checkPermission("country","update"), updateCountry);
+router.put("/ownertype/:id",isLogin, checkPermission("ownerType","update"), updateOwnerType);
+router.put("/plan/:id",isLogin, checkPermission("plan","update"), updatePlan);
+router.put("/servicecategory/:id",isLogin, checkPermission("sericeCategory","update"), updateServiceCategory);
+router.put("/servicetype/:id",isLogin, checkPermission("serviceType","update"), updateServiceType);
+router.put('/busstop/:id', isLogin, checkPermission("busStop","update"),updateBusStop)
+router.put('/zone/:id', isLogin, checkPermission("zone","update"),updateRegion)
+router.put('/depot/:id', isLogin, checkPermission("depot","update"),updateDepotCustomer)
+router.put("/vehicle/:id",isLogin, checkPermission("vehicle","update"), updateVehicle);
+router.put("/vehiclemanufacturer/:id",isLogin, checkPermission("vehicleM","update"), updateVehicleManufacturer);
+router.put('/department/:id',isLogin, checkPermission("department","update"), updateDepartment);
+router.put('/department/name/:departmentName',isLogin, checkPermission("department","update"), updateDepartmentByName);
+router.put('/stoparea/:id',isLogin, checkPermission("area","update"), updateArea);
+router.put('/area/name/:name',isLogin, checkPermission("area","update"), updateAreaByName);
+router.put('/vehiclemodel/:id',isLogin, checkPermission("vehicleModel","update"), updateVehicleModel);
+router.put('/vehicletype/:id',isLogin, checkPermission("vehicleType","update"), updateVehicleType);
+router.put('/state/:id',isLogin, checkPermission("state","update"), updateState);
+router.put('/gender/:id',isLogin, checkPermission("gender","update"),updateGender );
+router.put('/photoidcard/:id',isLogin, checkPermission("photoIdCard","update"),updatePhotoIdCard);
+router.put('/pismanufacturer/:id',isLogin, checkPermission("pismanuf","update"),updatePisManufacturer);
+router.put('/pistype/:id',isLogin, checkPermission("pisType","update"),updatepisType);
+router.put('/pismodel/:id',isLogin, checkPermission("pisModel","update"),updatePisModel);
+router.put('/employtype/:id',isLogin, checkPermission("employType","update"),updateEmployType);
 
 export default router

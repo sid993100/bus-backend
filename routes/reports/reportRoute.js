@@ -15,17 +15,17 @@ import { stopSummary } from '../../services/reports/stopSummaryServices.js';
 const router = Router();
 
 
-router.get('/rawdata',isLogin,roleBaseAuth( "ADMIN"),checkPermission("rawData","read"),rawData)
-router.get('/vehicleactivity',isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleActivity","read"),vehicleActivity)
-router.get('/journeyhistory/:vehicleNumber',isLogin,roleBaseAuth( "ADMIN"),checkPermission("journeyHistory","read"),journeyHistory)
-router.get('/firmware',isLogin,roleBaseAuth( "ADMIN"),checkPermission("firmware","read"),latestFirmware)
-router.get('/firmware/:search',isLogin,roleBaseAuth( "ADMIN"),checkPermission("firmware","read"),latestFirmwareByImei)
-router.get('/idlingsummary',isLogin,roleBaseAuth( "ADMIN"),checkPermission("idlingSummary","read"),idlingSummary)
-router.get('/stopsummary',isLogin,roleBaseAuth( "ADMIN"),checkPermission("stopSummary","read"),stopSummary)
-router.get('/distancetravelled',isLogin,roleBaseAuth( "ADMIN"),checkPermission("distanceTravelled","read"),getDistanceTravelled)
-router.get('/vehicleutilization',isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleUtilization","read"),getVehicleUtilization)
-router.get('/stoppagedetailed',isLogin,roleBaseAuth( "ADMIN"),checkPermission("stoppageDetailedReport","read"),stoppageDetailedReport)
-router.get('/idlingdetailed',isLogin,roleBaseAuth( "ADMIN"),checkPermission("idlingDetailedReport","read"),stoppageDetailedReport)
+router.get('/rawdata',isLogin, checkPermission("rawData","read"),rawData)
+router.get('/vehicleactivity',isLogin, checkPermission("vehicleActivity","read"),vehicleActivity)
+router.get('/journeyhistory/:vehicleNumber',isLogin, checkPermission("journeyHistory","read"),journeyHistory)
+router.get('/firmware',isLogin, checkPermission("firmware","read"),latestFirmware)
+router.get('/firmware/:search',isLogin, checkPermission("firmware","read"),latestFirmwareByImei)
+router.get('/idlingsummary',isLogin, checkPermission("idlingSummary","read"),idlingSummary)
+router.get('/stopsummary',isLogin, checkPermission("stopSummary","read"),stopSummary)
+router.get('/distancetravelled',isLogin, checkPermission("distanceTravelled","read"),getDistanceTravelled)
+router.get('/vehicleutilization',isLogin, checkPermission("vehicleUtilization","read"),getVehicleUtilization)
+router.get('/stoppagedetailed',isLogin, checkPermission("stoppageDetailedReport","read"),stoppageDetailedReport)
+router.get('/idlingdetailed',isLogin, checkPermission("idlingDetailedReport","read"),stoppageDetailedReport)
 
 
 export default router;
