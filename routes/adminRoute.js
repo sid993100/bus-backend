@@ -20,13 +20,11 @@ const router = Router();
 
 
 router.get("/pisreg", isLogin, getpisReg);
-router.get("/vltdevice", isLogin, getVltDevices);
 router.get("/sim",isLogin,getSim)
 router.get("/plan",isLogin,checkPermission("plain","read"),getPlan)
 router.get("/vltdmanufacturer",isLogin,getVltdManufacturer)
 router.get("/vltmodel",isLogin,getVltModel)
 router.get("/ownertype",isLogin,checkPermission("ownerType","read"),getOwnerType)
-router.get("/subscription",isLogin,getSubscription)
 router.get("/incident",isLogin,checkPermission("incident","read"),getIncident)
 router.get("/hierarchy",isLogin,getHierarchy)
 
@@ -34,13 +32,12 @@ router.get("/hierarchy",isLogin,getHierarchy)
 
 
 router.post("/pisreg",isLogin,addPisRegistration);
-router.post("/addvltdevice",isLogin,addVltDevices);
 router.post("/addsim",isLogin,addSim);
 router.post("/addplan",isLogin,checkPermission("plain","create"),addPlan)
 router.post("/addvltdmanufacturer",isLogin,addVltdManufacturer)
 router.post("/addvltmodel",isLogin,addVltModel)
 router.post("/ownertype",isLogin,checkPermission("ownerType","create"),addOwnerType)
-router.post("/subscription",isLogin,addSubscription)
+
 // router.post("/hierarchy",isLogin,addHierarchy)
 
 

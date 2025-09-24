@@ -101,38 +101,5 @@ const tripConfigSchema = new Schema({
   timestamps: true
 });
 
-tripConfigSchema.pre('save', async function(next) {
-  if (this.isNew && !this.tripId) {
-    try {
-      const depot = await model('DepotCustomer').findById(this.depot);
-      let depotCode = 'DEF';
-      
-      if (depot && depot.depotCustomer) {
-        depotCode = depot.depotCustomer.substring(0, 3).toUpperCase();
-      }
-      
-      const lastTrip = await model('TripConfig')
-        .findOne({ tripId: { $regex: `^${depotCode}` } })
-        .sort({ tripId: -1 })
-        .select('tripId');
-      
-      let nextNumber = 1;
-      if (lastTrip && lastTrip.tripId) {
-        const lastNumberStr = lastTrip.tripId.replace(depotCode, '');
-        if (!isNaN(parseInt(lastNumberStr))) {
-            nextNumber = parseInt(lastNumberStr) + 1;
-        }
-      }
-      
-      this.tripId = depotCode + nextNumber.toString().padStart(4, '0');
-      next();
-    } catch (error) {
-      next(error);
-    }
-  } else {
-    next();
-  }
-});
-
 const TripConfig = model("TripConfig", tripConfigSchema);
 export default TripConfig;

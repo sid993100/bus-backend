@@ -23,22 +23,47 @@ export const latestFirmware = async (req, res) => {
       }
     }
 
+    // Build IMEI -> deviceModel map by querying VltDevice
+    const imeis = uniqueDevices.map(d => d.imei).filter(Boolean);
+    const imeiNums = imeis.map(i => {
+      const n = Number(i);
+      return Number.isNaN(n) ? null : n;
+    }).filter(Boolean);
+
+    let imeiToModel = {};
+    if (imeiNums.length > 0) {
+      try {
+        const vltDevices = await VltDevice.find({ imeiNumber: { $in: imeiNums } }).populate('vlt', 'modelName').lean();
+        for (const vd of vltDevices) {
+          if (vd && vd.imeiNumber) {
+            imeiToModel[String(vd.imeiNumber)] = vd.vlt && vd.vlt.modelName ? vd.vlt.modelName : null;
+          }
+        }
+      } catch (lookupErr) {
+        console.warn('Failed to lookup VltDevice models for IMEIs', lookupErr && lookupErr.message);
+      }
+    }
+
     // Format the data
-    const formattedDevices = uniqueDevices.map((device, index) => ({
-      serialNo: index + 1,
-      imeiNumber: device.imei || "N/A",
-      deviceMake: device.vendor_id || "Unknown",
-      deviceModel: "TM100",
-      mappedVehicle: device.vehicle_reg_no || "N/A",
-      lastReportedDateTime: device.timestamp
-        ? new Date(device.timestamp)
-            .toLocaleString("en-IN", {
-              timeZone: "Asia/Kolkata",
-            })
-            .replace(",", "")
-        : "N/A",
-      firmwareVersion: device.firmware_version || "4GN6065",
-    }));
+    const formattedDevices = uniqueDevices.map((device, index) => {
+      const imeiKey = device.imei ? String(device.imei) : '';
+      const modelFromVlt = imeiToModel[imeiKey];
+      return {
+        serialNo: index + 1,
+        imeiNumber: device.imei || "N/A",
+        deviceMake: device.vendor_id || "Unknown",
+        deviceModel: modelFromVlt || device.vendor_id || "TM100",
+        mappedVehicle: device.vehicle_reg_no || "N/A",
+        lastReportedDateTime: device.timestamp
+          ? new Date(device.timestamp)
+              .toLocaleString("en-IN", {
+                timeZone: "Asia/Kolkata",
+              })
+              .replace(",", "")
+          : "N/A",
+        firmwareVersion: device.firmware_version || "4GN6065",
+      };
+    });
 
     res.json({
       success: true,
@@ -66,11 +91,20 @@ export const latestFirmwareByImei = async (req, res) => {
     if (!device) {
       return res.status(404).json({ error: "No device found" });
     }
+    // try to fetch VltDevice modelName for this IMEI
+    let deviceModelName = null;
+    try {
+      const vltDev = await VltDevice.findOne({ imeiNumber: Number(device.imei) }).populate('vlt', 'modelName').lean();
+      if (vltDev && vltDev.vlt && vltDev.vlt.modelName) deviceModelName = vltDev.vlt.modelName;
+    } catch (err) {
+      console.warn('failed to lookup vlt device for imei', device.imei, err && err.message);
+    }
+
     res.json({
       serialNo: 1,
       imeiNumber: device.imei,
       deviceMake: device.vendor_id,
-      deviceModel: "TM100",
+      deviceModel: deviceModelName || device.vendor_id || "TM100",
       mappedVehicle: device.vehicle_reg_no,
       lastReportedDateTime: new Date(device.timestamp)
         .toLocaleString("en-IN")

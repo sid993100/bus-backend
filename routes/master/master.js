@@ -8,7 +8,7 @@ import { addCountry, getCountry, updateCountry } from "../../services/admin/coun
 import { addServiceType, getServiceType, updateServiceType } from "../../services/admin/serviceType/serviceTypeServices.js";
 import { addStopGrade, getStopGrade, updateStopGrade } from "../../services/admin/stopGrade/stopGradeServices.js";
 import { addArea, getArea, updateArea, updateAreaByName } from "../../services/admin/area/areaServices.js";
-import { addVehicle, getVehicle, updateVehicle } from "../../services/admin/vehicle/vehicleServices.js";
+import { addVehicle, getVehicle, getVehiclesByDepot, getVehiclesByRegion, updateVehicle } from "../../services/admin/vehicle/vehicleServices.js";
 import { addVehicleManufacturer, getVehicleManufacturer, updateVehicleManufacturer } from "../../services/admin/vehicleManufacturer/vehicleManufacturerServices.js";
 import { isLogin } from "../../middleWares/isLogin.js";
 import { addVehicleType, getVehicleTypes, updateVehicleType } from "../../services/master/vehicleTypeService.js";
@@ -16,7 +16,7 @@ import { roleBaseAuth } from "../../middleWares/rolebaseAuth.js";
 import { updatePlan } from "../../services/admin/plan/planServices.js";
 import { updateOwnerType } from "../../services/admin/owner/ownerServices.js";
 import { addRegion, getRegions, updateRegion } from "../../services/master/zoneRegionService.js";
-import { addDepotCustomer,  getDepotCustomers, updateDepotCustomer } from "../../services/master/depotService.js";
+import { addDepotCustomer,  getDepotCustomers, getDepotCustomersByRegion, updateDepotCustomer } from "../../services/master/depotService.js";
 import { checkPermission } from "../../middleWares/checkPermission.js";
 import { addToll, getToll, updateToll } from "../../services/master/toll/tollService.js";
 import { updateDepartment, updateDepartmentByName } from "../../services/admin/department/departmentServices.js";
@@ -27,6 +27,8 @@ import { addPisManufacturer, getPisManufacturer, updatePisManufacturer } from ".
 import { addPisType, getPisTypes, updatepisType } from "../../services/otc/pisTypeService.js";
 import { addPisModel, getAllPisModels, updatePisModel } from "../../services/otc/pisModelService.js";
 import { createEmployType, getAllEmployTypes, updateEmployType } from "../../services/master/empolyType/empolyTypeService.js";
+import { addVltDevices, getVltDevices, getVltDevicesByDepot, getVltDevicesByRegion, updateVltDevices } from "../../services/admin/vltDevices/vltDevicesServices.js";
+import { addSubscription, getSubscription, getSubscriptionsByDepot, getSubscriptionsByRegion, updateSubscription } from "../../services/admin/subscription/subscriptionServices.js";
 
 
 
@@ -42,11 +44,14 @@ router.get("/country", isLogin,roleBaseAuth( "ADMIN"),checkPermission("country",
 router.get("/servicetype", isLogin,roleBaseAuth("ADMIN"), checkPermission("servicetype", "read"), getServiceType);
 router.get("/stoparea",isLogin,roleBaseAuth( "ADMIN"),checkPermission("stopArea","read"),getArea)
 router.get("/stopgrade",isLogin,roleBaseAuth( "ADMIN"),checkPermission("stopGrade","read"),getStopGrade)
+router.get("/vehicle/:regionId",isLogin,checkPermission("vehicle","read"),getVehiclesByRegion)
+router.get("/vehicle/:depotId",isLogin,checkPermission("vehicle","read"),getVehiclesByDepot)
 router.get("/vehicle",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicle","read"),getVehicle)
 router.get("/vehiclemanufacturer",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleM","read"),getVehicleManufacturer)
 router.get("/vehicletype",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleType","read"),getVehicleTypes)
 router.get("/zone",isLogin,roleBaseAuth( "ADMIN"),checkPermission("zone","read"),getRegions)
 router.get("/depot",isLogin,roleBaseAuth( "ADMIN"),checkPermission("depot","read"),getDepotCustomers)
+router.get("/depot/:regionId",isLogin,checkPermission("depot","read"),getDepotCustomersByRegion)
 router.get("/vehiclemodel",isLogin,roleBaseAuth( "ADMIN"),checkPermission("vehicleModel","read"),getVehicleModels)
 router.get("/gender",isLogin,roleBaseAuth( "ADMIN"),checkPermission("gender","read"),getGender)
 router.get("/photoidcard",isLogin,roleBaseAuth( "ADMIN"),checkPermission("photoIdCard","read"),getPhotoIdCard)
@@ -54,11 +59,18 @@ router.get("/pismanufacturer",isLogin,roleBaseAuth( "ADMIN"),checkPermission("pi
 router.get("/pistype",isLogin,roleBaseAuth( "ADMIN"),checkPermission("pisType","read"),getPisTypes)
 router.get("/pismodel",isLogin,roleBaseAuth( "ADMIN"),checkPermission("pisModel","read"),getAllPisModels)
 router.get("/employtype",isLogin,roleBaseAuth( "ADMIN"),checkPermission("employType","read"),getAllEmployTypes)
+router.get("/vltdevice", isLogin, getVltDevices);
+router.get("/vltdevice/:regionId", isLogin, getVltDevicesByRegion);
+router.get("/vltdevice/:depotId", isLogin, getVltDevicesByDepot);
+router.get("/subscription",isLogin,getSubscription)
+router.get("/subscription/:regionId",isLogin,getSubscriptionsByRegion)
+router.get("/subscription/:depotId",isLogin,getSubscriptionsByDepot)
 
 
 
 
-
+router.post("/addvltdevice",isLogin,addVltDevices);
+router.post("/subscription",isLogin,addSubscription)
 router.post("/account", isLogin,roleBaseAuth("ADMIN"), checkPermission("account", "create"), addAccount);
 router.post("/tolltype", isLogin,roleBaseAuth("ADMIN"), checkPermission("tollType", "create"), addTollType);
 router.post("/toll", isLogin, roleBaseAuth("ADMIN"), checkPermission("toll", "create"), addToll);
@@ -85,6 +97,8 @@ router.post("/employtype",isLogin,roleBaseAuth( "ADMIN"),checkPermission("empoly
 
 
 
+router.put("/vltdevice/:id",isLogin, updateVltDevices);
+router.put("/subscription/:id",isLogin,updateSubscription);
 router.put("/account/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("account","update"),updateAccount)
 router.put("/stopgrade/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("stop","update"),updateStopGrade)
 router.put("/tolltypes/:id",isLogin,roleBaseAuth( "ADMIN"),checkPermission("tollType", "update"), updateTollType);

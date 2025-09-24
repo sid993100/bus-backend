@@ -3,12 +3,239 @@ import VltDevice from "../../../models/vltDeviceModel.js";
 import consoleManager from "../../../utils/consoleManager.js";
 import VltdManufacturer from "../../../models/vltdManufacturerModel.js";
 
+import { isValidObjectId } from "mongoose";
 
-const populatedFields=[
-        {path:"vlt",select:"manufacturerName modelName" },
-        // {path:"region",select:"regionName" },
-        // {path:"customer",select:"depotCustomer" }
-       ]
+const populatedFields = [
+  { path: "vlt", select: "manufacturerName modelName" },
+  // { path: "region", select: "name" },
+  // { path: "customer", select: "depotCustomer" }
+];
+
+// Get VLT Devices by Region
+export const getVltDevicesByRegion = async (req, res) => {
+  try {
+    const { regionId } = req.params;
+
+    // Validate ObjectId format
+    if (!isValidObjectId(regionId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid region ID format"
+      });
+    }
+
+    const vltDevices = await VltDevice.find({ region: regionId })
+      .populate(populatedFields)
+      .sort({ imeiNumber: 1 });
+
+    if (!vltDevices || vltDevices.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No VLT Devices found for this region"
+      });
+    }
+
+    // Map async to update manufacturer names with short names
+    const updatedVltDevices = await Promise.all(
+      vltDevices.map(async (device) => {
+        if (device.vlt && device.vlt.manufacturerName) {
+          const vltManufacturer = await VltdManufacturer.findOne({ 
+            manufacturerName: device.vlt.manufacturerName 
+          });
+          if (vltManufacturer && vltManufacturer.shortName) {
+            device.vlt.manufacturerName = vltManufacturer.shortName;
+          }
+        }
+        return device;
+      })
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "VLT Devices retrieved successfully for region",
+      data: updatedVltDevices,
+      count: updatedVltDevices.length,
+      regionId: regionId
+    });
+
+  } catch (error) {
+    console.error('Error fetching VLT devices by region:', error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+    });
+  }
+};
+
+// Get VLT Devices by Depot/Customer
+export const getVltDevicesByDepot = async (req, res) => {
+  try {
+    const { depotId } = req.params;
+
+    // Validate ObjectId format
+    if (!isValidObjectId(depotId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid depot ID format"
+      });
+    }
+
+    const vltDevices = await VltDevice.find({ customer: depotId })
+      .populate(populatedFields)
+      .sort({ imeiNumber: 1 });
+
+    if (!vltDevices || vltDevices.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No VLT Devices found for this depot"
+      });
+    }
+
+    // Map async to update manufacturer names with short names
+    const updatedVltDevices = await Promise.all(
+      vltDevices.map(async (device) => {
+        if (device.vlt && device.vlt.manufacturerName) {
+          const vltManufacturer = await VltdManufacturer.findOne({ 
+            manufacturerName: device.vlt.manufacturerName 
+          });
+          if (vltManufacturer && vltManufacturer.shortName) {
+            device.vlt.manufacturerName = vltManufacturer.shortName;
+          }
+        }
+        return device;
+      })
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "VLT Devices retrieved successfully for depot",
+      data: updatedVltDevices,
+      count: updatedVltDevices.length,
+      depotId: depotId
+    });
+
+  } catch (error) {
+    console.error('Error fetching VLT devices by depot:', error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+    });
+  }
+};
+
+// Enhanced version with query parameters and filters
+export const getVltDevicesByRegionAndDepot = async (req, res) => {
+  try {
+    const { regionId, depotId } = req.query;
+    const { 
+      page = 1, 
+      limit = 10, 
+      sortBy = 'imeiNumber', 
+      sortOrder = 'asc',
+      search,
+      deviceStatus 
+    } = req.query;
+
+    // Build filter object
+    const filter = {};
+    if (regionId) {
+      if (!isValidObjectId(regionId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid region ID format"
+        });
+      }
+      filter.region = regionId;
+    }
+
+    if (depotId) {
+      if (!isValidObjectId(depotId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid depot ID format"
+        });
+      }
+      filter.customer = depotId;
+    }
+
+    if (search) {
+      filter.$or = [
+        { imeiNumber: { $regex: search, $options: 'i' } },
+        { iccid: { $regex: search, $options: 'i' } },
+        { simNumber: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    if (deviceStatus) {
+      filter.deviceStatus = deviceStatus;
+    }
+
+    // Pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const sort = {};
+    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+    const vltDevices = await VltDevice.find(filter)
+      .populate(populatedFields)
+      .sort(sort)
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    // Get total count for pagination
+    const totalCount = await VltDevice.countDocuments(filter);
+    const totalPages = Math.ceil(totalCount / parseInt(limit));
+
+    if (!vltDevices || vltDevices.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No VLT Devices found for the specified criteria"
+      });
+    }
+
+    // Map async to update manufacturer names with short names
+    const updatedVltDevices = await Promise.all(
+      vltDevices.map(async (device) => {
+        if (device.vlt && device.vlt.manufacturerName) {
+          const vltManufacturer = await VltdManufacturer.findOne({ 
+            manufacturerName: device.vlt.manufacturerName 
+          });
+          if (vltManufacturer && vltManufacturer.shortName) {
+            device.vlt.manufacturerName = vltManufacturer.shortName;
+          }
+        }
+        return device;
+      })
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "VLT Devices retrieved successfully",
+      data: updatedVltDevices,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages,
+        totalItems: totalCount,
+        itemsPerPage: parseInt(limit),
+        hasNextPage: parseInt(page) < totalPages,
+        hasPrevPage: parseInt(page) > 1
+      },
+      filters: {
+        ...(regionId && { regionId }),
+        ...(depotId && { depotId })
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching VLT devices:', error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+    });
+  }
+};
        
 export const getVltDevices = async (req, res) => {
   try {
