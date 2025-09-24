@@ -3,7 +3,7 @@ import { addDriver, getAllDrivers, updateDriver } from "../../services/admin/dri
 import { addConductor, getConductor, updateConductor } from "../../services/admin/conductor/conductorService.js";
 import { isLogin } from "../../middleWares/isLogin.js";
 import { roleBaseAuth } from "../../middleWares/rolebaseAuth.js";
-import { addUser, getUsers, updateUser } from "../../services/admin/user/userServices.js";
+import { addUser, getUsers, updateUser, setActive } from "../../services/admin/user/userServices.js";
 import { checkPermission } from "../../middleWares/checkPermission.js";
 const router = Router();
 
@@ -22,4 +22,6 @@ router.post('/conductor',isLogin,roleBaseAuth( "ADMIN"),checkPermission("conduct
 router.put('/driver/:id', isLogin,roleBaseAuth( "ADMIN"),checkPermission("drive","update"),updateDriver)
 router.put('/conductor/:id', isLogin,roleBaseAuth( "ADMIN"),checkPermission("conductor","update"),updateConductor)
 router.put('/user/:id', isLogin,roleBaseAuth("ADMIN"),checkPermission("user","update"),updateUser)
+router.put('/user/setStatus/:id', isLogin,checkPermission("user","update"),setActive)
+
 export default router;

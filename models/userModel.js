@@ -63,6 +63,11 @@ const UserSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "DepotCustomer",
     } ,
+    isActive:{
+      type:Boolean,
+      default:true
+    },
+
     resetCode: { type: String, default: null },
     resetCodeExpires: { type: Date, default: null },
 

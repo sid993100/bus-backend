@@ -72,25 +72,80 @@ export const updatePisModel = async (req, res) => {
     const { id } = req.params;
     const { make, vehicleType, vehicleModel } = req.body;
 
-
-     const existsPisMoel=await PisModel.findOne({vehicleModel})
-    if(existsPisMoel&& existsPisMoel._id!=id ){
-      return res.status(409).json({
-        message: "Pis Model already exists"
-      })
+    // Validate required fields
+    if (!make || !vehicleType || !vehicleModel) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'All fields are required' 
+      });
     }
 
+    // Check if a PisModel with the same combination already exists (excluding current record)
+    const existsPisModel = await PisModel.findOne({
+      make: make,
+      vehicleType: vehicleType,  
+      vehicleModel: vehicleModel.toUpperCase(),
+      _id: { $ne: id } // Exclude current record from duplicate check
+    });
+
+    if (existsPisModel) {
+      return res.status(409).json({
+        success: false,
+        message: "Pis Model already exists with this combination"
+      });
+    }
+
+    // Update the PisModel
     const updated = await PisModel.findByIdAndUpdate(
       id,
-      { make, vehicleType, vehicleModel },
+      { 
+        make, 
+        vehicleType, 
+        vehicleModel: vehicleModel.toUpperCase() // Ensure consistency with create
+      },
       { new: true, runValidators: true }
     );
+
     if (!updated) {
-      return res.status(404).json({ success: false, error: 'Pis Model not found' });
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Pis Model not found' 
+      });
     }
-    res.status(200).json({ success: true, data: updated });
+
+    res.status(200).json({ 
+      success: true, 
+      message: 'Pis Model updated successfully',
+      data: updated 
+    });
+
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    console.error('Error updating PisModel:', error);
+    
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid PisModel ID format'
+      });
+    }
+
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => ({
+        field: err.path,
+        message: err.message
+      }));
+
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: validationErrors
+      });
+    }
+
+    res.status(500).json({ 
+      success: false, 
+      error: 'Internal server error' 
+    });
   }
 };
 
