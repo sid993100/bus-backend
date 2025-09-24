@@ -239,7 +239,7 @@ function formatDateTime(date) {
  */
 async function addLocationData(data) {
   // Limit geocoding to first 20 records to avoid rate limiting
-  const maxGeocode = Math.min(data.length, 20);
+  const maxGeocode = Math.min(data.length, 50);
   
   for (let i = 0; i < maxGeocode; i++) {
     const record = data[i];

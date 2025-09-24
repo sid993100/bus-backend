@@ -3,6 +3,10 @@ import { model, Schema } from "mongoose";
 // Vehicle Schema
 const vehicleSchema = new Schema(
   {
+    department:{
+      type:Schema.Types.ObjectId,
+      ref:"Account"
+    },
     vehicleNumber: {
       type: String,
       required: true,

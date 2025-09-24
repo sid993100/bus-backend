@@ -5,6 +5,7 @@ export const getVehicle = async (req, res) => {
   try {
     const vehicles = await Vehicle.find({})
       .populate('seatLayout', 'layoutName')
+      .populate('department', 'account accountCode')
       .populate('hierarchy', 'name level description')
       .populate('regionZone', 'name code')
       .populate('depotCustomer', 'depotCustomer depotCode location')
@@ -50,6 +51,7 @@ export const addVehicle = async (req, res) => {
   try {
     
    const {
+       department,
       vehicleNumber,
       seatLayout,
       hierarchy,
@@ -88,6 +90,7 @@ export const addVehicle = async (req, res) => {
 
     // Create vehicle
     const vehicle = await Vehicle.create({
+      department,
       vehicleNumber,
       seatLayout,
       hierarchy,
@@ -177,6 +180,7 @@ export const getVehiclesByRegion = async (req, res) => {
 
     const vehicles = await Vehicle.find({ regionZone: regionId })
       .populate('seatLayout', 'layoutName')
+      .populate('department', 'account accountCode')
       .populate('hierarchy', 'name level description')
       .populate('regionZone', 'name code')
       .populate('depotCustomer', 'depotCustomer depotCode location')
@@ -235,6 +239,7 @@ export const getVehiclesByDepot = async (req, res) => {
 
     const vehicles = await Vehicle.find({ depotCustomer: depotId })
       .populate('seatLayout', 'layoutName')
+      .populate('department', 'account accountCode')
       .populate('hierarchy', 'name level description')
       .populate('regionZone', 'name code')
       .populate('depotCustomer', 'depotCustomer depotCode location')
