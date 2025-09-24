@@ -1,5 +1,3 @@
-import e from "express";
-
 
 export default class UnifiedDeviceParser {
     constructor() {
@@ -13,7 +11,7 @@ export default class UnifiedDeviceParser {
             6: "Alert Connected back to main battery",
             7: "Alert Ignition ON",
             8: "Alert Ignition OFF",
-            9: "Alert  GPS box opened",
+            9: "Alert GPS box opened",
             10: "Alert ON - emergency state",
             11: "Alert OFF - emergency state",
             12: "Alert Over the air",
@@ -49,14 +47,22 @@ export default class UnifiedDeviceParser {
         };
     }
 
+    // Helper method to get current Indian Standard Time (IST)
+    getISTTime() {
+        const now = new Date();
+        // IST is UTC+5:30
+        const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+        const istTime = new Date(now.getTime() + istOffset);
+        return istTime.toISOString();
+    }
+
     parseDeviceData(rawData) {
         try {
             console.log('Parsing raw data:', rawData);
             
             const cleanData = rawData.trim();
             const protocol = this.detectProtocol(cleanData);
-            console.log('Dected protocol...................:', protocol);
-            
+            console.log('Detected protocol...................:', protocol);
             
             switch(protocol) {
                 case 'BHARAT_101':
@@ -98,8 +104,6 @@ export default class UnifiedDeviceParser {
 
     // BHARAT_101 Protocol Parsers
     parseBharatPacket(data) {
-        
-        
         if (data.startsWith('$Header')) {
             return this.parseBharatTrackingPacket(data);
         } else if (data.startsWith('$EPB')) {
@@ -112,30 +116,31 @@ export default class UnifiedDeviceParser {
         return null;
     }
 
- parseBharatTrackingPacket(data) {
-    const fields = data.split(',');
-    if (fields.length < 13) {
-        return this.parseBharatLoginPacket(data);   
-    }else if(fields.length<17){
-        return this.parseBharatHealthPacket(data);
-    }
-     const lastField = fields[51] || '';
-    let opt = "()";
-    let checksum = null;
-    
-    if (lastField.includes('*')) {
-        const parts = lastField.split('*');
-        opt = parts[0] || "()";
-      
-        checksum = parts[1] || null;
-    } else {
-        opt = lastField || "()";
-    }
-    return {
-        protocol: "BHARAT_101",
-        packet_type: "tracking",
-        timestamp: new Date().toISOString(),
-        raw_data: data,
+    parseBharatTrackingPacket(data) {
+        const fields = data.split(',');
+        if (fields.length < 13) {
+            return this.parseBharatLoginPacket(data);   
+        } else if(fields.length < 17) {
+            return this.parseBharatHealthPacket(data);
+        }
+        
+        const lastField = fields[51] || '';
+        let opt = "()";
+        let checksum = null;
+        
+        if (lastField.includes('*')) {
+            const parts = lastField.split('*');
+            opt = parts[0] || "()";
+            checksum = parts[1] || null;
+        } else {
+            opt = lastField || "()";
+        }
+        
+        return {
+            protocol: "BHARAT_101",
+            packet_type: "tracking",
+            timestamp: this.getISTTime(), // Changed to IST
+            raw_data: data,
             // Header fields
             header: fields[0], // $Header
             vendor_id: fields[1], // BHARTI
@@ -204,139 +209,131 @@ export default class UnifiedDeviceParser {
             
             // Additional information
             delta_distance: fields[50] || '0', // Provide default
-            ota_response:opt || null,
-            checksum:checksum || null
-        
-    };
-}
-
+            ota_response: opt || null,
+            checksum: checksum || null
+        };
+    }
 
     parseBharatEmergencyPacket(data) {    
-    const fields = data.split(',');
-    
-      const lastField = fields[15] || '';
-    let emergency_contact = lastField;
-    let checksum = null;
-    
-    if (lastField.includes('*')) {
-        const parts = lastField.split('*');
-        emergency_contact = parts[0] || "()";
-      
-        checksum = parts[1] || null;
-    } else {
-        emergency_contact = lastField;
-    }
-    return {
-        protocol: "BHARAT_101",
-        packet_type: "emergency",
-        timestamp: new Date().toISOString(),
-        raw_data: data,
+        const fields = data.split(',');
         
-        // Flat structure matching your schema
-        header: fields[0], // $EPB
-        message_type: fields[1], // EMR or SEM
-        device_id: fields[2], // IMEI (864495034476850)
-        packet_status: fields[3], // NM=Normal, SP=Stored
-        datetime: fields[4], // DDMMYYYYHHMMSS (02022019093817)
-        gps_validity: fields[5], // A=Valid, V=Invalid
-        latitude: parseFloat(fields[6]) || 0, // 12.976358
-        latitude_dir: fields[7] || 'N', // N
-        longitude: parseFloat(fields[8]) || 0, // 77.549919
-        longitude_dir: fields[9] || 'E', // E
-        altitude: parseFloat(fields[10]) || 0, // 910.0
-        speed: parseFloat(fields[11]) || 0, // 0.0
-        distance: parseInt(fields[12]) || 0, // 2
-        provider: fields[13] || 'G', // G=GPS, N=Network
-        vehicle_reg_no: fields[14] || '', // KA01G1234
-        emergency_contact:emergency_contact || '', // +9164061023
-        checksum:checksum || null // *4B
-    };
-}
-
-
-parseBharatHealthPacket(data) {
-    const fields = data.split(',');
-    
-     const lastField = fields[12] || '';
-    let input_2 = 0;
-    let checksum = null;
-    
-    if (lastField.includes('*')) {
-        const parts = lastField.split('*');
-        input_2 = parts[0] || "()";
-      
-        checksum = parts[1] || null;
-    } else {
-        input_2 = parseFloat(lastField) || 0;
+        const lastField = fields[15] || '';
+        let emergency_contact = lastField;
+        let checksum = null;
+        
+        if (lastField.includes('*')) {
+            const parts = lastField.split('*');
+            emergency_contact = parts[0] || "()";
+            checksum = parts[1] || null;
+        } else {
+            emergency_contact = lastField;
+        }
+        
+        return {
+            protocol: "BHARAT_101",
+            packet_type: "emergency",
+            timestamp: this.getISTTime(), // Changed to IST
+            raw_data: data,
+            
+            // Flat structure matching your schema
+            header: fields[0], // $EPB
+            message_type: fields[1], // EMR or SEM
+            device_id: fields[2], // IMEI (864495034476850)
+            packet_status: fields[3], // NM=Normal, SP=Stored
+            datetime: fields[4], // DDMMYYYYHHMMSS (02022019093817)
+            gps_validity: fields[5], // A=Valid, V=Invalid
+            latitude: parseFloat(fields[6]) || 0, // 12.976358
+            latitude_dir: fields[7] || 'N', // N
+            longitude: parseFloat(fields[8]) || 0, // 77.549919
+            longitude_dir: fields[9] || 'E', // E
+            altitude: parseFloat(fields[10]) || 0, // 910.0
+            speed: parseFloat(fields[11]) || 0, // 0.0
+            distance: parseInt(fields[12]) || 0, // 2
+            provider: fields[13] || 'G', // G=GPS, N=Network
+            vehicle_reg_no: fields[14] || '', // KA01G1234
+            emergency_contact: emergency_contact || '', // +9164061023
+            checksum: checksum || null // *4B
+        };
     }
 
-
-    return {
-        protocol: "BHARAT_101",
-        packet_type: "health",
-        timestamp: new Date().toISOString(),
-        raw_data: data,
+    parseBharatHealthPacket(data) {
+        const fields = data.split(',');
         
-        // Flat structure matching your schema needs
-        header: fields[0], // $Header
-        vendor_id: fields[1], // iTriangle
-        firmware_version: fields[2], // 1_36T02B0164MAIS_6
-        imei: fields[3], // IMEI
-        battery_percentage: parseInt(fields[4]) || 0,
-        low_battery_threshold: parseInt(fields[5]) || 0,
-        server1_memory_percentage: parseFloat(fields[6]) || 0,
-        server2_memory_percentage: parseFloat(fields[7]) || 0,
-        ignition_on_interval: parseInt(fields[8]) || 0,
-        ignition_off_interval: parseInt(fields[9]) || 0,
-        digital_inputs: fields[10] || '0000',
-        analog_input_1: parseFloat(fields[11]) || 0,
-        analog_input_2: parseFloat(input_2) || 0,
-        checksum:checksum || null
-    };
-}
+        const lastField = fields[12] || '';
+        let input_2 = 0;
+        let checksum = null;
+        
+        if (lastField.includes('*')) {
+            const parts = lastField.split('*');
+            input_2 = parts[0] || "()";
+            checksum = parts[1] || null;
+        } else {
+            input_2 = parseFloat(lastField) || 0;
+        }
 
-
-   parseBharatLoginPacket(data) {
-    const fields = data.split(',');
-    
-    // Parse the last field "E*1C" into components
-    const lastField = fields[9] || '';
-    let longitude_dir = 'E';
-    let checksum_separator = '*';
-    let checksum = null;
-    
-    if (lastField.includes('*')) {
-        const parts = lastField.split('*');
-        longitude_dir = parts[0] || 'E';
-        checksum_separator = '*';
-        checksum = parts[1] || null;
-    } else {
-        longitude_dir = lastField || 'E';
+        return {
+            protocol: "BHARAT_101",
+            packet_type: "health",
+            timestamp: this.getISTTime(), // Changed to IST
+            raw_data: data,
+            
+            // Flat structure matching your schema needs
+            header: fields[0], // $Header
+            vendor_id: fields[1], // iTriangle
+            firmware_version: fields[2], // 1_36T02B0164MAIS_6
+            imei: fields[3], // IMEI
+            battery_percentage: parseInt(fields[4]) || 0,
+            low_battery_threshold: parseInt(fields[5]) || 0,
+            server1_memory_percentage: parseFloat(fields[6]) || 0,
+            server2_memory_percentage: parseFloat(fields[7]) || 0,
+            ignition_on_interval: parseInt(fields[8]) || 0,
+            ignition_off_interval: parseInt(fields[9]) || 0,
+            digital_inputs: fields[10] || '0000',
+            analog_input_1: parseFloat(fields[11]) || 0,
+            analog_input_2: parseFloat(input_2) || 0,
+            checksum: checksum || null
+        };
     }
-    
-    return {
-        protocol: "BHARAT_101",
-        packet_type: "login",
-        timestamp: new Date().toISOString(),
-        raw_data: data,
+
+    parseBharatLoginPacket(data) {
+        const fields = data.split(',');
         
-        start_character: '$',
-        header: fields[0].replace('$', ''), // Remove $ to get just "Header"
-        vendor_id: fields[1] || '',
-        vehicle_reg_no: fields[2] || '',
-        imei: fields[3] || '',
-        firmware_version: fields[4] || '',
-        protocol_version: fields[5] || '',
-        latitude: parseFloat(fields[6]) || 0,
-        latitude_dir: fields[7] || 'N',
-        longitude: parseFloat(fields[8]) || 0,
-        longitude_dir: longitude_dir,
-        checksum_separator: checksum_separator,
-        checksum: checksum
-    };
-}
-
-
+        // Parse the last field "E*1C" into components
+        const lastField = fields[9] || '';
+        let longitude_dir = 'E';
+        let checksum_separator = '*';
+        let checksum = null;
+        
+        if (lastField.includes('*')) {
+            const parts = lastField.split('*');
+            longitude_dir = parts[0] || 'E';
+            checksum_separator = '*';
+            checksum = parts[1] || null;
+        } else {
+            longitude_dir = lastField || 'E';
+        }
+        
+        return {
+            protocol: "BHARAT_101",
+            packet_type: "login",
+            timestamp: this.getISTTime(), // Changed to IST
+            raw_data: data,
+            
+            start_character: '$',
+            header: fields[0].replace('$', ''), // Remove $ to get just "Header"
+            vendor_id: fields[1] || '',
+            vehicle_reg_no: fields[2] || '',
+            imei: fields[3] || '',
+            firmware_version: fields[4] || '',
+            protocol_version: fields[5] || '',
+            latitude: parseFloat(fields[6]) || 0,
+            latitude_dir: fields[7] || 'N',
+            longitude: parseFloat(fields[8]) || 0,
+            longitude_dir: longitude_dir,
+            checksum_separator: checksum_separator,
+            checksum: checksum
+        };
+    }
 
     // AIS-140 Protocol Parsers
     parseAis140Packet(data) {
@@ -358,7 +355,7 @@ parseBharatHealthPacket(data) {
         return {
             protocol: "AIS_140",
             packet_type: "login",
-            timestamp: new Date().toISOString(),
+            timestamp: this.getISTTime(), // Changed to IST
             raw_data: data,
             parsed_data: {
                 header: fields[0], // $LGN
@@ -379,7 +376,7 @@ parseBharatHealthPacket(data) {
         return {
             protocol: "AIS_140",
             packet_type: "location",
-            timestamp: new Date().toISOString(),
+            timestamp: this.getISTTime(), // Changed to IST
             raw_data: data,
             parsed_data: {
                 header: fields[0], // $NRM
@@ -435,7 +432,7 @@ parseBharatHealthPacket(data) {
         return {
             protocol: "AIS_140",
             packet_type: "alert",
-            timestamp: new Date().toISOString(),
+            timestamp: this.getISTTime(), // Changed to IST
             raw_data: data,
             parsed_data: {
                 header: fields[0], // $ALT
@@ -466,7 +463,7 @@ parseBharatHealthPacket(data) {
         return {
             protocol: "AIS_140",
             packet_type: "health",
-            timestamp: new Date().toISOString(),
+            timestamp: this.getISTTime(), // Changed to IST
             raw_data: data,
             parsed_data: {
                 header: fields[0], // $HLM

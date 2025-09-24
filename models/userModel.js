@@ -41,23 +41,18 @@ const UserSchema = new Schema(
     },
     emergencyContact:{
       type:Number,
-     
     },
     aadhar:{
       type:Number,
-     
     },  
     address:{
       type:String,
-     
     },  
     state:{
       type:String,
-      
     },  
     pinCode:{
       type:Number,
-     
     }, 
     depot:{
       type: Schema.Types.ObjectId,
