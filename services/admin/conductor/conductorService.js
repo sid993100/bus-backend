@@ -1,12 +1,11 @@
 import mongoose from "mongoose";
 import Conductor from "../../../models/conductorModel.js";
+import validateAge from "../../../utils/valideAge.js";
+import responseManager from "../../../utils/responseManager.js";
 
 
 export const getConductor = async (req, res) => {
   try {
-    const user = req.user;
-
-   
 
     const conductors = await Conductor.find({});
 
@@ -57,6 +56,12 @@ export const addConductor = async (req, res) => {
         message: "payrollId, driverName, gender, mobileNumber, employment, dateOfBirth, and fatherName are required"
       });
     }
+     if (dateOfBirth) {
+      const ageValidation = validateAge(dateOfBirth);
+      if (!ageValidation.isValid) {
+        return responseManager.badRequest(res, ageValidation.message);
+      }
+    }
 
     // Create conductor
     const conductor = await Conductor.create({
@@ -94,6 +99,7 @@ export const addConductor = async (req, res) => {
 export const updateConductor = async (req, res) => {
   try {
     const { id } = req.params;
+    const updates =req.body
 
     // Validate ObjectId format
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -109,8 +115,15 @@ export const updateConductor = async (req, res) => {
       });
     }
 
+   if (updates.dateOfBirth) {
+      const ageValidation = validateAge(updates.dateOfBirth);
+      if (!ageValidation.isValid) {
+        return responseManager.badRequest(res, ageValidation.message);
+      }
+    }
+
     // Perform update
-    const updatedConductor = await Conductor.findByIdAndUpdate(id, req.body, { new: true });
+    const updatedConductor = await Conductor.findByIdAndUpdate(id, updates, { new: true });
 
     if (!updatedConductor) {
       return res.status(404).json({

@@ -10,7 +10,7 @@ const populateUser = (query) => {
         .populate('roleName', 'role')
         .populate('hierarchy', 'name level')
         .populate('region', 'name code')
-        .populate('depot', 'DepotCustomer');
+        .populate('depot', 'depotCustomer code');
 };
 
 
