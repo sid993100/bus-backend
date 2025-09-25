@@ -15,29 +15,22 @@ const populationFields = [
 // **ENHANCED: GET all conductors with population and filtering**
 export const getConductor = async (req, res) => {
   try {
-    const { page = 1, limit = 20 } = req.query;
+  
+    const allConductor = await Conductor.find()
+    .populate(populationFields)
 
-    const pageNum = parseInt(page) || 1;
-    const limitNum = parseInt(limit) || 20;
-
-    const [conductors, total] = await Promise.all([
-      Conductor.find({})
-        .populate(populationFields)
-        .skip((pageNum - 1) * limitNum)
-        .limit(limitNum),
-      Conductor.countDocuments({})
-    ]);
+    if (!allConductor) {
+      return res.status(404).json({
+        success: false,
+        message: "No conductors found"
+      });
+    }
 
     res.status(200).json({
       success: true,
-      data: conductors,
-      pagination: {
-        page: pageNum,
-        limit: limitNum,
-        total,
-        pages: Math.ceil(total / limitNum)
-      }
+      data: allConductor
     });
+
   } catch (error) {
     res.status(500).json({
       success: false,

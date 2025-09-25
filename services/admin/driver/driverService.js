@@ -80,86 +80,36 @@ export const addDriver = async (req, res) => {
   }
 };
 
-// **ENHANCED: GET all Drivers with population**
 export const getAllDrivers = async (req, res) => {
   try {
-    const {
-      page = 1,
-      limit = 20,
-      search = '',
-      active,
-      includeDeleted = 'false',
-      minAge,
-      maxAge,
-      zoneRegion,
-      depotCustomer
-    } = req.query;
+    let { page = 1, limit = 20 } = req.query;
 
-    const pageNum = Math.max(parseInt(page, 10) || 1, 1);
-    const limitNum = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
-
-    const filter = {};
-
-    // Soft delete filter
-    if (includeDeleted !== 'true') {
-      filter.isDeleted = { $ne: true };
-    }
-
-    // **ADDED: Region/Depot filters**
-    if (zoneRegion) filter.zoneRegion = zoneRegion;
-    if (depotCustomer) filter.depotCustomer = depotCustomer;
-
-    // Text search across common fields
-    if (search) {
-      filter.$or = [
-        { driverName: { $regex: search, $options: 'i' } },
-        { payrollId: { $regex: search, $options: 'i' } },
-        { mobileNumber: { $regex: search, $options: 'i' } },
-        { dlNumber: { $regex: search, $options: 'i' } }
-      ];
-    }
-
-    // **ADDED: Age-based filtering**
-    if (minAge || maxAge) {
-      const today = new Date();
-      if (minAge) {
-        const maxBirthDate = new Date(today.getFullYear() - parseInt(minAge), today.getMonth(), today.getDate());
-        filter.dateOfBirth = { ...filter.dateOfBirth, $lte: maxBirthDate };
-      }
-      if (maxAge) {
-        const minBirthDate = new Date(today.getFullYear() - parseInt(maxAge) - 1, today.getMonth(), today.getDate());
-        filter.dateOfBirth = { ...filter.dateOfBirth, $gt: minBirthDate };
-      }
-    }
+    // ✅ Validate numbers
+    page = Number.isInteger(+page) && +page > 0 ? +page : 1;
+    limit = Number.isInteger(+limit) && +limit > 0 && +limit <= 100 ? +limit : 20;
 
     const [items, total] = await Promise.all([
-      Driver.find(filter)
-        .populate(populationFields) // **ADDED: Population**
+      Driver.find()
+      .populate(populationFields)
         .sort({ createdAt: -1 })
-        .skip((pageNum - 1) * limitNum)
-        .limit(limitNum)
+        .skip((page - 1) * limit)
+        .limit(limit)
         .lean(),
-      Driver.countDocuments(filter)
+      Driver.countDocuments(),
     ]);
-
-    // **ADDED: Calculate age for each driver**
-    const itemsWithAge = items.map(driver => ({
-      ...driver,
-      age: driver.dateOfBirth ? new Date().getFullYear() - new Date(driver.dateOfBirth).getFullYear() : null
-    }));
 
     res.status(200).json({
       success: true,
-      data: itemsWithAge,
+      data: items,
       pagination: {
-        page: pageNum,
-        limit: limitNum,
+        page,
+        limit,
         total,
-        pages: Math.ceil(total / limitNum)
-      }
+        pages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
-    responseManager.serverError(res, error.message);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
