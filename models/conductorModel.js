@@ -8,25 +8,21 @@ const ConductorSchema = new Schema({
     uppercase: true
   },
   departmentSection: {
-    type: String,
-    trim: true,
-    uppercase: true
+    type: Schema.Types.ObjectId,
+    ref:"Account"
   },
   zoneRegion: {
-    type: String,
-    trim: true,
-    uppercase: true
+    type: Schema.Types.ObjectId,
+    ref: "Region",
   },
   depotCustomer: {
-    type: String,
-    trim: true,
-    uppercase: true
+    type: Schema.Types.ObjectId,
+    ref: "DepotCustomer",
   },
   driverName: {
-    type: String,
+    type: Schema.Types.ObjectId,
     required: true,
-    trim: true,
-    uppercase: true
+    ref: "Driver"
   },
   gender: {
     type: String,
@@ -41,9 +37,9 @@ const ConductorSchema = new Schema({
     uppercase: true
   },
   employment: {
-    type: String,
+    type: Schema.Types.ObjectId,
+    ref: "EmpolyType",
     required: true,
-    uppercase: true
   },
   dateOfBirth: {
     type: Date,
@@ -55,9 +51,8 @@ const ConductorSchema = new Schema({
     uppercase: true
   },
   photoIdCard: {
-    type: String,
-    trim: true,
-    uppercase: true
+    type: Schema.Types.ObjectId,
+    ref:"PhotoIdCard"
   },
   idCardNumber: {
     type: String,

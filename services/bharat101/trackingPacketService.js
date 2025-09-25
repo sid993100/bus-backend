@@ -6,9 +6,6 @@ import TrackingPacket from "../../models/trackingPacketModel.js";
 export const addTrackingPacket = async (req, res) => {
   try {
     const {data}= req.body;
-
-    
-
     // Create tracking packet directly
     const trackingPacket = new TrackingPacket(data);
     const savedPacket = await trackingPacket.save();

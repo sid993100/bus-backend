@@ -27,8 +27,8 @@ const io = new Server(server, {
 consoleManager.log("socket.io server running on port 5000");
 
 const KAFKA_BROKER = process.env.KAFKA_BROKER;
-const BHARAT_TCP_PORT = process.env.TCP_PORT || 5055;
-const ACUTE_TCP_PORT = process.env.TCP_PORT || 5056;
+const BHARAT_TCP_PORT = process.env.BHARAT_TCP_PORT || 5055;
+const ACUTE_TCP_PORT = process.env.ACUTE_TCP_PORT || 5056;
 
 // Kafka setup
 const kafka = new Kafka({
@@ -62,15 +62,6 @@ async function connectKafka() {
         consoleManager.log("⚠️ Could not parse GPS data:", parsed);
         return;
       }
-
-      const timestamp = new Date().toLocaleString("en-IN", {
-        timeZone: "Asia/Kolkata",
-      });
-
-      console.log(
-        `[${timestamp}] Received message from topic ${topic}:`,
-        parsed
-      );
 
       // Fix: Send to correct endpoint with raw_data included
       try {
@@ -136,7 +127,7 @@ const bharatTcp = net.createServer((socket) => {
     // 🔹 Push parsed JSON to Kafka
     try {
       await producer.send({
-        topic: "busTrack",
+        topic: "bharatBusTrack",
         messages: [{ value: raw }],
       });
       consoleManager.log("🚀 Published parsed data to Kafka");
@@ -166,7 +157,7 @@ const acuteTcp = net.createServer((socket) => {
 
     try {
       await producer.send({
-        topic: "busTrack",
+        topic: "acuteBusTrack",
         messages: [{ value: raw }],
       });
       consoleManager.log("🚀 Published parsed data to Kafka");
