@@ -1,4 +1,4 @@
-import mongoose, { model, Schema } from "mongoose";
+import  { model, Schema } from "mongoose";
 
 
 const DriverSchema = new Schema(
@@ -10,19 +10,19 @@ const DriverSchema = new Schema(
       trim: true,
       index: true
     },
-    departmentSection: { type: String, trim: true }, // Department / Section
-    zoneRegion: { type: String, trim: true },        // Zone / Region
-    depotCustomer: { type: String, trim: true },     // Depot / Customer
+    departmentSection: { type:Schema.Types.ObjectId,ref:"Account" }, // Department / Section
+    zoneRegion: {type:Schema.Types.ObjectId,ref:"Region" },        // Zone / Region
+    depotCustomer: {type:Schema.Types.ObjectId,ref:"DepotCustomer" },     // Depot / Customer
 
-    driverName: { type:mongoose.Types.ObjectId,ref:"User", required: true },
+    driverName: { type:String, required: true },
     gender: { type: String, required: true, enum: ['Male', 'Female', 'Other'] },
     mobileNumber: { type: String, required: true, trim: true },
-    employment: { type: String, required: true, trim: true },
+    employment: { type:Schema.Types.ObjectId,ref:"EmpolyType" },
 
     dateOfBirth: { type: Date, required: true },
     fatherName: { type: String, required: true, trim: true },
 
-    photoIdCardType: { type: String, trim: true }, // Aadhar / Passport / VoterID
+    photoIdCardType: { type:Schema.Types.ObjectId, ref:"PhotoIdCard" }, // Aadhar / Passport / VoterID
     idCardNumber: { type: String, trim: true },
 
     localAddress: { type: String, trim: true },

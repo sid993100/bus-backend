@@ -25,6 +25,7 @@ export const getTrips = async (req, res) => {
 export const addTrip = async (req, res) => {
   try {
     const {
+      tripId,
       depot,
       seatLayout,
       busService,
@@ -203,6 +204,7 @@ export const addTrip = async (req, res) => {
 
     // Prepare trip data based on cycleDay
     const tripData = {
+      tripId,
       depot,
       seatLayout,
       busService,

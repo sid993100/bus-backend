@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { addDriver, getAllDrivers, updateDriver } from "../../services/admin/driver/driverService.js";
+import { addDriver, getAllDrivers, getDriversByDepot, getDriversByRegion, updateDriver } from "../../services/admin/driver/driverService.js";
 import { addConductor, getConductor, updateConductor } from "../../services/admin/conductor/conductorService.js";
 import { isLogin } from "../../middleWares/isLogin.js";
 import { addUser, getUsers, updateUser, setActive } from "../../services/admin/user/userServices.js";
@@ -7,6 +7,8 @@ import { checkPermission } from "../../middleWares/checkPermission.js";
 const router = Router();
 
 router.get("/driver",isLogin, checkPermission("drive","read"),getAllDrivers)
+router.get("/driver/:regionId",isLogin, checkPermission("drive","read"),getDriversByRegion)
+router.get("/driver/:depotId",isLogin, checkPermission("drive","read"),getDriversByDepot)
 router.get("/conductor",isLogin, checkPermission("drive","read"),getConductor)
 router.get("/users", isLogin, checkPermission("user","read"), getUsers);
 
