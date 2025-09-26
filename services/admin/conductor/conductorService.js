@@ -47,7 +47,7 @@ export const addConductor = async (req, res) => {
       departmentSection,
       zoneRegion,
       depotCustomer,
-      name, 
+      driverName,
       gender,
       mobileNumber,
       employment,
@@ -63,7 +63,7 @@ export const addConductor = async (req, res) => {
     } = req.body;
 
     // **ENHANCED: Validate required fields**
-    if (!payrollId || !name || !gender || !mobileNumber || !employment || !dateOfBirth || !fatherName) {
+    if (!payrollId || !driverName || !gender || !mobileNumber || !employment || !dateOfBirth || !fatherName) {
       return res.status(400).json({
         success: false,
         message: "payrollId, name, gender, mobileNumber, employment, dateOfBirth, and fatherName are required"
@@ -105,7 +105,7 @@ export const addConductor = async (req, res) => {
       departmentSection,
       zoneRegion,
       depotCustomer,
-      name: name.toUpperCase(),
+      driverName: driverName.toUpperCase(),
       gender: gender.toUpperCase(),
       mobileNumber,
       employment,
@@ -191,7 +191,7 @@ export const updateConductor = async (req, res) => {
     }
 
     // **ADDED: Transform fields to uppercase where needed**
-    if (updates.conductorName) updates.conductorName = updates.conductorName.toUpperCase();
+    if (updates.driverName) updates.driverName = updates.driverName.toUpperCase();
     if (updates.gender) updates.gender = updates.gender.toUpperCase();
     if (updates.fatherName) updates.fatherName = updates.fatherName.toUpperCase();
     if (updates.payrollId) updates.payrollId = updates.payrollId.toUpperCase();

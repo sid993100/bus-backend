@@ -119,11 +119,11 @@ function calculateDateRange(period, startDate, endDate) {
 
   switch (period) {
     case 'last1hour':
-      start = new Date(now.getTime() - (4 * 30 * 60 * 1000));
+      start = new Date(now.getTime() - (1 * 60 * 60 * 1000));
       break;
     
     case 'last2hours':
-      start = new Date(now.getTime() - (3 * 50 * 60 * 1000));
+      start = new Date(now.getTime() - (2 * 60 * 60 * 1000));
       break;
     
     case 'last6hours':
@@ -136,88 +136,50 @@ function calculateDateRange(period, startDate, endDate) {
     
     case 'custom':
       if (!startDate || !endDate) {
-        return {
-          success: false,
-          message: 'Start date and end date are required for custom period'
-        };
+        return { success: false, message: 'Start date and end date are required for custom period' };
       }
       
       start = new Date(startDate);
       end = new Date(endDate);
       
       if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-        return {
-          success: false,
-          message: 'Invalid date format. Use ISO format (e.g., 2024-03-03T14:04:20Z)'
-        };
+        return { success: false, message: 'Invalid date format. Use ISO format (e.g., 2024-03-03T14:04:20Z)' };
       }
 
-      // **FIX: Check if dates are in the future**
-      if (start > now) {
-        return {
-          success: false,
-          message: 'Start date cannot be in the future'
-        };
-      }
+      if (start > now) return { success: false, message: 'Start date cannot be in the future' };
+      if (end > now) return { success: false, message: 'End date cannot be in the future' };
 
-      if (end > now) {
-        return {
-          success: false,
-          message: 'End date cannot be in the future'
-        };
-      }
-      
-      // Validate 24-hour limit for custom range
       const hoursDiff = (end - start) / (1000 * 60 * 60);
-      if (hoursDiff > 24) {
-        return {
-          success: false,
-          message: 'Custom date range cannot exceed 24 hours'
-        };
-      }
-      
-      if (start >= end) {
-        return {
-          success: false,
-          message: 'Start date must be before end date'
-        };
-      }
+      if (hoursDiff > 24) return { success: false, message: 'Custom date range cannot exceed 24 hours' };
+      if (start >= end) return { success: false, message: 'Start date must be before end date' };
 
-      // **FIX: Additional validation for reasonable date ranges**
-      const maxPastDays = 90; // Allow maximum 90 days in the past
+      const maxPastDays = 90;
       const maxPastTime = new Date(now.getTime() - (maxPastDays * 24 * 60 * 60 * 1000));
-      
       if (start < maxPastTime) {
-        return {
-          success: false,
-          message: `Start date cannot be more than ${maxPastDays} days in the past`
-        };
+        return { success: false, message: `Start date cannot be more than ${maxPastDays} days in the past` };
       }
-
       break;
     
     default:
-      return {
-        success: false,
-        message: 'Invalid period. Use: last1hour, last2hours, last6hours, last12hours, or custom'
-      };
+      return { success: false, message: 'Invalid period. Use: last1hour, last2hours, last6hours, last12hours, or custom' };
   }
 
-  // **FIX: Final validation to ensure dates are not in future for predefined periods**
-  if (start > now) {
-    start = new Date(now.getTime() - (1 * 60 * 60 * 1000)); // Default to 1 hour ago
-  }
-  
-  if (end > now) {
-    end = now;
-  }
+  if (start > now) start = new Date(now.getTime() - (1 * 60 * 60 * 1000));
+  if (end > now) end = now;
+
+  // ✅ Convert UTC to IST
+  const toIST = (date) => {
+    const IST_OFFSET = 5.5 * 60; // minutes
+    return new Date(date.getTime() + IST_OFFSET * 60 * 1000);
+  };
 
   return {
     success: true,
-    startDate: start,
-    endDate: end
+    startDate: toIST(start),
+    endDate: toIST(end)
   };
 }
+
 
 
 /**
