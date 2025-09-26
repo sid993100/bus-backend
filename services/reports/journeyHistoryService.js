@@ -63,7 +63,7 @@ export const journeyHistory = async (req, res) => {
     let formattedData = trackingData.map((record, index) => ({
       serialNumber: index + 1,
       vehicleNumber: record.vehicle_reg_no,
-      dateTime:record.timestamp,
+      dateTime: formatDateTime(record.timestamp),
       latitude: record.latitude || 0,
       longitude: record.longitude || 0,
       location: null, // Will be populated if includeLocation is true
@@ -119,11 +119,11 @@ function calculateDateRange(period, startDate, endDate) {
 
   switch (period) {
     case 'last1hour':
-      start = new Date(now.getTime() - (1 * 60 * 60 * 1000));
+      start = new Date(now.getTime() - (4 * 30 * 60 * 1000));
       break;
     
     case 'last2hours':
-      start = new Date(now.getTime() - (2 * 60 * 60 * 1000));
+      start = new Date(now.getTime() - (3 * 50 * 60 * 1000));
       break;
     
     case 'last6hours':
@@ -219,20 +219,26 @@ function calculateDateRange(period, startDate, endDate) {
   };
 }
 
+
 /**
  * Format datetime similar to Journey History format (03-03-2024 14:04:20)
  */
 function formatDateTime(date) {
   const d = new Date(date);
+
   const day = String(d.getDate()).padStart(2, '0');
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const year = d.getFullYear();
+
   const hours = String(d.getHours()).padStart(2, '0');
   const minutes = String(d.getMinutes()).padStart(2, '0');
   const seconds = String(d.getSeconds()).padStart(2, '0');
-  
+
   return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
 }
+
+
+
 
 /**
  * Add location data using reverse geocoding - Improved version
