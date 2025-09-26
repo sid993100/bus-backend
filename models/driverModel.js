@@ -15,7 +15,7 @@ const DriverSchema = new Schema(
     depotCustomer: {type:Schema.Types.ObjectId,ref:"DepotCustomer" },     // Depot / Customer
 
     driverName: { type:String, required: true },
-    gender: { type: String, required: true, enum: ['Male', 'Female', 'Other'] },
+    gender: { type: String, required: true },
     mobileNumber: { type: String, required: true, trim: true },
     employment: { type:Schema.Types.ObjectId,ref:"EmpolyType" },
 

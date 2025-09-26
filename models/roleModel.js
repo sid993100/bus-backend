@@ -82,6 +82,7 @@ const roleSchema = new Schema({
         vehicleUtilization:{ type: permissionSchema, default: defaultPermission },//new
         stoppageDetailedReport:{ type: permissionSchema, default: defaultPermission },//new
         idlingDetailedReport:{ type: permissionSchema, default: defaultPermission },//new
+        vehicleCurrentStatus:{ type: permissionSchema, default: defaultPermission },//new
     },
     hierarchy: {
         type: Schema.Types.ObjectId,

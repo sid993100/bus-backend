@@ -11,6 +11,7 @@ import { getDistanceTravelled } from '../../services/reports/distanceTravelledSe
 import { getVehicleUtilization } from '../../services/reports/vehicleUtilizationServices.js';
 import { stoppageDetailedReport } from '../../services/reports/stoppageDetailedReportService.js';
 import { stopSummary } from '../../services/reports/stopSummaryServices.js';
+import { getVehicleCurrentStatusWithLocation } from '../../services/reports/vehicleCurrentStatusService.js';
 
 const router = Router();
 
@@ -26,6 +27,7 @@ router.get('/distancetravelled',isLogin, checkPermission("distanceTravelled","re
 router.get('/vehicleutilization',isLogin, checkPermission("vehicleUtilization","read"),getVehicleUtilization)
 router.get('/stoppagedetailed',isLogin, checkPermission("stoppageDetailedReport","read"),stoppageDetailedReport)
 router.get('/idlingdetailed',isLogin, checkPermission("idlingDetailedReport","read"),stoppageDetailedReport)
+router.get('/vehiclecurrentstatus',isLogin, checkPermission("vehicleCurrentStatus","read"),getVehicleCurrentStatusWithLocation)
 
 
 export default router;

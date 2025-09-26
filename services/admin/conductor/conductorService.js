@@ -44,15 +44,15 @@ export const addConductor = async (req, res) => {
   try {
     const {
       payrollId,
-      departmentSection,
-      zoneRegion,
-      depotCustomer,
       driverName,
       gender,
       mobileNumber,
       employment,
       dateOfBirth,
       fatherName,
+      departmentSection,
+      zoneRegion,
+      depotCustomer,
       photoIdCard,
       idCardNumber,
       localAddress,
@@ -62,103 +62,71 @@ export const addConductor = async (req, res) => {
       emergencyContactNumber
     } = req.body;
 
-    // **ENHANCED: Validate required fields**
+    // ✅ Only required fields validation
     if (!payrollId || !driverName || !gender || !mobileNumber || !employment || !dateOfBirth || !fatherName) {
       return res.status(400).json({
         success: false,
-        message: "payrollId, name, gender, mobileNumber, employment, dateOfBirth, and fatherName are required"
+        message:
+          "payrollId, driverName, gender, mobileNumber, employment, dateOfBirth, and fatherName are required",
       });
     }
 
-    // **ADDED: Age validation**
-    if (dateOfBirth) {
-      const ageValidation = validateAge(dateOfBirth);
-      if (!ageValidation.isValid) {
-        return responseManager.badRequest(res, ageValidation.message);
-      }
-    }
+ // Helper to clean ObjectId fields
+const cleanObjectId = (value) => {
+  if (!value || value === "") return undefined;
+  return value;
+};
 
-    // **ADDED: Check for duplicate payrollId**
-    const existingConductor = await Conductor.findOne({ 
-      payrollId: payrollId.toUpperCase(), 
-      isDeleted: { $ne: true } 
-    }).lean();
-    
-    if (existingConductor) {
-      return res.status(409).json({
-        success: false,
-        message: "A conductor with this Payroll ID already exists"
-      });
-    }
 
-    // **ADDED: Validate mobile number format**
-    if (!/^[0-9]{10,15}$/.test(mobileNumber)) {
-      return res.status(400).json({
-        success: false,
-        message: "Mobile number must be 10-15 digits"
-      });
-    }
-
-    // Create conductor
     const conductor = await Conductor.create({
       payrollId: payrollId.toUpperCase(),
-      departmentSection,
-      zoneRegion,
-      depotCustomer,
+      departmentSection: cleanObjectId(departmentSection),
+      zoneRegion: cleanObjectId(zoneRegion),
+      depotCustomer: cleanObjectId(depotCustomer),
       driverName: driverName.toUpperCase(),
       gender: gender.toUpperCase(),
       mobileNumber,
-      employment,
+      employment: cleanObjectId(employment),
       dateOfBirth,
       fatherName: fatherName.toUpperCase(),
-      photoIdCard,
+      photoIdCard: cleanObjectId(photoIdCard),
       idCardNumber: idCardNumber?.toUpperCase(),
       localAddress: localAddress?.toUpperCase(),
       permanentAddress: permanentAddress?.toUpperCase(),
       clNumber: clNumber?.toUpperCase(),
       clExpiryDate,
-      emergencyContactNumber
+      emergencyContactNumber,
     });
-
-    // **ADDED: Populate the created conductor**
-    const populatedConductor = await Conductor.findById(conductor._id)
-      .populate(populationFields)
-      .lean();
 
     res.status(201).json({
       success: true,
       message: "Conductor created successfully",
-      data: populatedConductor
+      data: conductor,
     });
-  } catch (error) {
-    console.error('Error creating conductor:', error);
-    
-    if (error.code === 11000) {
-      return res.status(409).json({
-        success: false,
-        message: "Duplicate key error - Payroll ID must be unique"
-      });
-    }
 
-    if (error.name === 'ValidationError') {
-      const validationErrors = Object.values(error.errors).map(err => ({
+  } catch (error) {
+    console.error("Error creating conductor:", error);
+
+    if (error.name === "ValidationError") {
+      const validationErrors = Object.values(error.errors).map((err) => ({
         field: err.path,
-        message: err.message
+        message: err.message,
       }));
-      
+
       return res.status(400).json({
         success: false,
-        message: 'Validation failed',
-        errors: validationErrors
+        message: "Validation failed",
+        errors: validationErrors,
       });
     }
 
     res.status(500).json({
       success: false,
-      message: error.message || "Server Error"
+      message: error.message || "Server Error",
     });
   }
 };
+
 
 // **ENHANCED: Update conductor with validation and population**
 export const updateConductor = async (req, res) => {

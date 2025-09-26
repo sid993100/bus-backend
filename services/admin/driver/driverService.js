@@ -18,67 +18,97 @@ const populationFields = [
 // CREATE Driver with age validation
 export const addDriver = async (req, res) => {
   try {
-    const payload = req.body;
+    const {
+      payrollId,
+      driverName,
+      gender,
+      mobileNumber,
+      employment,
+      dateOfBirth,
+      fatherName,
+      departmentSection,
+      zoneRegion,
+      depotCustomer,
+      photoIdCardType,
+      idCardNumber,
+      localAddress,
+      permanentAddress,
+      dlNumber,
+      dlExpiryDate,
+      emergencyContactNumber
+    } = req.body;
 
-    // Basic safeguard
-    if (!payload || Object.keys(payload).length === 0) {
-      return responseManager.badRequest(res, 'Driver data is required');
+    // ✅ Only required fields validation
+    if (!payrollId || !driverName || !gender || !mobileNumber || !dateOfBirth || !fatherName) {
+      return res.status(400).json({
+        success: false,
+        message: "payrollId, driverName, gender, mobileNumber, dateOfBirth, and fatherName are required",
+      });
     }
 
-    // **ADDED: Age validation before creating**
-    if (payload.dateOfBirth) {
-      const ageValidation = validateAge(payload.dateOfBirth);
-      if (!ageValidation.isValid) {
-        return responseManager.badRequest(res, ageValidation.message);
-      }
-    }
+    // ✅ Clean optional ObjectId fields
+    const cleanObjectId = (value) => {
+      if (!value || value === "") return undefined;
+      return value;
+    };
 
-    // Duplicate payrollId check
-    const existing = await Driver.findOne({ 
-      payrollId: payload.payrollId, 
-      isDeleted: { $ne: true } 
-    }).lean();
-    
-    if (existing) {
-      return responseManager.conflict(res, 'A driver with this Payroll ID already exists');
-    }
+    // ✅ Create driver
+    const driver = await Driver.create({
+      payrollId: payrollId.toUpperCase(),
+      departmentSection: cleanObjectId(departmentSection),
+      zoneRegion: cleanObjectId(zoneRegion),
+      depotCustomer: cleanObjectId(depotCustomer),
+      driverName: driverName.toUpperCase(),
+      gender: gender.toUpperCase(),
+      mobileNumber,
+      employment: cleanObjectId(employment),
+      dateOfBirth,
+      fatherName: fatherName.toUpperCase(),
+      photoIdCardType: cleanObjectId(photoIdCardType),
+      idCardNumber: idCardNumber?.toUpperCase(),
+      localAddress: localAddress?.toUpperCase(),
+      permanentAddress: permanentAddress?.toUpperCase(),
+      dlNumber: dlNumber?.toUpperCase(),
+      dlExpiryDate,
+      emergencyContactNumber,
+    });
 
-    // Create record
-    const driver = await Driver.create(payload);
-
-    if (!driver) {
-      return responseManager.serverError(res, "Something went wrong while creating a driver");
-    }
-
-    // **ADDED: Populate the created driver before returning**
-    const populatedDriver = await Driver.findById(driver._id)
-      .populate(populationFields)
-      .lean();
-
-    // Respond
-    responseManager.created(res, 'Driver created successfully', populatedDriver);
+    res.status(201).json({
+      success: true,
+      message: "Driver created successfully",
+      data: driver,
+    });
 
   } catch (error) {
-    consoleManager.error('Error creating driver:', error);
+    console.error("Error creating driver:", error);
 
-    // Mongo duplicate key error code
     if (error.code === 11000) {
-      return responseManager.conflict(res, 'Duplicate key error — payrollId must be unique');
+      return res.status(409).json({
+        success: false,
+        message: "Duplicate key error — payrollId must be unique",
+      });
     }
 
-    // **ENHANCED: Better validation error handling**
-    if (error.name === 'ValidationError') {
-      const validationErrors = Object.values(error.errors).map(err => ({
+    if (error.name === "ValidationError") {
+      const validationErrors = Object.values(error.errors).map((err) => ({
         field: err.path,
-        message: err.message
+        message: err.message,
       }));
-      
-      return responseManager.badRequest(res, 'Validation failed', validationErrors);
+
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: validationErrors,
+      });
     }
 
-    responseManager.badRequest(res, error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Server Error",
+    });
   }
 };
+
 
 export const getAllDrivers = async (req, res) => {
   try {
