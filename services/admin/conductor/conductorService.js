@@ -47,7 +47,7 @@ export const addConductor = async (req, res) => {
       departmentSection,
       zoneRegion,
       depotCustomer,
-      conductorName, // **CHANGED: Fixed field name**
+      name, 
       gender,
       mobileNumber,
       employment,
@@ -63,10 +63,10 @@ export const addConductor = async (req, res) => {
     } = req.body;
 
     // **ENHANCED: Validate required fields**
-    if (!payrollId || !conductorName || !gender || !mobileNumber || !employment || !dateOfBirth || !fatherName) {
+    if (!payrollId || !name || !gender || !mobileNumber || !employment || !dateOfBirth || !fatherName) {
       return res.status(400).json({
         success: false,
-        message: "payrollId, conductorName, gender, mobileNumber, employment, dateOfBirth, and fatherName are required"
+        message: "payrollId, name, gender, mobileNumber, employment, dateOfBirth, and fatherName are required"
       });
     }
 
@@ -105,7 +105,7 @@ export const addConductor = async (req, res) => {
       departmentSection,
       zoneRegion,
       depotCustomer,
-      conductorName: conductorName.toUpperCase(),
+      name: name.toUpperCase(),
       gender: gender.toUpperCase(),
       mobileNumber,
       employment,

@@ -8,11 +8,11 @@ const sendError = (res, status, message) => res.status(status).json({ error: mes
 
 // **ADDED: Population fields configuration**
 const populationFields = [
-  { path: 'departmentSection', select: 'accountName accountCode' },
+  { path: 'departmentSection', select: 'account accountCode' },
   { path: 'zoneRegion', select: 'name code communicationAddress' },
   { path: 'depotCustomer', select: 'depotCustomer depotCode location' },
-  { path: 'employment', select: 'employmentType description' },
-  { path: 'photoIdCardType', select: 'cardType description' }
+  { path: 'employment', select: 'name' },
+  { path: 'photoIdCardType', select: 'name' }
 ];
 
 // CREATE Driver with age validation

@@ -63,7 +63,7 @@ export const journeyHistory = async (req, res) => {
     let formattedData = trackingData.map((record, index) => ({
       serialNumber: index + 1,
       vehicleNumber: record.vehicle_reg_no,
-      dateTime: formatDateTime(record.timestamp),
+      dateTime:record.timestamp,
       latitude: record.latitude || 0,
       longitude: record.longitude || 0,
       location: null, // Will be populated if includeLocation is true

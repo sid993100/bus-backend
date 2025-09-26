@@ -19,10 +19,10 @@ const ConductorSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "DepotCustomer",
   },
-  driverName: {
-    type: Schema.Types.ObjectId,
+  name: {
+    type: String,
     required: true,
-    ref: "Driver"
+    uppercase: true
   },
   gender: {
     type: String,
