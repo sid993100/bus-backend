@@ -158,15 +158,24 @@ export const updateConductor = async (req, res) => {
       }
     }
 
-    // **ADDED: Transform fields to uppercase where needed**
-    if (updates.driverName) updates.driverName = updates.driverName.toUpperCase();
-    if (updates.gender) updates.gender = updates.gender.toUpperCase();
-    if (updates.fatherName) updates.fatherName = updates.fatherName.toUpperCase();
-    if (updates.payrollId) updates.payrollId = updates.payrollId.toUpperCase();
-    if (updates.idCardNumber) updates.idCardNumber = updates.idCardNumber.toUpperCase();
-    if (updates.localAddress) updates.localAddress = updates.localAddress.toUpperCase();
-    if (updates.permanentAddress) updates.permanentAddress = updates.permanentAddress.toUpperCase();
-    if (updates.clNumber) updates.clNumber = updates.clNumber.toUpperCase();
+        const cleanObjectId = (value) => {
+          // Normalize falsy or empty-string values to undefined so Mongoose clears them if needed
+          if (value === undefined || value === null) return undefined;
+          if (typeof value === 'string' && value.trim() === '') return undefined;
+          return value;
+        };
+
+        // **ADDED: Transform fields to uppercase where needed**
+        if (updates.driverName) updates.driverName = String(updates.driverName).toUpperCase();
+        // Ensure photoIdCard becomes undefined when empty string; otherwise keep the provided value
+        if ('photoIdCard' in updates) updates.photoIdCard = cleanObjectId(updates.photoIdCard);
+        if (updates.gender) updates.gender = String(updates.gender).toUpperCase();
+        if (updates.fatherName) updates.fatherName = String(updates.fatherName).toUpperCase();
+        if (updates.payrollId) updates.payrollId = String(updates.payrollId).toUpperCase();
+        if (updates.idCardNumber) updates.idCardNumber = String(updates.idCardNumber).toUpperCase();
+        if (updates.localAddress) updates.localAddress = String(updates.localAddress).toUpperCase();
+        if (updates.permanentAddress) updates.permanentAddress = String(updates.permanentAddress).toUpperCase();
+        if (updates.clNumber) updates.clNumber = String(updates.clNumber).toUpperCase();
 
     // **ADDED: Validate mobile number if being updated**
     if (updates.mobileNumber && !/^[0-9]{10,15}$/.test(updates.mobileNumber)) {

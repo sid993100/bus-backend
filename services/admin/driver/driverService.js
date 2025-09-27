@@ -188,6 +188,17 @@ export const updateDriver = async (req, res) => {
       }
     }
 
+    // Normalize optional ObjectId-like fields: empty string => undefined
+    const cleanObjectId = (value) => {
+      if (value === undefined || value === null) return undefined;
+      if (typeof value === 'string' && value.trim() === '') return undefined;
+      return value;
+    };
+
+    if ('photoIdCardType' in updates) {
+      updates.photoIdCardType = cleanObjectId(updates.photoIdCardType);
+    }
+
     const driver = await Driver.findOneAndUpdate(
       { _id: id, isDeleted: { $ne: true } },
       updates,
