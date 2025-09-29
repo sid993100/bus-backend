@@ -19,7 +19,7 @@ router.get("/health/:id",isLogin, getAllHealthPackets)
 router.get("/emergency",isLogin, getAllEmergencyPackets)
 router.get("/emergency/:id",isLogin, getEmergencyPacketById)
 router.get("/journey/:vehicleNumber",isLogin, journeyHistoryReplay)
-router.get("/tracking/:vehicleNumber",isLogin, getVehicleByVehicleNumber)
+router.get("/tracking/:vehicleNumber", getVehicleByVehicleNumber)
 
 
 

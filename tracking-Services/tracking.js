@@ -10,9 +10,6 @@ import axios from "axios";
 
 dotenv.config();
 
-let vehicleId
-
-let socketId;
 const axiosApi = process.env.MY_AXIOS_URL || "http://localhost:5000";
 const parser = new BharatDeviceParser();
 
@@ -98,15 +95,17 @@ connectKafka().catch(console.error);
 
 // WebSocket events
 io.on("connection", async (socket) => {
+
   socket.on("trackBus", async (busIdOrReg) => {
     try {
-      // optional fetch last known packet
-      const res = await axios.get(`${axiosApi}/api/tracking/tracking/${busIdOrReg}`);
+      
+      const res = await axios.get(`${axiosApi}/api/tracking/tracking/${busIdOrReg.trim()}`);
       if (res?.data?.success && res?.data?.data) {
         socket.emit("track", res.data.data);
+        
       }
     } catch (e) {
-      consoleManager.log("prefetch error", e?.message);
+      consoleManager.log("prefetch error",  e.message);
     }
 
     const room = `bus_${busIdOrReg}`;

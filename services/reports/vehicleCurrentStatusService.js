@@ -201,20 +201,20 @@ export const getVehicleByVehicleNumber = async (req, res) => {
       : 'N/A';
 
     const formatted = {
-      vehicleNumber: vehicle.vehicle_reg_no || 'N/A',
-      imeiNumber: vehicle.imei || 'N/A',
+      vehicle_reg_no: vehicle.vehicle_reg_no || 'N/A',
+      imei: vehicle.imei || 'N/A',
       status,
-      batteryStatus: vehicle.main_power ? 'Connected' : 'Disconnected',
-      speed: `${vehicle.speed_kmh || 0} km/h`,
+      main_power: vehicle.main_power ? 'Connected' : 'Disconnected',
+      speed_kmh: `${vehicle.speed_kmh || 0} km/h`,
       lastLocation,
       lastUpdate,
       latitude: vehicle.latitude || 0,
       longitude: vehicle.longitude || 0,
       ignition: vehicle.ignition || false,
-      mainPower: vehicle.main_power || false,
-      emergencyStatus: vehicle.emergency_status || false,
-      batteryVoltage: vehicle.battery_voltage || 0,
-      gsmSignal: vehicle.gsm_signal || 0,
+      main_power: vehicle.main_power || false,
+      emergency_status: vehicle.emergency_status || false,
+      battery_voltage: vehicle.battery_voltage || 0,
+      gsm_signal: vehicle.gsm_signal || 0,
       satellites: vehicle.satellites || 0,
     };
 
