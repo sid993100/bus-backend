@@ -98,29 +98,30 @@ connectKafka().catch(console.error);
 
 // WebSocket events
 io.on("connection", async (socket) => {
-  socketId = socket.id;
+  socket.on("trackBus", async (busIdOrReg) => {
+    try {
+      // optional fetch last known packet
+      const res = await axios.get(`${axiosApi}/api/tracking/tracking/${busIdOrReg}`);
+      if (res?.data?.success && res?.data?.data) {
+        socket.emit("track", res.data.data);
+      }
+    } catch (e) {
+      consoleManager.log("prefetch error", e?.message);
+    }
 
-  socket.on("trackBus", async (busId) => {
-      await axios.get(`${axiosApi}/api/tracking/tracking/${busId}`).then((res)=>{
-          if(res.data && res.data.success && res.data.data){
-              socket.emit("track",res.data.data)
-          }
-      });
-      io.to(socketId).emit("join",busId)
-       socket.join(`bus_${busId}`)
-       socket.to(`bus_${busId}`).emit("join", busId);
+    const room = `bus_${busIdOrReg}`;
+    socket.join(room);
+    socket.emit("join", busIdOrReg); // confirm to requester only
   });
 
-  socket.on("stopTracking", (busId) => {
-    socket.leave(`bus_${busId}`);
-    // socket.to(`bus_${busId}`).emit("stopped", { message: `Stopped tracking bus ${busId}` });
-    consoleManager.log(`Client ${socket.id} stopped tracking bus ${busId}`);
-  });
-
-  socket.on("disconnect", () => {
-    consoleManager.log("Client disconnected:", socket.id);
+  socket.on("stopTracking", (busIdOrReg) => {
+    const room = `bus_${busIdOrReg}`;
+    socket.leave(room);
+    socket.emit("stopped", { message: `Stopped tracking bus ${busIdOrReg}` });
+    consoleManager.log(`Client ${socket.id} stopped tracking ${busIdOrReg}`);
   });
 });
+
 
 ///////////////////////////bharat-Tcp////////////////////////////////
 
