@@ -139,88 +139,109 @@ export const getVehicleCurrentStatusWithLocation = async (req, res) => {
 
 export const getVehicleByVehicleNumber = async (req, res) => {
   try {
-    const vehicleNumber = (req.params.vehicleNumber || req.query.vehicleNumber || '').toString().trim();
+    const vehicleNumber = (req.params.vehicleNumber || req.query.vehicleNumber || "").toString().trim();
 
     if (!vehicleNumber) {
-      return res.status(400).json({ success: false, message: 'vehicleNumber is required in params or query' });
+      return res.status(400).json({ success: false, message: "vehicleNumber is required in params or query" });
     }
 
     // helper escape to build a safe case-insensitive exact match regex
-    const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`^${escapeRegExp(vehicleNumber)}$`, 'i');
+    const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`^${escapeRegExp(vehicleNumber)}$`, "i");
 
-    // Fetch latest tracking packet for this vehicle
-    const vehicle = await TrackingPacket.findOne({ packet_type: 'tracking', vehicle_reg_no: regex })
+    // Fetch latest tracking packet for this vehicle with packet_status 'L'
+    const vehicle = await TrackingPacket.findOne(
+      { packet_type: "tracking", packet_status: "L", vehicle_reg_no: regex },
+      {
+        vehicle_reg_no: 1,
+        imei: 1,
+        ignition: 1,
+        main_power: 1,
+        speed_kmh: 1,
+        latitude: 1,
+        longitude: 1,
+        emergency_status: 1,
+        battery_voltage: 1,
+        gsm_signal: 1,
+        satellites: 1,
+        timestamp: 1,
+        packet_status: 1,
+      }
+    )
       .sort({ timestamp: -1 })
       .lean();
 
     if (!vehicle) {
-      return res.status(404).json({ success: false, message: 'Vehicle not found', data: null });
+      return res.status(404).json({ success: false, message: "Vehicle not found", data: null });
     }
 
     // resolve address
     const getAddressFromCoordinates = async (lat, lng) => {
       try {
-        if (!lat || !lng || lat === 0 || lng === 0) return 'Location not available';
+        if (!lat || !lng || lat === 0 || lng === 0) return "Location not available";
         const response = await fetch(
           `http://nominatim.locationtrack.in/reverse?format=geocodejson&lat=${lat}&lon=${lng}`
         );
-        if (!response.ok) throw new Error('Failed to fetch address');
+        if (!response.ok) throw new Error("Failed to fetch address");
         const data = await response.json();
-        return data.features?.[0]?.properties?.geocoding?.label || 'Address not found';
+        return data.features?.[0]?.properties?.geocoding?.label || "Address not found";
       } catch (err) {
-        console.error('Address fetch error:', err);
-        return 'Could not determine location';
+        console.error("Address fetch error:", err);
+        return "Could not determine location";
       }
     };
 
     const lastLocation = await getAddressFromCoordinates(vehicle.latitude, vehicle.longitude);
 
-    let status = 'Stopped';
+    let status = "Stopped";
     if (vehicle.ignition && vehicle.main_power && vehicle.speed_kmh > 0) {
-      status = 'Running';
+      status = "Running";
     } else if (vehicle.ignition && vehicle.main_power) {
-      status = 'Idle';
+      status = "Idle";
     } else if (!vehicle.main_power) {
-      status = 'Offline';
+      status = "Offline";
     }
 
     const lastUpdate = vehicle.timestamp
       ? new Date(vehicle.timestamp)
-          .toLocaleString('en-IN', {
-            timeZone: 'Asia/Kolkata',
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
+          .toLocaleString("en-IN", {
+            timeZone: "Asia/Kolkata",
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
             hour12: false,
           })
-          .replace(',', '')
-      : 'N/A';
+          .replace(",", "")
+      : "N/A";
 
     const formatted = {
-      vehicle_reg_no: vehicle.vehicle_reg_no || 'N/A',
-      imei: vehicle.imei || 'N/A',
+      vehicle_reg_no: vehicle.vehicle_reg_no || "N/A",
+      imei: vehicle.imei || "N/A",
       status,
-      main_power: vehicle.main_power ? 'Connected' : 'Disconnected',
+      main_power_status: vehicle.main_power ? "Connected" : "Disconnected",
       speed_kmh: `${vehicle.speed_kmh || 0} km/h`,
       lastLocation,
       lastUpdate,
       latitude: vehicle.latitude || 0,
       longitude: vehicle.longitude || 0,
-      ignition: vehicle.ignition || false,
-      main_power: vehicle.main_power || false,
-      emergency_status: vehicle.emergency_status || false,
+      ignition: !!vehicle.ignition,
+      main_power: !!vehicle.main_power,
+      emergency_status: !!vehicle.emergency_status,
       battery_voltage: vehicle.battery_voltage || 0,
       gsm_signal: vehicle.gsm_signal || 0,
       satellites: vehicle.satellites || 0,
+      packet_status: vehicle.packet_status || null,
     };
 
-    return res.status(200).json({ success: true, message: 'Vehicle retrieved', data: formatted });
+    return res.status(200).json({ success: true, message: "Vehicle retrieved", data: formatted });
   } catch (error) {
-    console.error('Error in getVehicleByVehicleNumber:', error);
-    return res.status(500).json({ success: false, message: 'Failed to fetch vehicle', error: error.message });
+    console.error("Error in getVehicleByVehicleNumber:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch vehicle", error: error.message });
   }
 };
+
