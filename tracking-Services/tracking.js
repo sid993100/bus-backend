@@ -86,9 +86,9 @@ async function connectKafka() {
 
       // Emit to WebSocket
       if (topic === "bharatBusTrack") {
-          io.to(socketId).emit("track",parsed)
+          io.to(`bus_${parsed.vehicle_reg_no}`).emit("track",parsed)
       } else if (topic === "acuteBusTrack") {
-        io.to(socketId).emit("track", parsed);
+        io.to(`bus_${parsed.vehicle_reg_no}`).emit("track", parsed);
       }
     },
   });
@@ -97,16 +97,23 @@ async function connectKafka() {
 connectKafka().catch(console.error);
 
 // WebSocket events
-io.on("connection", (socket) => {
+io.on("connection", async (socket) => {
   socketId = socket.id;
 
-  socket.on("trackBus", (busId) => {
-      console.log(busId);
+  socket.on("trackBus", async (busId) => {
+      await axios.get(`${axiosApi}/api/tracking/tracking/${busId}`).then((res)=>{
+          if(res.data && res.data.success && res.data.data){
+              socket.emit("track",res.data.data)
+          }
+      });
       io.to(socketId).emit("join",busId)
+       socket.join(`bus_${busId}`)
+       socket.to(`bus_${busId}`).emit("join", busId);
   });
 
   socket.on("stopTracking", (busId) => {
-    socket.leave(`bus_${vehicleId}`);
+    socket.leave(`bus_${busId}`);
+    // socket.to(`bus_${busId}`).emit("stopped", { message: `Stopped tracking bus ${busId}` });
     consoleManager.log(`Client ${socket.id} stopped tracking bus ${busId}`);
   });
 

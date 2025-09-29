@@ -6,6 +6,7 @@ import { addHealthPacket, getAllHealthPackets } from "../../services/bharat101/h
 import { addEmergencyPacket, getAllEmergencyPackets, getEmergencyPacketById } from "../../services/bharat101/emergencyPacketService.js";
 import { roleBaseAuth } from "../../middleWares/rolebaseAuth.js";
 import { journeyHistoryReplay } from "../../services/tracking/journeyServices.js";
+import { getVehicleByVehicleNumber } from "../../services/reports/vehicleCurrentStatusService.js";
 
 const router = Router();
 
@@ -18,6 +19,8 @@ router.get("/health/:id",isLogin, getAllHealthPackets)
 router.get("/emergency",isLogin, getAllEmergencyPackets)
 router.get("/emergency/:id",isLogin, getEmergencyPacketById)
 router.get("/journey/:vehicleNumber",isLogin, journeyHistoryReplay)
+router.get("/tracking/:vehicleNumber",isLogin, getVehicleByVehicleNumber)
+
 
 
 
