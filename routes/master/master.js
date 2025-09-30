@@ -36,11 +36,11 @@ const router=Router()
 router.get("/accounts", isLogin, checkPermission("account","read"), getAccount);
 router.get("/tolltypes", isLogin,  checkPermission("tollType", "read"), getTollType);
 router.get("/toll",isLogin,  checkPermission("toll", "create"),getToll);
-router.get("/servicecategory", isLogin,  checkPermission("servicecategory", "read"), getServiceCategory);
+router.get("/servicecategory", isLogin,  checkPermission("serviceCategory", "read"), getServiceCategory);
 router.get("/state", isLogin,  checkPermission("state", "read"), getState);
 router.get("/busstop", isLogin, checkPermission("busStop","read"), getBusStop);
 router.get("/country", isLogin, checkPermission("country","read"), getCountry);
-router.get("/servicetype", isLogin,  checkPermission("servicetype", "read"), getServiceType);
+router.get("/servicetype", isLogin,  checkPermission("serviceType", "read"), getServiceType);
 router.get("/stoparea",isLogin, checkPermission("stopArea","read"),getArea)
 router.get("/stopgrade",isLogin, checkPermission("stopGrade","read"),getStopGrade)
 router.get("/vehicle/region/:regionId",isLogin,checkPermission("vehicle","read"),getVehiclesByRegion)
