@@ -54,13 +54,7 @@ export const latestFirmware = async (req, res) => {
         deviceMake: device.vendor_id || "Unknown",
         deviceModel: modelFromVlt || device.vendor_id || "TM100",
         mappedVehicle: device.vehicle_reg_no || "N/A",
-        lastReportedDateTime: device.timestamp
-          ? new Date(device.timestamp)
-              .toLocaleString("en-IN", {
-                timeZone: "Asia/Kolkata",
-              })
-              .replace(",", "")
-          : "N/A",
+        lastReportedDateTime: new Date(device.timestamp).toLocaleString("en-IN").replace(",", ""),
         firmwareVersion: device.firmware_version || "4GN6065",
       };
     });

@@ -16,6 +16,7 @@ import consoleManager from "./utils/consoleManager.js";
 import trackingRoutes from "./routes/tracking/trackingRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js"
 import reportRoutes from "./routes/reports/reportRoute.js"
+import helpAndSupportRoutes from "./routes/helpAndSupport/helpAndSupportRoutes.js"
 
 dotenv.config();
 
@@ -63,6 +64,7 @@ app.use("/api/operation", operationRoute);
 app.use("/api/tracking", trackingRoutes); 
 app.use("/api/dashboard", dashboardRoutes); 
 app.use("/api/reports", reportRoutes); 
+app.use("/api/helpandsupport", helpAndSupportRoutes);
 
 
 // ✅ Start Server

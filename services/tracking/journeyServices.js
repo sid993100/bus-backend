@@ -38,6 +38,7 @@ export const journeyHistoryReplay = async (req, res) => {
     // Build query for tracking data
     const trackingQuery = {
       vehicle_reg_no: vehicleNumber,
+      packet_status:"L",
       timestamp: {
         $gte: dateRange.startDate,
         $lte: dateRange.endDate

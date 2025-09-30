@@ -15,7 +15,7 @@ import { addVehicleType, getVehicleTypes, updateVehicleType } from "../../servic
 import { roleBaseAuth } from "../../middleWares/rolebaseAuth.js";
 import { updatePlan } from "../../services/admin/plan/planServices.js";
 import { updateOwnerType } from "../../services/admin/owner/ownerServices.js";
-import { addRegion, getRegions, updateRegion } from "../../services/master/zoneRegionService.js";
+import { addRegion, getRegion, getRegions, updateRegion } from "../../services/master/zoneRegionService.js";
 import { addDepotCustomer,  getDepotCustomers, getDepotCustomersByRegion, updateDepotCustomer } from "../../services/master/depotService.js";
 import { checkPermission } from "../../middleWares/checkPermission.js";
 import { addToll, getToll, updateToll } from "../../services/master/toll/tollService.js";
@@ -50,6 +50,7 @@ router.get("/vehicle",isLogin, checkPermission("vehicle","read"),getVehicle)
 router.get("/vehiclemanufacturer",isLogin, checkPermission("vehicleM","read"),getVehicleManufacturer)
 router.get("/vehicletype",isLogin, checkPermission("vehicleType","read"),getVehicleTypes)
 router.get("/zone",isLogin, checkPermission("zone","read"),getRegions)
+router.get("/zone/:id",isLogin, checkPermission("zone","read"),getRegion)
 router.get("/depot",isLogin, checkPermission("depot","read"),getDepotCustomers)
 router.get("/depot/:regionId",isLogin,checkPermission("depot","read"),getDepotCustomersByRegion)
 router.get("/vehiclemodel",isLogin, checkPermission("vehicleModel","read"),getVehicleModels)
