@@ -78,7 +78,7 @@ export const getRoutesByDepot = async (req, res) => {
     }
 
     const { pageNum, limitNum, skip, sort, textFilter } = buildRouteQueryParams(req);
-    const filter = { customer: depotId, ...textFilter }; // assuming field 'customer' stores depot ref
+    const filter = { depot: depotId, ...textFilter }; 
 
     const [items, total] = await Promise.all([
       Route.find(filter).populate(populatedFields).sort(sort).skip(skip).limit(limitNum),
