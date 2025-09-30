@@ -20,7 +20,193 @@ export const getTrips = async (req, res) => {
       .status(500)
       .json({ message: error.message || "Internal server error" });
   }
+}
+
+// Common populate used in getTrips
+const tripPopulate = [
+  { path: "depot", select: "depotCustomer code" },
+  { path: "seatLayout", select: "layoutName" },
+  {
+    path: "route",
+    select: "routeName depot region", // include region here for region filter if needed
+    populate: [{ path: "depot", select: "depotCustomer code" }],
+  },
+];
+
+// Helper to build query params
+function buildTripQueryParams(req) {
+  const {
+    page = "1",
+    limit = "20",
+    sortBy = "createdAt",
+    sortOrder = "desc",
+    search, // optional: matches by tripName or code fields if present
+  } = req.query;
+
+  const pageNum = Math.max(parseInt(page, 10), 1);
+  const limitNum = Math.max(parseInt(limit, 10), 1);
+  const skip = (pageNum - 1) * limitNum;
+  const sort = { [sortBy]: sortOrder === "asc" ? 1 : -1 };
+
+  const textFilter = search
+    ? {
+        $or: [
+          { tripName: { $regex: search, $options: "i" } },
+          { tripCode: { $regex: search, $options: "i" } },
+        ],
+      }
+    : {};
+
+  return { pageNum, limitNum, skip, sort, textFilter };
+}
+
+// GET /api/trips/by-depot/:depotId
+export const getTripsByDepot = async (req, res) => {
+  try {
+    const { depotId } = req.params;
+    if (!isValidObjectId(depotId)) {
+      return res.status(400).json({ success: false, message: "Invalid depot ID" });
+    }
+
+    const { pageNum, limitNum, skip, sort, textFilter } = buildTripQueryParams(req);
+
+    // Assuming TripConfig has a direct depot field (ObjectId -> Depot model)
+    // If not, and depot comes via route.depot, switch to aggregation below.
+    const filter = { depot: depotId, ...textFilter };
+
+    const [items, total] = await Promise.all([
+      TripConfig.find(filter).populate(tripPopulate).sort(sort).skip(skip).limit(limitNum),
+      TripConfig.countDocuments(filter),
+    ]);
+
+    if (items.length === 0) {
+      return res.status(200).json({ success: true, message: "No trips found for depot" });
+    }
+
+    const totalPages = Math.ceil(total / limitNum);
+    return res.status(200).json({
+      success: true,
+      message: "Trips retrieved successfully",
+      data: items,
+      pagination: {
+        currentPage: pageNum,
+        totalPages,
+        totalItems: total,
+        itemsPerPage: limitNum,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1,
+      },
+      filters: { depotId },
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: error.message || "Internal server error" });
+  }
 };
+
+// GET /api/trips/by-region/:regionId
+export const getTripsByRegion = async (req, res) => {
+  try {
+    const { regionId } = req.params;
+    if (!isValidObjectId(regionId)) {
+      return res.status(400).json({ success: false, message: "Invalid region ID" });
+    }
+
+    const { pageNum, limitNum, skip, sort, textFilter } = buildTripQueryParams(req);
+
+    // If TripConfig does not have a direct region field, we filter via route.region using aggregation.
+    const pipeline = [
+      { $match: { ...textFilter } },
+      {
+        $lookup: {
+          from: "routes", // collection name for Route model
+          localField: "route",
+          foreignField: "_id",
+          as: "route",
+        },
+      },
+      { $unwind: "$route" },
+      { $match: { "route.region": new mongoose.Types.ObjectId(regionId) } },
+      // Optional lookups for depot and seatLayout to mirror populate
+      {
+        $lookup: {
+          from: "depots", // collection name for Depot model (adjust if different)
+          localField: "depot",
+          foreignField: "_id",
+          as: "depot",
+        },
+      },
+      { $unwind: { path: "$depot", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "seatlayouts", // collection name for SeatLayout model
+          localField: "seatLayout",
+          foreignField: "_id",
+          as: "seatLayout",
+        },
+      },
+      { $unwind: { path: "$seatLayout", preserveNullAndEmptyArrays: true } },
+      // Sorting and pagination
+      { $sort: sort },
+      { $skip: skip },
+      { $limit: limitNum },
+      // Project to limit fields similar to populate select
+      {
+        $project: {
+          tripName: 1,
+          tripCode: 1,
+          createdAt: 1,
+          depot: { depotCustomer: 1, code: 1, _id: 1 },
+          seatLayout: { layoutName: 1, _id: 1 },
+          route: { routeName: 1, depot: 1, region: 1, _id: 1 },
+        },
+      },
+    ];
+
+    const [items, countAgg] = await Promise.all([
+      TripConfig.aggregate(pipeline),
+      TripConfig.aggregate([
+        { $match: { ...textFilter } },
+        {
+          $lookup: {
+            from: "routes",
+            localField: "route",
+            foreignField: "_id",
+            as: "route",
+          },
+        },
+        { $unwind: "$route" },
+        { $match: { "route.region": new mongoose.Types.ObjectId(regionId) } },
+        { $count: "total" },
+      ]),
+    ]);
+
+    const total = countAgg[0]?.total || 0;
+    if (items.length === 0) {
+      return res.status(200).json({ success: true, message: "No trips found for region" });
+    }
+
+    const totalPages = Math.ceil(total / limitNum);
+    return res.status(200).json({
+      success: true,
+      message: "Trips retrieved successfully",
+      data: items,
+      pagination: {
+        currentPage: pageNum,
+        totalPages,
+        totalItems: total,
+        itemsPerPage: limitNum,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1,
+      },
+      filters: { regionId },
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: error.message || "Internal server error" });
+  }
+};
+
 
 export const addTrip = async (req, res) => {
   try {
