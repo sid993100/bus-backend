@@ -1,3 +1,4 @@
+import { isValidObjectId } from "mongoose";
 import Duty from "../../../models/dutyModel.js";
 
 // Is function mein koi badlav nahi hai
@@ -24,6 +25,128 @@ export const getDuty = async (req, res) => {
         });
     }
 };
+
+
+const dutyPopulate = [
+  { path: "conductorName", select: "driverName" },
+  { path: "driverName", select: "driverName" },
+  { path: "supportDriver", select: "driverName" },
+];
+
+function buildDutyQueryParams(req) {
+  const {
+    page = "1",
+    limit = "20",
+    sortBy = "createdAt",
+    sortOrder = "desc",
+    search,
+  } = req.query;
+
+  const pageNum = Math.max(parseInt(page, 10), 1);
+  const limitNum = Math.max(parseInt(limit, 10), 1);
+  const skip = (pageNum - 1) * limitNum;
+  const sort = { [sortBy]: sortOrder === "asc" ? 1 : -1 };
+
+  // Adjust text fields per Duty schema (examples: dutyNumber, remarks)
+  const textFilter = search
+    ? {
+        $or: [
+          { dutyNumber: { $regex: search, $options: "i" } },
+          { remarks: { $regex: search, $options: "i" } },
+        ],
+      }
+    : {};
+
+  return { pageNum, limitNum, skip, sort, textFilter };
+}
+
+
+export const getDutyByDepot = async (req, res) => {
+  try {
+    const { depotId } = req.params;
+    if (!isValidObjectId(depotId)) {
+      return res.status(400).json({ success: false, message: "Invalid depot ID" });
+    }
+
+    const { pageNum, limitNum, skip, sort, textFilter } = buildDutyQueryParams(req);
+
+    // Assuming 'depot' field on Duty references the Depot model
+    const filter = { depot: depotId, ...textFilter };
+
+    const [items, total] = await Promise.all([
+      Duty.find(filter).populate(dutyPopulate).sort(sort).skip(skip).limit(limitNum),
+      Duty.countDocuments(filter),
+    ]);
+
+    if (items.length === 0) {
+      return res.status(200).json({ success: true, message: "No duties found for depot",data:items });
+    }
+
+    const totalPages = Math.ceil(total / limitNum);
+    return res.status(200).json({
+      success: true,
+      message: "Duties retrieved successfully",
+      data: items,
+      pagination: {
+        currentPage: pageNum,
+        totalPages,
+        totalItems: total,
+        itemsPerPage: limitNum,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1,
+      },
+      filters: { depotId },
+    });
+  } catch (error) {
+    console.error("Error fetching duties by depot:", error);
+    return res.status(500).json({ success: false, message: "Server Error", error: error.message });
+  }
+};
+
+
+export const getDutyByRegion = async (req, res) => {
+  try {
+    const { regionId } = req.params;
+    if (!isValidObjectId(regionId)) {
+      return res.status(400).json({ success: false, message: "Invalid region ID" });
+    }
+
+    const { pageNum, limitNum, skip, sort, textFilter } = buildDutyQueryParams(req);
+
+    // If Duty has direct region field, use simple find; else filter via related Route/Depot
+    // Here assuming a direct 'region' ObjectId on Duty:
+    const filter = { region: regionId, ...textFilter };
+
+    const [items, total] = await Promise.all([
+      Duty.find(filter).populate(dutyPopulate).sort(sort).skip(skip).limit(limitNum),
+      Duty.countDocuments(filter),
+    ]);
+
+    if (items.length === 0) {
+      return res.status(200).json({ success: true, message: "No duties found for region" , data: items });
+    }
+
+    const totalPages = Math.ceil(total / limitNum);
+    return res.status(200).json({
+      success: true,
+      message: "Duties retrieved successfully",
+      data: items,
+      pagination: {
+        currentPage: pageNum,
+        totalPages,
+        totalItems: total,
+        itemsPerPage: limitNum,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1,
+      },
+      filters: { regionId },
+    });
+  } catch (error) {
+    console.error("Error fetching duties by region:", error);
+    return res.status(500).json({ success: false, message: "Server Error", error: error.message });
+  }
+};
+
 
 // addDuty function mein badlav
 export const addDuty = async (req, res) => {

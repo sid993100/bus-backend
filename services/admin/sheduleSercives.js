@@ -1,3 +1,4 @@
+import { isValidObjectId } from "mongoose";
 import ScheduleConfiguration from "../../models/scheduleModel.js";
 import TripConfig from "../../models/tripModel.js";
 
@@ -97,7 +98,7 @@ export const getAllScheduleConfigurations = async (req, res) => {
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
     const schedules = await ScheduleConfiguration.find(filter)
-      .populate('depot', 'depotCustomer depotCode location')
+      .populate('depot', 'depotCustomer depotCode region')
       .populate('seatLayout', 'layoutName totalSeats seatConfiguration')
       .populate('busService', 'name serviceType fare')
       .populate({
@@ -259,6 +260,27 @@ export const getSchedulesByDepot = async (req, res) => {
       success: false,
       error: 'Failed to fetch depot schedules'
     });
+  }
+};
+
+export const getByRegion = async (req, res) => {
+  try {
+    const { regionId } = req.query;
+    if (!regionId || !isValidObjectId(regionId)) {
+      return res.status(400).json({ success: false, error: "Invalid regionId" });
+    }
+
+    const items = await ScheduleConfiguration.find({})
+      .populate({ path: "depot", select: "depotCustomer depotCode region", match: { region: regionId } })
+      .populate("seatLayout", "layoutName")
+      .populate("busService", "name")
+      .populate({ path: "trips.trip", select: "tripId route", populate: [{ path: "route", select: "routeName" }] })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return res.status(200).json({ success: true, data: items.filter(d => d.depot) });
+  } catch (e) {
+    return res.status(500).json({ success: false, error: e.message || "Server error" });
   }
 };
 
