@@ -1,3 +1,4 @@
+import { isValidObjectId } from "mongoose";
 import Route from "../../../models/routemodel.js";
 
 const populatedFields = [
@@ -36,6 +37,118 @@ export const getRoutes = async (req, res) => {
         return res.status(500).json({ message: "Server Error", error: error.message });
     }
 };
+
+
+
+// Shared query helper
+function buildRouteQueryParams(req) {
+  const {
+    page = "1",
+    limit = "20",
+    sortBy = "routeCode",
+    sortOrder = "desc",
+    search,
+  } = req.query;
+
+  const pageNum = Math.max(parseInt(page, 10), 1);
+  const limitNum = Math.max(parseInt(limit, 10), 1);
+  const skip = (pageNum - 1) * limitNum;
+  const sort = { [sortBy]: sortOrder === "asc" ? 1 : -1 };
+
+  const textFilter = search
+    ? {
+        $or: [
+          { routeCode: { $regex: search, $options: "i" } },
+          { routeName: { $regex: search, $options: "i" } },
+          { source: { $regex: search, $options: "i" } },
+          { destination: { $regex: search, $options: "i" } },
+        ],
+      }
+    : {};
+
+  return { pageNum, limitNum, skip, sort, textFilter };
+}
+
+// GET by Depot
+export const getRoutesByDepot = async (req, res) => {
+  try {
+    const { depotId } = req.params;
+    if (!isValidObjectId(depotId)) {
+      return res.status(400).json({ success: false, message: "Invalid depot ID" });
+    }
+
+    const { pageNum, limitNum, skip, sort, textFilter } = buildRouteQueryParams(req);
+    const filter = { customer: depotId, ...textFilter }; // assuming field 'customer' stores depot ref
+
+    const [items, total] = await Promise.all([
+      Route.find(filter).populate(populatedFields).sort(sort).skip(skip).limit(limitNum),
+      Route.countDocuments(filter),
+    ]);
+
+    if (items.length === 0) {
+      return res.status(200).json({ success: true, message: "Routes not found for depot" });
+    }
+
+    const totalPages = Math.ceil(total / limitNum);
+    return res.status(200).json({
+      success: true,
+      data: items,
+      pagination: {
+        currentPage: pageNum,
+        totalPages,
+        totalItems: total,
+        itemsPerPage: limitNum,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1,
+      },
+      filters: { depotId },
+      log: "ok",
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Server Error", error: error.message });
+  }
+};
+
+// GET by Region
+export const getRoutesByRegion = async (req, res) => {
+  try {
+    const { regionId } = req.params;
+    if (!isValidObjectId(regionId)) {
+      return res.status(400).json({ success: false, message: "Invalid region ID" });
+    }
+
+    const { pageNum, limitNum, skip, sort, textFilter } = buildRouteQueryParams(req);
+    const filter = { region: regionId, ...textFilter }; // assuming field 'region' stores region ref
+
+    const [items, total] = await Promise.all([
+      Route.find(filter).populate(populatedFields).sort(sort).skip(skip).limit(limitNum),
+      Route.countDocuments(filter),
+    ]);
+    
+    if (items.length === 0) {
+      return res.status(200).json({ success: true, message: "Routes not found for region" });
+    }
+
+    const totalPages = Math.ceil(total / limitNum);
+    return res.status(200).json({
+      success: true,
+      data: items,
+      pagination: {
+        currentPage: pageNum,
+        totalPages,
+        totalItems: total,
+        itemsPerPage: limitNum,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1,
+      },
+      filters: { regionId },
+      log: "ok",
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Server Error", error: error.message });
+  }
+};
+
 
 export const getRoute = async (req, res) => {
     const { id } = req.params;

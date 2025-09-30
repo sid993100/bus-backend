@@ -4,7 +4,7 @@ import { roleBaseAuth } from "../../middleWares/rolebaseAuth.js";
 import { checkPermission } from "../../middleWares/checkPermission.js";
 import { addSeatLayout, getSeatLayout, updateSeatLayout } from "../../services/admin/seatLayout/seatLayoutServices.js";
 import { addTrip, getTrips, updateTrip } from "../../services/admin/trip/tripServices.js";
-import { addRoute, updateRoute ,getRoutes} from "../../services/admin/route/routeService.js";
+import { addRoute, updateRoute ,getRoutes, getRoutesByDepot, getRoutesByRegion} from "../../services/admin/route/routeService.js";
 import { addDuty, getDuty, updateDuty } from "../../services/admin/duty/dutyServices.js";
 import { createScheduleConfiguration, getAllScheduleConfigurations, updateScheduleConfiguration } from "../../services/admin/sheduleSercives.js";
 import { addSim, getAllSims, updateSim } from "../../services/master/sim/simServices.js";
@@ -13,6 +13,8 @@ import { addSim, getAllSims, updateSim } from "../../services/master/sim/simServ
 const router = Router();
 
 router.get("/route",isLogin ,checkPermission("route","read"),getRoutes)
+router.get("/route/region/:regionId",isLogin ,checkPermission("route","read"),getRoutesByRegion)
+router.get("/route/depot/:depotId",isLogin ,checkPermission("route","read"),getRoutesByDepot)
 router.get("/seatlayout",isLogin ,checkPermission("seatLayout","read"),getSeatLayout)
 router.get("/trip",isLogin ,checkPermission("trip","read"),getTrips)
 router.get("/duty", isLogin ,checkPermission("duty","read"), getDuty);

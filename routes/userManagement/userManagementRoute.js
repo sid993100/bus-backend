@@ -7,11 +7,11 @@ import { checkPermission } from "../../middleWares/checkPermission.js";
 const router = Router();
 
 router.get("/driver",isLogin, checkPermission("drive","read"),getAllDrivers)
-router.get("/driver/:regionId",isLogin, checkPermission("drive","read"),getDriversByRegion)
-router.get("/driver/:depotId",isLogin, checkPermission("drive","read"),getDriversByDepot)
-router.get("/conductor",isLogin, checkPermission("drive","read"),getConductor)
-router.get("/conductor/:regionId",isLogin, checkPermission("drive","read"),getConductorsByRegion)
-router.get("/conductor/:depotId",isLogin, checkPermission("drive","read"),getConductorsByDepot)
+router.get("/driver/region/:regionId",isLogin, checkPermission("drive","read"),getDriversByRegion)
+router.get("/driver/depot/:depotId",isLogin, checkPermission("drive","read"),getDriversByDepot)
+router.get("/conductor",isLogin, checkPermission("conductor","read"),getConductor)
+router.get("/conductor/region/:regionId",isLogin, checkPermission("conductor","read"),getConductorsByRegion)
+router.get("/conductor/depot/:depotId",isLogin, checkPermission("conductor","read"),getConductorsByDepot)
 router.get("/users", isLogin, checkPermission("user","read"), getUsers);
 
 
