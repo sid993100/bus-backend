@@ -302,3 +302,53 @@ export const getScheduleConfigurationById = async (req, res) => {
     });
   }
 };
+
+export const getActiveSchedulesToday = async (req, res) => {
+  try {
+    // Build "today" range in server local time (inclusive)
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+    // Optional filters & pagination
+    const { depot, page = "1", limit = "20" } = req.query;
+    const pageNum = Math.max(parseInt(page, 10), 1);
+    const limitNum = Math.max(parseInt(limit, 10), 1);
+    const skip = (pageNum - 1) * limitNum;
+
+    const filter = {
+      // Inclusive range: startDate <= today <= endDate
+      startDate: { $lte: endOfDay },
+      endDate: { $gte: startOfDay },
+    };
+
+    if (depot) {
+      filter.depot = depot;
+    }
+
+    const [items, total] = await Promise.all([
+      ScheduleConfiguration.find(filter)
+        .sort({ startDate: 1, endDate: 1 })
+        .skip(skip)
+        .limit(limitNum)
+        .populate("depot", "_id name")                 // adjust projected fields
+        .populate("seatLayout", "_id name")            // adjust as per schema
+        .populate("busService", "_id name")            // ServiceType fields
+        .populate("trips.trip", "_id name"),           // TripConfig fields
+      ScheduleConfiguration.countDocuments(filter),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: items,
+      pagination: { page: pageNum, limit: limitNum, total, pages: Math.ceil(total / limitNum) },
+      filterApplied: { depot: depot || null, today: { startOfDay, endOfDay } },
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch today's active schedules.",
+      error: err.message,
+    });
+  }
+};

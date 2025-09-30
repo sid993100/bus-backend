@@ -12,7 +12,6 @@ import { addVehicle, getVehicle, getVehiclesByDepot, getVehiclesByRegion, update
 import { addVehicleManufacturer, getVehicleManufacturer, updateVehicleManufacturer } from "../../services/admin/vehicleManufacturer/vehicleManufacturerServices.js";
 import { isLogin } from "../../middleWares/isLogin.js";
 import { addVehicleType, getVehicleTypes, updateVehicleType } from "../../services/master/vehicleTypeService.js";
-import { roleBaseAuth } from "../../middleWares/rolebaseAuth.js";
 import { updatePlan } from "../../services/admin/plan/planServices.js";
 import { updateOwnerType } from "../../services/admin/owner/ownerServices.js";
 import { addRegion, getRegion, getRegions, updateRegion } from "../../services/master/zoneRegionService.js";
@@ -44,8 +43,8 @@ router.get("/country", isLogin, checkPermission("country","read"), getCountry);
 router.get("/servicetype", isLogin,  checkPermission("servicetype", "read"), getServiceType);
 router.get("/stoparea",isLogin, checkPermission("stopArea","read"),getArea)
 router.get("/stopgrade",isLogin, checkPermission("stopGrade","read"),getStopGrade)
-router.get("/vehicle/:regionId",isLogin,checkPermission("vehicle","read"),getVehiclesByRegion)
-router.get("/vehicle/:depotId",isLogin,checkPermission("vehicle","read"),getVehiclesByDepot)
+router.get("/vehicle/region/:regionId",isLogin,checkPermission("vehicle","read"),getVehiclesByRegion)
+router.get("/vehicle/depot/:depotId",isLogin,checkPermission("vehicle","read"),getVehiclesByDepot)
 router.get("/vehicle",isLogin, checkPermission("vehicle","read"),getVehicle)
 router.get("/vehiclemanufacturer",isLogin, checkPermission("vehicleM","read"),getVehicleManufacturer)
 router.get("/vehicletype",isLogin, checkPermission("vehicleType","read"),getVehicleTypes)
@@ -61,8 +60,8 @@ router.get("/pistype",isLogin, checkPermission("pisType","read"),getPisTypes)
 router.get("/pismodel",isLogin, checkPermission("pisModel","read"),getAllPisModels)
 router.get("/employtype",isLogin, checkPermission("employType","read"),getAllEmployTypes)
 router.get("/vltdevice", isLogin, getVltDevices);
-router.get("/vltdevice/:regionId", isLogin, getVltDevicesByRegion);
-router.get("/vltdevice/:depotId", isLogin, getVltDevicesByDepot);
+router.get("/vltdevice/region/:regionId", isLogin, getVltDevicesByRegion);
+router.get("/vltdevice/depot/:depotId", isLogin, getVltDevicesByDepot);
 router.get("/subscription",isLogin,getSubscription)
 router.get("/subscription/:regionId",isLogin,getSubscriptionsByRegion)
 router.get("/subscription/:depotId",isLogin,getSubscriptionsByDepot)

@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { isValidObjectId } from "mongoose";
 import Vehicle from "../../../models/vehicleModel.js";
 
 export const getVehicle = async (req, res) => {
