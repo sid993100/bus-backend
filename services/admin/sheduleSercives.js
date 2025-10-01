@@ -242,10 +242,10 @@ export const getSchedulesByDepot = async (req, res) => {
     const { depotId } = req.params;
 
     const schedules = await ScheduleConfiguration.find({ depot: depotId })
-      .populate('depot', 'depotName depotCode')
+      .populate('depot', 'depotCustomer depotCode')
       .populate('seatLayout', 'layoutName totalSeats')
       .populate('busService', 'serviceName serviceType')
-      .populate('routeName', 'routeName routeCode source destination')
+      // .populate('routeName', 'routeName routeCode source destination')
       .sort({ scheduleLabel: 1 });
 
     res.status(200).json({
@@ -266,10 +266,10 @@ export const getSchedulesByDepot = async (req, res) => {
 export const getByRegion = async (req, res) => {
   try {
     const { regionId } = req.query;
+    
     if (!regionId || !isValidObjectId(regionId)) {
       return res.status(400).json({ success: false, error: "Invalid regionId" });
     }
-
     const items = await ScheduleConfiguration.find({})
       .populate({ path: "depot", select: "depotCustomer depotCode region", match: { region: regionId } })
       .populate("seatLayout", "layoutName")

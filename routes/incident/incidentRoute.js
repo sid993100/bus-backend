@@ -7,7 +7,7 @@ import { getIncident, getIncidents } from "../../services/admin/Incident/Inciden
 
 const router= Router();
 
-router.get("/incident",isLogin,roleBaseAuth(),checkPermission(),getIncidents)
+router.get("/incident",isLogin,checkPermission("incidentHandling","read"),getIncidents)
 
 
 

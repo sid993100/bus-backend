@@ -69,15 +69,15 @@ const roleSchema = new Schema({
         event:{ type: permissionSchema, default: defaultPermission },//new
         rawData:{ type: permissionSchema, default: defaultPermission },//new
         journeyHistory:{ type: permissionSchema, default: defaultPermission },//new
-        incident:{ type: permissionSchema, default: defaultPermission },//new
+        incidentHandling:{ type: permissionSchema, default: defaultPermission },//new
         vehicleActivity:{ type: permissionSchema, default: defaultPermission },//new
-        crowedManagement:{ type: permissionSchema, default: defaultPermission },//new
+        crowdManagement:{ type: permissionSchema, default: defaultPermission },//new
         idlingSummary:{ type: permissionSchema, default: defaultPermission },//new
         rawData:{ type: permissionSchema, default: defaultPermission },//new
         vehicleActivity:{ type: permissionSchema, default: defaultPermission },//new
         journeyHistory:{ type: permissionSchema, default: defaultPermission },//new
         firmware:{ type: permissionSchema, default: defaultPermission },//new
-        idlingSummary:{ type: permissionSchema, default: defaultPermission },//new
+        stoppageSummary:{ type: permissionSchema, default: defaultPermission },//new
         distanceTravelled:{ type: permissionSchema, default: defaultPermission },//new
         vehicleUtilization:{ type: permissionSchema, default: defaultPermission },//new
         stoppageDetailedReport:{ type: permissionSchema, default: defaultPermission },//new
@@ -87,6 +87,20 @@ const roleSchema = new Schema({
         hierarchy:{ type: permissionSchema, default: defaultPermission },//new
         toll:{ type: permissionSchema, default: defaultPermission },//new
         stopArea:{ type: permissionSchema, default: defaultPermission },//new
+        faq:{ type: permissionSchema, default: defaultPermission },//new
+        faqCategory:{ type: permissionSchema, default: defaultPermission },//new
+        helpAndSupport:{ type: permissionSchema, default: defaultPermission},
+        accessControl:{ type: permissionSchema, default: defaultPermission},
+        contactUs:{type: permissionSchema, default: defaultPermission},
+        complaint:{ type: permissionSchema, default: defaultPermission},
+        userProfile:{ type: permissionSchema, default: defaultPermission},
+        liveTracking:{ type: permissionSchema, default: defaultPermission},
+        arrivalDeparture:{ type: permissionSchema, default: defaultPermission},
+        incidentManagement:{ type: permissionSchema, default: defaultPermission},
+        todaySchedules:{ type: permissionSchema, default: defaultPermission},
+        todayTrips:{ type: permissionSchema, default: defaultPermission},
+        geofence:{ type: permissionSchema, default: defaultPermission}
+
     },
     hierarchy: {
         type: Schema.Types.ObjectId,

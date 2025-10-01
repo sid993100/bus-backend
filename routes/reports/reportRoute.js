@@ -22,7 +22,7 @@ router.get('/journeyhistory/:vehicleNumber',isLogin, checkPermission("journeyHis
 router.get('/firmware',isLogin, checkPermission("firmware","read"),latestFirmware)
 router.get('/firmware/:search',isLogin, checkPermission("firmware","read"),latestFirmwareByImei)
 router.get('/idlingsummary',isLogin, checkPermission("idlingSummary","read"),idlingSummary)
-router.get('/stopsummary',isLogin, checkPermission("stopSummary","read"),stopSummary)
+router.get('/stoppagesummary',isLogin, checkPermission("stoppageSummary","read"),stopSummary)
 router.get('/distancetravelled',isLogin, checkPermission("distanceTravelled","read"),getDistanceTravelled)
 router.get('/vehicleutilization',isLogin, checkPermission("vehicleUtilization","read"),getVehicleUtilization)
 router.get('/stoppagedetailed',isLogin, checkPermission("stoppageDetailedReport","read"),stoppageDetailedReport)
