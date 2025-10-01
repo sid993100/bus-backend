@@ -308,7 +308,8 @@ export const getDepotById = async (req, res) => {
     const depot = await DepotCustomer.findById(id).populate('region', 'name communicationAddress location');
     if (!depot) {
       return res.status(404).json({
-        message: "Depot/Customer Not Found"
+        message: "Depot/Customer Not Found",
+        data:depot
       });
     }
     return res.status(200).json({
