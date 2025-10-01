@@ -83,9 +83,13 @@ async function connectKafka() {
 
       // Emit to WebSocket
       if (topic === "bharatBusTrack") {
-          io.to(`bus_${parsed.vehicle_reg_no}`).emit("track",parsed)
+         if (parsed.packet_status==="L") {
+           io.to(`bus_${parsed.vehicle_reg_no}`).emit("track",parsed)
+         }
       } else if (topic === "acuteBusTrack") {
-        io.to(`bus_${parsed.vehicle_reg_no}`).emit("track", parsed);
+        if (parsed.packet_status==="L") {
+           io.to(`bus_${parsed.vehicle_reg_no}`).emit("track",parsed)
+         }
       }
     },
   });
@@ -101,6 +105,7 @@ io.on("connection", async (socket) => {
       
       const res = await axios.get(`${axiosApi}/api/tracking/tracking/${busIdOrReg.trim()}`);
       if (res?.data?.success && res?.data?.data) {
+        res.data.data.new=true; // mark as new data
         socket.emit("track", res.data.data);
         
       }

@@ -244,7 +244,7 @@ export const getSchedulesByDepot = async (req, res) => {
     const schedules = await ScheduleConfiguration.find({ depot: depotId })
       .populate('depot', 'depotCustomer depotCode')
       .populate('seatLayout', 'layoutName totalSeats')
-      .populate('busService', 'serviceName serviceType')
+      .populate('busService', 'name ')
       // .populate('routeName', 'routeName routeCode source destination')
       .sort({ scheduleLabel: 1 });
 
@@ -283,7 +283,6 @@ export const getByRegion = async (req, res) => {
     return res.status(500).json({ success: false, error: e.message || "Server error" });
   }
 };
-
 
 // GET BY ID - Retrieve single schedule configuration
 export const getScheduleConfigurationById = async (req, res) => {
@@ -362,7 +361,7 @@ export const getSchedulesByDate = async (req, res) => {
       ScheduleConfiguration.find(filter)
         .populate("depot", "depotCustomer depotCode region")
         .populate("seatLayout", "layoutName totalSeats seatConfiguration")
-        .populate("busService", "name serviceType fare")
+        .populate("busService","name")
         .populate({
           path: "trips.trip",
           select: "tripId origin destination originTime destinationTime cycleDay day status route",
@@ -392,3 +391,248 @@ export const getSchedulesByDate = async (req, res) => {
     return res.status(500).json({ success: false, error: "Failed to fetch schedules by date" });
   }
 };
+
+
+export const getSchedulesByDateAndDepot = async (req, res) => {
+  try {
+    const {
+      date = new Date().toISOString().split("T")[0], // required for this endpoint
+      page = "1",
+      limit = "10",
+      sortBy = "createdAt",
+      sortOrder = "desc",
+    } = req.query;
+    const depot = req.params.depotId;
+
+    if (!depot || !isValidObjectId(depot)) {
+      return res.status(400).json({ success: false, error: "Valid 'depot' is required" });
+    }
+
+    const target = new Date(date);
+    if (isNaN(target.getTime())) {
+      return res.status(400).json({ success: false, error: "Invalid 'date' format" });
+    }
+
+    const filter = {
+      depot,
+      startDate: { $lte: target },
+      endDate: { $gte: target },
+    };
+
+    const pageNum = Math.max(parseInt(page, 10), 1);
+    const limitNum = Math.max(parseInt(limit, 10), 1);
+    const skip = (pageNum - 1) * limitNum;
+    const sort = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
+
+    const [items, total] = await Promise.all([
+      ScheduleConfiguration.find(filter)
+        .populate("depot", "depotCustomer depotCode region")
+        .populate("seatLayout", "layoutName totalSeats seatConfiguration")
+        .populate("busService", "name")
+        .populate({
+          path: "trips.trip",
+          select: "tripId origin destination originTime destinationTime cycleDay day status route",
+          populate: [{ path: "route", select: "routeName" }],
+        })
+        .sort(sort)
+        .skip(skip)
+        .limit(limitNum),
+      ScheduleConfiguration.countDocuments(filter),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: items,
+      pagination: {
+        currentPage: pageNum,
+        totalPages: Math.ceil(total / limitNum),
+        totalItems: total,
+        itemsPerPage: limitNum,
+        hasNextPage: pageNum * limitNum < total,
+        hasPrevPage: pageNum > 1,
+      },
+      filters: { date, depot },
+    });
+  } catch (error) {
+    console.error("Error fetching schedules by date+depot:", error);
+    return res.status(500).json({ success: false, error: "Failed to fetch schedules" });
+  }
+};
+
+
+
+export const getSchedulesByDateAndRegion = async (req, res) => {
+  try {
+    const {
+      date = new Date().toISOString().split("T")[0],
+      page = "1",
+      limit = "10",
+      sortBy = "createdAt",
+      sortOrder = "desc",
+    } = req.query;
+const regionId = req.params.regionId;
+    if (!regionId || !isValidObjectId(regionId)) {
+      return res.status(400).json({ success: false, error: "Valid 'regionId' is required" });
+    }
+
+    const target = new Date(date);
+    if (isNaN(target.getTime())) {
+      return res.status(400).json({ success: false, error: "Invalid 'date' format" });
+    }
+
+    // Date-inclusive base filter
+    const baseMatch = {
+      startDate: { $lte: target },
+      endDate: { $gte: target },
+    };
+
+    const pageNum = Math.max(parseInt(page, 10), 1);
+    const limitNum = Math.max(parseInt(limit, 10), 1);
+    const skip = (pageNum - 1) * limitNum;
+    const sortStage = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
+
+    // Use aggregation to enforce depot.region match
+    const pipeline = [
+      { $match: baseMatch },
+      {
+        $lookup: {
+          from: "depotcustomers",
+          localField: "depot",
+          foreignField: "_id",
+          as: "depot",
+          pipeline: [
+            { $match: { region: new mongoose.Types.ObjectId(regionId) } },
+            { $project: { depotCustomer: 1, depotCode: 1, region: 1 } },
+          ],
+        },
+      },
+      { $match: { depot: { $ne: [] } } },
+      {
+        $lookup: {
+          from: "seatlayouts",
+          localField: "seatLayout",
+          foreignField: "_id",
+          as: "seatLayout",
+          pipeline: [{ $project: { layoutName: 1, totalSeats: 1, seatConfiguration: 1 } }],
+        },
+      },
+      { $unwind: { path: "$seatLayout", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "servicetypes",
+          localField: "busService",
+          foreignField: "_id",
+          as: "busService",
+          pipeline: [{ $project: { name: 1 } }],
+        },
+      },
+      { $unwind: { path: "$busService", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "tripconfigs",
+          localField: "trips.trip",
+          foreignField: "_id",
+          as: "tripDocs",
+          pipeline: [
+            {
+              $lookup: {
+                from: "routes",
+                localField: "route",
+                foreignField: "_id",
+                as: "route",
+                pipeline: [{ $project: { routeName: 1 } }],
+              },
+            },
+            { $unwind: { path: "$route", preserveNullAndEmptyArrays: true } },
+            {
+              $project: {
+                tripId: 1,
+                origin: 1,
+                destination: 1,
+                originTime: 1,
+                destinationTime: 1,
+                cycleDay: 1,
+                day: 1,
+                status: 1,
+                route: 1,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $addFields: {
+          trips: {
+            $map: {
+              input: "$trips",
+              as: "t",
+              in: {
+                $mergeObjects: [
+                  "$$t",
+                  {
+                    trip: {
+                      $arrayElemAt: [
+                        {
+                          $filter: {
+                            input: "$tripDocs",
+                            as: "td",
+                            cond: { $eq: ["$$td._id", "$$t.trip"] },
+                          },
+                        },
+                        0,
+                      ],
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+      { $unset: "tripDocs" },
+      { $sort: sortStage },
+      { $skip: skip },
+      { $limit: limitNum },
+    ];
+
+    const countPipeline = [
+      { $match: baseMatch },
+      {
+        $lookup: {
+          from: "depotcustomers",
+          localField: "depot",
+          foreignField: "_id",
+          as: "depot",
+          pipeline: [{ $match: { region: new mongoose.Types.ObjectId(regionId) } }],
+        },
+      },
+      { $match: { depot: { $ne: [] } } },
+      { $count: "total" },
+    ];
+
+    const [items, countAgg] = await Promise.all([
+      ScheduleConfiguration.aggregate(pipeline),
+      ScheduleConfiguration.aggregate(countPipeline),
+    ]);
+
+    const total = countAgg[0]?.total || 0;
+
+    return res.status(200).json({
+      success: true,
+      data: items,
+      pagination: {
+        currentPage: pageNum,
+        totalPages: Math.ceil(total / limitNum),
+        totalItems: total,
+        itemsPerPage: limitNum,
+        hasNextPage: pageNum * limitNum < total,
+        hasPrevPage: pageNum > 1,
+      },
+      filters: { date, regionId },
+    });
+  } catch (error) {
+    console.error("Error fetching schedules by date+region:", error);
+    return res.status(500).json({ success: false, error: "Failed to fetch schedules" });
+  }
+};
+
