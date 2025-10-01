@@ -75,12 +75,12 @@ const roleSchema = new Schema({
         idlingSummary:{ type: permissionSchema, default: defaultPermission },//new
         rawData:{ type: permissionSchema, default: defaultPermission },//new
         vehicleActivity:{ type: permissionSchema, default: defaultPermission },//new
-        journeyHistory:{ type: permissionSchema, default: defaultPermission },//new
+        journeyHistoryReplay:{ type: permissionSchema, default: defaultPermission },//new
         firmware:{ type: permissionSchema, default: defaultPermission },//new
         stoppageSummary:{ type: permissionSchema, default: defaultPermission },//new
         distanceTravelled:{ type: permissionSchema, default: defaultPermission },//new
         vehicleUtilization:{ type: permissionSchema, default: defaultPermission },//new
-        stoppageDetailedReport:{ type: permissionSchema, default: defaultPermission },//new
+        stoppageDetailedReport:{ type: permissionSchema, default: defaultPermission },//new 
         idlingDetailedReport:{ type: permissionSchema, default: defaultPermission },//new
         scheduleConfig:{ type: permissionSchema, default: defaultPermission },//new
         vehicleCurrentStatus:{ type: permissionSchema, default: defaultPermission },//new

@@ -2,6 +2,7 @@
 import { Router } from "express";
 import { createContact, getContactById, getContacts, updateContact } from "../../services/helpAndSupport/contactServer.js";
 import { createFAQCategory, deleteFAQCategory, getFAQCategories, getFAQCategoryById } from "../../services/helpAndSupport/faqCategoryServer.js";
+import { createFAQ, deleteFAQ, getFAQById, getFAQs, updateFAQ } from "../../services/helpAndSupport/faqsServers.js";
 
 const router = Router();
 
@@ -27,5 +28,16 @@ router.get("/faq-categories", getFAQCategories);
 router.get("/faq-categories/:id", getFAQCategoryById);
 // router.patch("/faq-categories/:id", updateFAQCategoryz);
 router.delete("/faq-categories/:id", deleteFAQCategory);
+
+
+
+
+router.post("/faqs", createFAQ);
+router.get("/faqs", getFAQs);
+router.get("/faqs/:id", getFAQById);
+router.patch("/faqs/:id", updateFAQ);
+router.delete("/faqs/:id", deleteFAQ);
+
+
 
 export default router;

@@ -35,14 +35,14 @@ const router=Router()
 
 router.get("/accounts", isLogin, checkPermission("account","read"), getAccount);
 router.get("/tolltypes", isLogin,  checkPermission("tollType", "read"), getTollType);
-router.get("/toll",isLogin,  checkPermission("toll", "create"),getToll);
+router.get("/toll",isLogin,  checkPermission("toll", "read"),getToll);
 router.get("/servicecategory", isLogin,  checkPermission("serviceCategory", "read"), getServiceCategory);
 router.get("/state", isLogin,  checkPermission("state", "read"), getState);
 router.get("/busstop", isLogin, checkPermission("busStop","read"), getBusStop);
 router.get("/country", isLogin, checkPermission("country","read"), getCountry);
 router.get("/servicetype", isLogin,  checkPermission("serviceType", "read"), getServiceType);
 router.get("/stoparea",isLogin, checkPermission("stopArea","read"),getArea)
-router.get("/stopgrade",isLogin, checkPermission("stopGrade","read"),getStopGrade)
+router.get("/stopgrade",isLogin, checkPermission("stopeGrade","read"),getStopGrade)
 router.get("/vehicle/region/:regionId",isLogin,checkPermission("vehicle","read"),getVehiclesByRegion)
 router.get("/vehicle/depot/:depotId",isLogin,checkPermission("vehicle","read"),getVehiclesByDepot)
 router.get("/vehicle",isLogin, checkPermission("vehicle","read"),getVehicle)
@@ -59,18 +59,18 @@ router.get("/pismanufacturer",isLogin, checkPermission("pismanuf","read"),getPis
 router.get("/pistype",isLogin, checkPermission("pisType","read"),getPisTypes)
 router.get("/pismodel",isLogin, checkPermission("pisModel","read"),getAllPisModels)
 router.get("/employtype",isLogin, checkPermission("employType","read"),getAllEmployTypes)
-router.get("/vltdevice", isLogin, getVltDevices);
-router.get("/vltdevice/region/:regionId", isLogin, getVltDevicesByRegion);
-router.get("/vltdevice/depot/:depotId", isLogin, getVltDevicesByDepot);
-router.get("/subscription",isLogin,getSubscription)
-router.get("/subscription/:regionId",isLogin,getSubscriptionsByRegion)
-router.get("/subscription/:depotId",isLogin,getSubscriptionsByDepot)
+router.get("/vltdevice", isLogin,checkPermission("vltDevice","read"), getVltDevices);
+router.get("/vltdevice/region/:regionId", isLogin,checkPermission("vltDevice","read"), getVltDevicesByRegion);
+router.get("/vltdevice/depot/:depotId", isLogin,checkPermission("vltDevice","read"), getVltDevicesByDepot);
+router.get("/subscription",isLogin,checkPermission("subscription","read"), getSubscription)
+router.get("/subscription/:regionId",isLogin,checkPermission("subscription","read"), getSubscriptionsByRegion)
+router.get("/subscription/:depotId",isLogin,checkPermission("subscription","read"), getSubscriptionsByDepot)
 
 
 
 
-router.post("/addvltdevice",isLogin,addVltDevices);
-router.post("/subscription",isLogin,addSubscription)
+router.post("/addvltdevice",isLogin,checkPermission("vltDevice","create"),addVltDevices);
+router.post("/subscription",isLogin,checkPermission("subscription","create"),addSubscription)
 router.post("/account", isLogin,  checkPermission("account", "create"), addAccount);
 router.post("/tolltype", isLogin,  checkPermission("tollType", "create"), addTollType);
 router.post("/toll", isLogin,   checkPermission("toll", "create"), addToll);
@@ -97,7 +97,7 @@ router.post("/employtype",isLogin, checkPermission("empolyType","create"),create
 
 
 
-router.put("/vltdevice/:id",isLogin, updateVltDevices);
+router.put("/vltdevice/:id",isLogin,checkPermission("vltDevice","update"), updateVltDevices);
 router.put("/subscription/:id",isLogin,updateSubscription);
 router.put("/account/:id",isLogin, checkPermission("account","update"),updateAccount)
 router.put("/stopgrade/:id",isLogin, checkPermission("stop","update"),updateStopGrade)

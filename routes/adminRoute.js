@@ -21,11 +21,11 @@ const router = Router();
 
 router.get("/pisreg", isLogin, getpisReg);
 router.get("/sim",isLogin,getSim)
-router.get("/plan",isLogin,checkPermission("plain","read"),getPlan)
+router.get("/plan",isLogin,checkPermission("plan","read"),getPlan)
 router.get("/vltdmanufacturer",isLogin,getVltdManufacturer)
 router.get("/vltmodel",isLogin,getVltModel)
 router.get("/ownertype",isLogin,checkPermission("ownerType","read"),getOwnerType)
-router.get("/incident",isLogin,checkPermission("incident","read"),getIncident)
+router.get("/incident",isLogin,checkPermission("incidentHandling","read"),getIncident)
 router.get("/hierarchy",isLogin,getHierarchy)
 
 
@@ -33,7 +33,7 @@ router.get("/hierarchy",isLogin,getHierarchy)
 
 router.post("/pisreg",isLogin,addPisRegistration);
 router.post("/addsim",isLogin,addSim);
-router.post("/addplan",isLogin,checkPermission("plain","create"),addPlan)
+router.post("/addplan",isLogin,checkPermission("plan","create"),addPlan)
 router.post("/addvltdmanufacturer",isLogin,addVltdManufacturer)
 router.post("/addvltmodel",isLogin,addVltModel)
 router.post("/ownertype",isLogin,checkPermission("ownerType","create"),addOwnerType)
@@ -52,7 +52,7 @@ router.put("/vltmodel/:id",isLogin, updateVltModel);
 router.put('/pisreg/:id', isLogin,updatePisRegistration)
 router.put("/hierarchy/:id",isLogin,updateHierarchy)
 router.put("/ownertype/:id",isLogin,checkPermission("ownerType","update"),updateOwnerType)
-router.put("/addplan/:id",isLogin,checkPermission("plain","update"),updatePlan)
+router.put("/addplan/:id",isLogin,checkPermission("plan","update"),updatePlan)
 router.put("/subscription/:id",isLogin,updateSubscription);
 
 
