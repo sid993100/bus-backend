@@ -325,52 +325,70 @@ export const getScheduleConfigurationById = async (req, res) => {
   }
 };
 
-export const getActiveSchedulesToday = async (req, res) => {
+export const getSchedulesByDate = async (req, res) => {
   try {
-    // Build "today" range in server local time (inclusive)
-    const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    const {
+      date = new Date().toISOString().split("T")[0],          // e.g., 2025-10-01 or ISO string
+      depot,         // optional
+      page = "1",
+      limit = "10",
+      sortBy = "createdAt",
+      sortOrder = "desc",
+    } = req.query;
 
-    // Optional filters & pagination
-    const { depot, page = "1", limit = "20" } = req.query;
+    if (!date) {
+      return res.status(400).json({ success: false, error: "Missing required 'date' query param" });
+    }
+
+    const target = new Date(date);
+    if (isNaN(target.getTime())) {
+      return res.status(400).json({ success: false, error: "Invalid 'date' format" });
+    }
+
+    // Inclusive window: startDate <= target <= endDate
+    const filter = {
+      startDate: { $lte: target },
+      endDate: { $gte: target },
+    };
+
+    if (depot) filter.depot = depot;
+
     const pageNum = Math.max(parseInt(page, 10), 1);
     const limitNum = Math.max(parseInt(limit, 10), 1);
     const skip = (pageNum - 1) * limitNum;
-
-    const filter = {
-      // Inclusive range: startDate <= today <= endDate
-      startDate: { $lte: endOfDay },
-      endDate: { $gte: startOfDay },
-    };
-
-    if (depot) {
-      filter.depot = depot;
-    }
+    const sort = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
 
     const [items, total] = await Promise.all([
       ScheduleConfiguration.find(filter)
-        .sort({ startDate: 1, endDate: 1 })
+        .populate("depot", "depotCustomer depotCode region")
+        .populate("seatLayout", "layoutName totalSeats seatConfiguration")
+        .populate("busService", "name serviceType fare")
+        .populate({
+          path: "trips.trip",
+          select: "tripId origin destination originTime destinationTime cycleDay day status route",
+          populate: [{ path: "route", select: "routeName" }],
+        })
+        .sort(sort)
         .skip(skip)
-        .limit(limitNum)
-        .populate("depot", "_id name")                 // adjust projected fields
-        .populate("seatLayout", "_id name")            // adjust as per schema
-        .populate("busService", "_id name")            // ServiceType fields
-        .populate("trips.trip", "_id name"),           // TripConfig fields
+        .limit(limitNum),
       ScheduleConfiguration.countDocuments(filter),
     ]);
 
     return res.status(200).json({
       success: true,
       data: items,
-      pagination: { page: pageNum, limit: limitNum, total, pages: Math.ceil(total / limitNum) },
-      filterApplied: { depot: depot || null, today: { startOfDay, endOfDay } },
+      pagination: {
+        currentPage: pageNum,
+        totalPages: Math.ceil(total / limitNum),
+        totalItems: total,
+        itemsPerPage: limitNum,
+        hasNextPage: pageNum * limitNum < total,
+        hasPrevPage: pageNum > 1,
+      },
+      filters: { date, ...(depot && { depot }) },
     });
-  } catch (err) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch today's active schedules.",
-      error: err.message,
-    });
+  } catch (error) {
+    console.error("Error fetching schedules by date:", error);
+    return res.status(500).json({ success: false, error: "Failed to fetch schedules by date" });
   }
 };

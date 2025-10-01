@@ -15,7 +15,7 @@ import { addVehicleType, getVehicleTypes, updateVehicleType } from "../../servic
 import { updatePlan } from "../../services/admin/plan/planServices.js";
 import { updateOwnerType } from "../../services/admin/owner/ownerServices.js";
 import { addRegion, getRegion, getRegions, updateRegion } from "../../services/master/zoneRegionService.js";
-import { addDepotCustomer,  getDepotCustomers, getDepotCustomersByRegion, updateDepotCustomer } from "../../services/master/depotService.js";
+import { addDepotCustomer,  getDepotById,  getDepotCustomers, getDepotCustomersByRegion, updateDepotCustomer } from "../../services/master/depotService.js";
 import { checkPermission } from "../../middleWares/checkPermission.js";
 import { addToll, getToll, updateToll } from "../../services/master/toll/tollService.js";
 import { updateDepartment, updateDepartmentByName } from "../../services/admin/department/departmentServices.js";
@@ -51,7 +51,8 @@ router.get("/vehicletype",isLogin, checkPermission("vehicleType","read"),getVehi
 router.get("/zone",isLogin, checkPermission("zone","read"),getRegions)
 router.get("/zone/:id",isLogin, checkPermission("zone","read"),getRegion)
 router.get("/depot",isLogin, checkPermission("depot","read"),getDepotCustomers)
-router.get("/depot/:regionId",isLogin,checkPermission("depot","read"),getDepotCustomersByRegion)
+router.get("/depot/:id",isLogin, checkPermission("depot","read"),getDepotById)
+router.get("/depot/region/:regionId",isLogin,checkPermission("depot","read"),getDepotCustomersByRegion)
 router.get("/vehiclemodel",isLogin, checkPermission("vehicleModel","read"),getVehicleModels)
 router.get("/gender",isLogin, checkPermission("gender","read"),getGender)
 router.get("/photoidcard",isLogin, checkPermission("photoIdCard","read"),getPhotoIdCard)

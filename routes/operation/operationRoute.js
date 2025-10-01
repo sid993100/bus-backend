@@ -1,12 +1,11 @@
 import { Router } from "express";
 import { isLogin } from "../../middleWares/isLogin.js";
-import { roleBaseAuth } from "../../middleWares/rolebaseAuth.js";
 import { checkPermission } from "../../middleWares/checkPermission.js";
 import { addSeatLayout, getSeatLayout, updateSeatLayout } from "../../services/admin/seatLayout/seatLayoutServices.js";
 import { addTrip, getTrips, getTripsByDepot, getTripsByRegion, updateTrip } from "../../services/admin/trip/tripServices.js";
 import { addRoute, updateRoute ,getRoutes, getRoutesByDepot, getRoutesByRegion} from "../../services/admin/route/routeService.js";
 import { addDuty, getDuty, getDutyByDepot, getDutyByRegion, updateDuty } from "../../services/admin/duty/dutyServices.js";
-import { createScheduleConfiguration, getActiveSchedulesToday, getAllScheduleConfigurations, getByRegion, getSchedulesByDepot, updateScheduleConfiguration } from "../../services/admin/sheduleSercives.js";
+import { createScheduleConfiguration, getAllScheduleConfigurations, getByRegion, getSchedulesByDate, getSchedulesByDepot, updateScheduleConfiguration } from "../../services/admin/sheduleSercives.js";
 import { addSim, getAllSims, updateSim } from "../../services/master/sim/simServices.js";
 
 
@@ -26,7 +25,7 @@ router.get("/scheduleconfig", isLogin ,checkPermission("scheduleConfig","read"),
 router.get("/scheduleconfig/depot/:depotId", isLogin ,checkPermission("scheduleConfig","read"), getSchedulesByDepot);
 router.get("/scheduleconfig/region/:regionId", isLogin ,checkPermission("scheduleConfig","read"), getByRegion);
 // router.get("/scheduleconfig/region/:regionId", isLogin ,checkPermission("scheduleConfig","read"), get);
-router.get("/todaySchedule", isLogin ,checkPermission("scheduleConfig","read"), getActiveSchedulesToday);
+router.get("/todaySchedule", isLogin ,checkPermission("scheduleConfig","read"), getSchedulesByDate);
 router.get("/vltsim", isLogin ,checkPermission("vltSim","read"), getAllSims);
 
 

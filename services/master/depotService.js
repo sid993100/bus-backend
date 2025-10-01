@@ -301,3 +301,23 @@ export const getDepotCustomerStats = async (req, res) => {
         });
     }
 };
+
+export const getDepotById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const depot = await DepotCustomer.findById(id).populate('region', 'name communicationAddress location');
+    if (!depot) {
+      return res.status(404).json({
+        message: "Depot/Customer Not Found"
+      });
+    }
+    return res.status(200).json({
+      message: "Depot/Customer Retrieved Successfully",
+      data: depot
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server Error"
+    });
+  }
+};
