@@ -9,7 +9,7 @@ const populationFields = [
   { path: 'zoneRegion', select: 'name code ' },
   { path: 'depotCustomer', select: 'depotCustomer code ' },
   { path: 'employment', select: 'name' },
-  { path: 'photoIdCard', select: 'name' }
+  // { path: 'photoIdCard', select: 'name' }
 ];
 
 // **ENHANCED: GET all conductors with population and filtering**

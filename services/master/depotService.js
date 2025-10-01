@@ -314,7 +314,7 @@ export const getDepotById = async (req, res) => {
     }
     return res.status(200).json({
       message: "Depot/Customer Retrieved Successfully",
-      data: depot
+      data: [depot]
     });
   } catch (error) {
     return res.status(500).json({
