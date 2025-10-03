@@ -77,7 +77,7 @@ export const journeyHistoryReplay = async (req, res) => {
     }
 
     // Process tracking data with markers
-    const replayData = await processReplayData(trackingData, markers, includeLocation === 'true');
+    const replayData = await processReplayData(trackingData, markers);
 
     // Convert timestamps to IST
     const replayDataIST = replayData.map(point => ({
@@ -225,7 +225,7 @@ function calculateDateRange(period, startDate, endDate) {
 /**
  * Process tracking data with marker information
  */
-async function processReplayData(trackingData, markers, includeLocation) {
+async function processReplayData(trackingData, markers, includeLocation=false) {
   const markerTypes = markers === 'all' ? 
     ['vehicleNumber', 'vehicleType', 'vehicleModel', 'imeiNumber', 'location', 'reportedDateTime', 'speed', 'powerStatus', 'routeName'] :
     markers.split(',').map(m => m.trim());
