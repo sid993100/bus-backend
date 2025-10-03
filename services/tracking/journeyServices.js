@@ -129,23 +129,27 @@ export const journeyHistoryReplay = async (req, res) => {
  */
 function calculateDateRange(period, startDate, endDate) {
   const now = new Date();
-  let start, end = new Date(now);
+
+  // Convert "now" into IST by adding +5:30
+  const nowIST = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+
+  let start, end = new Date(nowIST);
 
   switch (period) {
     case 'last1hour':
-      start = new Date(now.getTime() - (1 * 60 * 60 * 1000));
+      start = new Date(nowIST.getTime() - (1 * 60 * 60 * 1000));
       break;
     
     case 'last2hours':
-      start = new Date(now.getTime() - (2 * 60 * 60 * 1000));
+      start = new Date(nowIST.getTime() - (2 * 60 * 60 * 1000));
       break;
     
     case 'last6hours':
-      start = new Date(now.getTime() - (6 * 60 * 60 * 1000));
+      start = new Date(nowIST.getTime() - (6 * 60 * 60 * 1000));
       break;
     
     case 'last12hours':
-      start = new Date(now.getTime() - (12 * 60 * 60 * 1000));
+      start = new Date(nowIST.getTime() - (12 * 60 * 60 * 1000));
       break;
     
     case 'custom':
@@ -155,10 +159,11 @@ function calculateDateRange(period, startDate, endDate) {
           message: 'Start date and end date are required for custom period'
         };
       }
-      
-      start = new Date(startDate);
-      end = new Date(endDate);
-      
+
+      // Parse custom dates as IST directly
+      start = new Date(new Date(startDate).getTime() + (5.5 * 60 * 60 * 1000));
+      end = new Date(new Date(endDate).getTime() + (5.5 * 60 * 60 * 1000));
+
       if (isNaN(start.getTime()) || isNaN(end.getTime())) {
         return {
           success: false,
@@ -166,22 +171,20 @@ function calculateDateRange(period, startDate, endDate) {
         };
       }
 
-      // Check if dates are in the future
-      if (start > now) {
+      if (start > nowIST) {
         return {
           success: false,
           message: 'Start date cannot be in the future'
         };
       }
 
-      if (end > now) {
+      if (end > nowIST) {
         return {
           success: false,
           message: 'End date cannot be in the future'
         };
       }
-      
-      // **CUSTOM 24-HOUR LIMIT VALIDATION**
+
       const hoursDiff = (end - start) / (1000 * 60 * 60);
       if (hoursDiff > 24) {
         return {
@@ -189,7 +192,7 @@ function calculateDateRange(period, startDate, endDate) {
           message: 'Custom date range cannot exceed 24 hours'
         };
       }
-      
+
       if (start >= end) {
         return {
           success: false,
@@ -205,13 +208,13 @@ function calculateDateRange(period, startDate, endDate) {
       };
   }
 
-  // Final validation to ensure dates are not in future
-  if (start > now) {
-    start = new Date(now.getTime() - (1 * 60 * 60 * 1000));
+  // Final validation to ensure dates are not in the future
+  if (start > nowIST) {
+    start = new Date(nowIST.getTime() - (1 * 60 * 60 * 1000));
   }
-  
-  if (end > now) {
-    end = now;
+
+  if (end > nowIST) {
+    end = nowIST;
   }
 
   return {
