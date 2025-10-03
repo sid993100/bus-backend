@@ -11,24 +11,24 @@ import { addSim, getAllSims, updateSim } from "../../services/master/sim/simServ
 
 const router = Router();
 
-router.get("/route",isLogin ,checkPermission("route","read"),getRoutes)
-router.get("/route/region/:regionId",isLogin ,checkPermission("route","read"),getRoutesByRegion)
-router.get("/route/depot/:depotId",isLogin ,checkPermission("route","read"),getRoutesByDepot)
-router.get("/seatlayout",isLogin ,checkPermission("seatLayout","read"),getSeatLayout)
-router.get("/trip",isLogin ,checkPermission("trip","read"),getTrips)
-router.get("/trip/region/:regionId",isLogin ,checkPermission("trip","read"),getTripsByRegion)
-router.get("/trip/depot/:depotId",isLogin ,checkPermission("trip","read"),getTripsByDepot)
-router.get("/duty", isLogin ,checkPermission("duty","read"), getDuty);
-router.get("/duty/region/:regionId", isLogin ,checkPermission("duty","read"), getDutyByRegion);
-router.get("/duty/depot/:depotId", isLogin ,checkPermission("duty","read"), getDutyByDepot);
-router.get("/scheduleconfig", isLogin ,checkPermission("scheduleConfig","read"), getAllScheduleConfigurations);
-router.get("/scheduleconfig/depot/:depotId", isLogin ,checkPermission("scheduleConfig","read"), getSchedulesByDepot);
-router.get("/scheduleconfig/region/:regionId", isLogin ,checkPermission("scheduleConfig","read"), getByRegion);
+router.get("/route",isLogin ,getRoutes)
+router.get("/route/region/:regionId",isLogin ,getRoutesByRegion)
+router.get("/route/depot/:depotId",isLogin ,getRoutesByDepot)
+router.get("/seatlayout",isLogin ,getSeatLayout)
+router.get("/trip",isLogin ,getTrips)
+router.get("/trip/region/:regionId",isLogin ,getTripsByRegion)
+router.get("/trip/depot/:depotId",isLogin ,getTripsByDepot)
+router.get("/duty", isLogin ,getDuty);
+router.get("/duty/region/:regionId", isLogin ,getDutyByRegion);
+router.get("/duty/depot/:depotId", isLogin ,getDutyByDepot);
+router.get("/scheduleconfig", isLogin ,getAllScheduleConfigurations);
+router.get("/scheduleconfig/depot/:depotId", isLogin ,getSchedulesByDepot);
+router.get("/scheduleconfig/region/:regionId", isLogin ,getByRegion);
 // router.get("/scheduleconfig/region/:regionId", isLogin ,checkPermission("scheduleConfig","read"), get);
-router.get("/todaySchedule", isLogin ,checkPermission("todaySchedules","read"), getSchedulesByDate);
-router.get("/todaySchedule/depot/:depotId", isLogin ,checkPermission("todaySchedules","read"), getSchedulesByDateAndDepot);
-router.get("/todaySchedule/region/:regionId", isLogin ,checkPermission("todaySchedules","read"), getSchedulesByDateAndRegion);
-router.get("/vltsim", isLogin ,checkPermission("vltSim","read"), getAllSims);
+router.get("/todaySchedule", isLogin ,getSchedulesByDate);
+router.get("/todaySchedule/depot/:depotId", isLogin ,getSchedulesByDateAndDepot);
+router.get("/todaySchedule/region/:regionId", isLogin ,getSchedulesByDateAndRegion);
+router.get("/vltsim", isLogin ,getAllSims);
 
 
 router.post("/seatlayout",isLogin ,checkPermission("seatLayout","create"),addSeatLayout);

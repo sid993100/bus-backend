@@ -21,13 +21,12 @@ const router = Router();
 
 router.get("/pisreg", isLogin, getpisReg);
 router.get("/sim",isLogin,getSim)
-router.get("/plan",isLogin,checkPermission("plan","read"),getPlan)
+router.get("/plan",isLogin,getPlan)
 router.get("/vltdmanufacturer",isLogin,getVltdManufacturer)
 router.get("/vltmodel",isLogin,getVltModel)
-router.get("/ownertype",isLogin,checkPermission("ownerType","read"),getOwnerType)
-router.get("/incident",isLogin,checkPermission("incidentHandling","read"),getIncident)
+router.get("/ownertype",isLogin,getOwnerType)
+router.get("/incident",isLogin,getIncident)
 router.get("/hierarchy",isLogin,getHierarchy)
-
 
 
 

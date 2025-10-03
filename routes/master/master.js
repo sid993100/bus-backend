@@ -33,39 +33,39 @@ import { addSubscription, getSubscription, getSubscriptionsByDepot, getSubscript
 
 const router=Router()
 
-router.get("/accounts", isLogin, checkPermission("account","read"), getAccount);
-router.get("/tolltypes", isLogin,  checkPermission("tollType", "read"), getTollType);
-router.get("/toll",isLogin,  checkPermission("toll", "read"),getToll);
-router.get("/servicecategory", isLogin,  checkPermission("serviceCategory", "read"), getServiceCategory);
-router.get("/state", isLogin,  checkPermission("state", "read"), getState);
-router.get("/busstop", isLogin, checkPermission("busStop","read"), getBusStop);
-router.get("/country", isLogin, checkPermission("country","read"), getCountry);
-router.get("/servicetype", isLogin,  checkPermission("serviceType", "read"), getServiceType);
-router.get("/stoparea",isLogin, checkPermission("stopArea","read"),getArea)
-router.get("/stopgrade",isLogin, checkPermission("stopeGrade","read"),getStopGrade)
-router.get("/vehicle/region/:regionId",isLogin,checkPermission("vehicle","read"),getVehiclesByRegion)
-router.get("/vehicle/depot/:depotId",isLogin,checkPermission("vehicle","read"),getVehiclesByDepot)
-router.get("/vehicle",isLogin, checkPermission("vehicle","read"),getVehicle)
-router.get("/vehiclemanufacturer",isLogin, checkPermission("vehicleM","read"),getVehicleManufacturer)
-router.get("/vehicletype",isLogin, checkPermission("vehicleType","read"),getVehicleTypes)
-router.get("/zone",isLogin, checkPermission("zone","read"),getRegions)
-router.get("/zone/:id",isLogin, checkPermission("zone","read"),getRegion)
-router.get("/depot",isLogin, checkPermission("depot","read"),getDepotCustomers)
-router.get("/depot/:id",isLogin, checkPermission("depot","read"),getDepotById)
-router.get("/depot/region/:regionId",isLogin,checkPermission("depot","read"),getDepotCustomersByRegion) 
-router.get("/vehiclemodel",isLogin, checkPermission("vehicleModel","read"),getVehicleModels)
-router.get("/gender",isLogin, checkPermission("gender","read"),getGender)
-router.get("/photoidcard",isLogin, checkPermission("photoIdCard","read"),getPhotoIdCard)
-router.get("/pismanufacturer",isLogin, checkPermission("pismanuf","read"),getPisManufacturer)
-router.get("/pistype",isLogin, checkPermission("pisType","read"),getPisTypes)
-router.get("/pismodel",isLogin, checkPermission("pisModel","read"),getAllPisModels)
-router.get("/employtype",isLogin, checkPermission("employType","read"),getAllEmployTypes)
-router.get("/vltdevice", isLogin,checkPermission("vltDevice","read"), getVltDevices);
-router.get("/vltdevice/region/:regionId", isLogin,checkPermission("vltDevice","read"), getVltDevicesByRegion);
-router.get("/vltdevice/depot/:depotId", isLogin,checkPermission("vltDevice","read"), getVltDevicesByDepot);
-router.get("/subscription",isLogin,checkPermission("subscription","read"), getSubscription)
-router.get("/subscription/:regionId",isLogin,checkPermission("subscription","read"), getSubscriptionsByRegion)
-router.get("/subscription/:depotId",isLogin,checkPermission("subscription","read"), getSubscriptionsByDepot)
+router.get("/accounts", isLogin, getAccount);
+router.get("/tolltypes", isLogin,  getTollType);
+router.get("/toll",isLogin,  getToll);
+router.get("/servicecategory", isLogin,  getServiceCategory);
+router.get("/state", isLogin,  getState);
+router.get("/busstop", isLogin, getBusStop);
+router.get("/country", isLogin, getCountry);
+router.get("/servicetype", isLogin,  getServiceType);
+router.get("/stoparea",isLogin, getArea)
+router.get("/stopgrade",isLogin, getStopGrade)
+router.get("/vehicle/region/:regionId",isLogin,getVehiclesByRegion)
+router.get("/vehicle/depot/:depotId",isLogin,getVehiclesByDepot)
+router.get("/vehicle",isLogin,getVehicle)
+router.get("/vehiclemanufacturer",isLogin,getVehicleManufacturer)
+router.get("/vehicletype",isLogin,getVehicleTypes)
+router.get("/zone",isLogin,getRegions)
+router.get("/zone/:id",isLogin,getRegion)
+router.get("/depot",isLogin,getDepotCustomers)
+router.get("/depot/:id",isLogin,getDepotById)
+router.get("/depot/region/:regionId",isLogin,getDepotCustomersByRegion) 
+router.get("/vehiclemodel",isLogin,getVehicleModels)
+router.get("/gender",isLogin,getGender)
+router.get("/photoidcard",isLogin,getPhotoIdCard)
+router.get("/pismanufacturer",isLogin,getPisManufacturer)
+router.get("/pistype",isLogin,getPisTypes)
+router.get("/pismodel",isLogin,getAllPisModels)
+router.get("/employtype",isLogin,getAllEmployTypes)
+router.get("/vltdevice", isLogin,getVltDevices);
+router.get("/vltdevice/region/:regionId", isLogin,getVltDevicesByRegion);
+router.get("/vltdevice/depot/:depotId", isLogin,getVltDevicesByDepot);
+router.get("/subscription",isLogin, getSubscription)
+router.get("/subscription/:regionId",isLogin, getSubscriptionsByRegion)
+router.get("/subscription/:depotId",isLogin, getSubscriptionsByDepot)
 
 
 
