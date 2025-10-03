@@ -2,7 +2,6 @@ import TrackingPacket from '../../models/trackingPacketModel.js';
 import Route from "../../models/routemodel.js";
 import axios from 'axios';
 
-
 export const journeyHistoryReplay = async (req, res) => {
   try {
     const { vehicleNumber } = req.params;
@@ -38,7 +37,7 @@ export const journeyHistoryReplay = async (req, res) => {
     // Build query for tracking data
     const trackingQuery = {
       vehicle_reg_no: vehicleNumber,
-      packet_status:"L",
+      packet_status: "L",
       timestamp: {
         $gte: dateRange.startDate,
         $lte: dateRange.endDate
@@ -79,10 +78,10 @@ export const journeyHistoryReplay = async (req, res) => {
     // Process tracking data with markers
     const replayData = await processReplayData(trackingData, markers);
 
-    // Convert timestamps to IST
+    // Since timestamp is already IST, no conversion needed
     const replayDataIST = replayData.map(point => ({
       ...point,
-      dateTimeIST: convertUTCToIST(point.timestamp),
+      dateTimeIST: point.timestamp,
       reportedDateTime: formatDateTimeIST(point.timestamp)
     }));
 
@@ -94,8 +93,8 @@ export const journeyHistoryReplay = async (req, res) => {
       dateRange: {
         startDate: dateRange.startDate.toISOString(),
         endDate: dateRange.endDate.toISOString(),
-        startDateIST: convertUTCToIST(dateRange.startDate),
-        endDateIST: convertUTCToIST(dateRange.endDate),
+        startDateIST: dateRange.startDate.toISOString(),
+        endDateIST: dateRange.endDate.toISOString(),
         duration: `${Math.round((dateRange.endDate - dateRange.startDate) / (1000 * 60 * 60))} hours`
       },
       route: routeInfo ? {
@@ -262,11 +261,11 @@ async function processReplayData(trackingData, markers, includeLocation=false) {
     }
     
     if (markerTypes.includes('vehicleType')) {
-      replayPoint.markers.vehicleType = 'BUS'; // Default from your context
+      replayPoint.markers.vehicleType = 'BUS'; // Default
     }
     
     if (markerTypes.includes('vehicleModel')) {
-      replayPoint.markers.vehicleModel = 'BS-VI'; // Default from your context
+      replayPoint.markers.vehicleModel = 'BS-VI'; // Default
     }
     
     if (markerTypes.includes('imeiNumber')) {
@@ -310,30 +309,18 @@ async function processReplayData(trackingData, markers, includeLocation=false) {
 }
 
 /**
- * Convert UTC timestamp to IST
+ * Format datetime (already IST, no conversion)
  */
-function convertUTCToIST(utcDate) {
-  const date = new Date(utcDate);
-  // Add 5 hours 30 minutes for IST
-  const istDate = new Date(date.getTime() + (5.5 * 60 * 60 * 1000));
-  return istDate.toISOString();
-}
+function formatDateTimeIST(dateObj) {
+  const date = new Date(dateObj); 
 
-/**
- * Format datetime to IST format (DD-MM-YYYY HH:MM:SS IST)
- */
-function formatDateTimeIST(utcDate) {
-  const date = new Date(utcDate);
-  // Add 5 hours 30 minutes for IST
-  const istDate = new Date(date.getTime() + (5.5 * 60 * 60 * 1000));
-  
-  const day = String(istDate.getDate()).padStart(2, '0');
-  const month = String(istDate.getMonth() + 1).padStart(2, '0');
-  const year = istDate.getFullYear();
-  const hours = String(istDate.getHours()).padStart(2, '0');
-  const minutes = String(istDate.getMinutes()).padStart(2, '0');
-  const seconds = String(istDate.getSeconds()).padStart(2, '0');
-  
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
   return `${day}-${month}-${year} ${hours}:${minutes}:${seconds} IST`;
 }
 
