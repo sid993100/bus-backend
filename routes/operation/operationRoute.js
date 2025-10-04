@@ -2,7 +2,7 @@ import { Router } from "express";
 import { isLogin } from "../../middleWares/isLogin.js";
 import { checkPermission } from "../../middleWares/checkPermission.js";
 import { addSeatLayout, getSeatLayout, updateSeatLayout } from "../../services/admin/seatLayout/seatLayoutServices.js";
-import { addTrip, getTrips, getTripsByDepot, getTripsByRegion, updateTrip } from "../../services/admin/trip/tripServices.js";
+import { addTrip, getTodayTrips, getTrips, getTripsByDepot, getTripsByRegion, updateTrip } from "../../services/admin/trip/tripServices.js";
 import { addRoute, updateRoute ,getRoutes, getRoutesByDepot, getRoutesByRegion} from "../../services/admin/route/routeService.js";
 import { addDuty, getDuty, getDutyByDepot, getDutyByRegion, updateDuty } from "../../services/admin/duty/dutyServices.js";
 import { createScheduleConfiguration, getAllScheduleConfigurations, getByRegion, getSchedulesByDate, getSchedulesByDateAndDepot, getSchedulesByDateAndRegion, getSchedulesByDepot, updateScheduleConfiguration } from "../../services/admin/sheduleSercives.js";
@@ -16,6 +16,7 @@ router.get("/route/region/:regionId",isLogin ,getRoutesByRegion)
 router.get("/route/depot/:depotId",isLogin ,getRoutesByDepot)
 router.get("/seatlayout",isLogin ,getSeatLayout)
 router.get("/trip",isLogin ,getTrips)
+router.get("/todaytrip",isLogin,getTodayTrips)
 router.get("/trip/region/:regionId",isLogin ,getTripsByRegion)
 router.get("/trip/depot/:depotId",isLogin ,getTripsByDepot)
 router.get("/duty", isLogin ,getDuty);

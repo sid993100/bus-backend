@@ -96,7 +96,15 @@ const tripConfigSchema = new Schema({
     uppercase: true,
     enum: ['APPROVED', 'PENDING', 'REJECTED', 'CANCELLED'],
     default: "PENDING"
-  }
+  },
+   startDate: {
+    type: Date,
+    required: true
+  },
+  endDate: {
+    type: Date,
+    required: true
+  },
 }, {
   timestamps: true
 });

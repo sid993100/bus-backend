@@ -2,17 +2,17 @@ import TrackingPacket from "../../models/trackingPacketModel.js";
 
 export const getVehicleCurrentStatusWithLocation = async (req, res) => {
   try {
-    // Use a group-by + lookup approach to fetch the latest document per vehicle
-    // This avoids sorting the entire collection in memory which can exceed the limit.
-    const collectionName = TrackingPacket.collection.name; // safe collection name
+    // Get pagination parameters
+    const page = parseInt(req.query.page) || 1;      // default 1
+    const limit = parseInt(req.query.limit) || 10;   // default 10
+    const skip = (page - 1) * limit;
+
+    const collectionName = TrackingPacket.collection.name;
+
+    // Aggregate: get latest packet per vehicle
     const vehicleStatuses = await TrackingPacket.aggregate([
-      // only tracking packets with a vehicle registration
       { $match: { packet_type: 'tracking', vehicle_reg_no: { $exists: true, $ne: null, $ne: '' } } },
-
-      // compute latest timestamp per vehicle
       { $group: { _id: '$vehicle_reg_no', latestTimestamp: { $max: '$timestamp' } } },
-
-      // lookup the document that matches vehicle_reg_no + latestTimestamp
       {
         $lookup: {
           from: collectionName,
@@ -24,14 +24,21 @@ export const getVehicleCurrentStatusWithLocation = async (req, res) => {
           as: 'latestData'
         }
       },
-
-      // unwind to get the document and replace root
       { $unwind: '$latestData' },
       { $replaceRoot: { newRoot: '$latestData' } },
-
-      // final sort for predictable ordering
-      { $sort: { vehicle_reg_no: 1 } }
+      { $sort: { vehicle_reg_no: 1 } },
+      // Apply pagination at MongoDB level (before large dataset expansion)
+      { $skip: skip },
+      { $limit: limit }
     ]).allowDiskUse(true);
+
+    // Also get total unique vehicles (for total pages)
+    const totalVehicles = await TrackingPacket.aggregate([
+      { $match: { packet_type: 'tracking', vehicle_reg_no: { $exists: true, $ne: null, $ne: '' } } },
+      { $group: { _id: '$vehicle_reg_no' } },
+      { $count: 'count' }
+    ]);
+    const total = totalVehicles[0]?.count || 0;
 
     if (!vehicleStatuses || vehicleStatuses.length === 0) {
       return res.status(404).json({
@@ -41,7 +48,7 @@ export const getVehicleCurrentStatusWithLocation = async (req, res) => {
       });
     }
 
-    // Function to get address from coordinates
+    // Helper: reverse geocode
     const getAddressFromCoordinates = async (lat, lng) => {
       try {
         if (!lat || !lng || lat === 0 || lng === 0) {
@@ -52,40 +59,26 @@ export const getVehicleCurrentStatusWithLocation = async (req, res) => {
           `http://nominatim.locationtrack.in/reverse?format=geocodejson&lat=${lat}&lon=${lng}`
         );
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch address");
-        }
+        if (!response.ok) throw new Error("Failed to fetch address");
 
         const data = await response.json();
-        return (
-          data.features[0]?.properties?.geocoding?.label || "Address not found"
-        );
-      } catch (error) {
-        console.error("Address fetch error:", error);
+        return data.features[0]?.properties?.geocoding?.label || "Address not found";
+      } catch {
         return "Could not determine location";
       }
     };
 
-    // Format data with location fetching
+    // Map + enrich each record
     const formattedVehicleStatus = await Promise.all(
       vehicleStatuses.map(async (vehicle) => {
-        // Get readable address
-        const lastLocation = await getAddressFromCoordinates(
-          vehicle.latitude,
-          vehicle.longitude
-        );
+        const lastLocation = await getAddressFromCoordinates(vehicle.latitude, vehicle.longitude);
 
         // Determine status
         let status = "Stopped";
-        if (vehicle.ignition && vehicle.main_power && vehicle.speed_kmh > 0) {
-          status = "Running";
-        } else if (vehicle.ignition && vehicle.main_power) {
-          status = "Idle";
-        } else if (!vehicle.main_power) {
-          status = "Offline";
-        }
+        if (vehicle.ignition && vehicle.main_power && vehicle.speed_kmh > 0) status = "Running";
+        else if (vehicle.ignition && vehicle.main_power) status = "Idle";
+        else if (!vehicle.main_power) status = "Offline";
 
-        // Format last update
         const lastUpdate = vehicle.timestamp
           ? new Date(vehicle.timestamp)
               .toLocaleString("en-IN", {
@@ -104,11 +97,11 @@ export const getVehicleCurrentStatusWithLocation = async (req, res) => {
         return {
           vehicleNumber: vehicle.vehicle_reg_no || "N/A",
           imeiNumber: vehicle.imei || "N/A",
-          status: status,
+          status,
           batteryStatus: vehicle.main_power ? "Connected" : "Disconnected",
           speed: `${vehicle.speed_kmh || 0} km/h`,
-          lastLocation: lastLocation,
-          lastUpdate: lastUpdate,
+          lastLocation,
+          lastUpdate,
           latitude: vehicle.latitude || 0,
           longitude: vehicle.longitude || 0,
           ignition: vehicle.ignition || false,
@@ -124,6 +117,10 @@ export const getVehicleCurrentStatusWithLocation = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Vehicle current status retrieved successfully",
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
       count: formattedVehicleStatus.length,
       data: formattedVehicleStatus,
     });

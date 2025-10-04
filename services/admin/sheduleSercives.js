@@ -30,8 +30,9 @@ export const createScheduleConfiguration = async (req, res) => {
     // 🔹 Calculate scheduleKm
     let totalKm = 0;
     for (const trip of trips) {
-      const tripConfig = await TripConfig.findById(trip.trip).populate("route", "routeLength");
+      const tripConfig = await TripConfig.findByIdAndUpdate(trip.trip,{$set: {startDate: start, endDate: end}},{new: true}).populate("route", "routeLength");
       if (!tripConfig) continue;
+      
       if (!tripConfig.route || !tripConfig.route.routeLength) continue;
 
       totalKm += trip.day * tripConfig.route.routeLength;
@@ -144,9 +145,9 @@ export const updateScheduleConfiguration = async (req, res) => {
     const { id } = req.params;
     const updateData = { ...req.body };
 
-    if (updateData.startDate && updateData.endDate) {
       const start = new Date(updateData.startDate);
       const end = new Date(updateData.endDate);
+    if (updateData.startDate && updateData.endDate) {
       if (start >= end) {
         return res.status(400).json({ success: false, error: 'Start date must be before end date' });
       }
@@ -160,7 +161,7 @@ export const updateScheduleConfiguration = async (req, res) => {
     if (updateData.trips && updateData.trips.length > 0) {
       let totalKm = 0;
       for (const trip of updateData.trips) {
-        const tripConfig = await TripConfig.findById(trip.trip).populate("route", "routeLength");
+        const tripConfig = await TripConfig.findByIdAndUpdate(trip.trip,{$set:{startDate: start, endDate: end}},{new: true}).populate("route", "routeLength");
         if (!tripConfig) continue;
         if (!tripConfig.route || !tripConfig.route.routeLength) continue;
 

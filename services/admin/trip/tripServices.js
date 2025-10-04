@@ -1,12 +1,18 @@
-import TripConfig from "../../../models/tripModel.js"; 
-import mongoose, { isValidObjectId, Types } from "mongoose";
+import TripConfig from "../../../models/tripModel.js";
+import { isValidObjectId, Types } from "mongoose";
 
 export const getTrips = async (req, res) => {
   try {
     const trips = await TripConfig.find()
       .populate("depot", "depotCustomer code ")
       .populate("seatLayout", "layoutName")
-      .populate([{path:"route",select:"routeName depot" ,populate:[{path:"depot", select:"depotCustomer code "}]}]);
+      .populate([
+        {
+          path: "route",
+          select: "routeName depot",
+          populate: [{ path: "depot", select: "depotCustomer code " }],
+        },
+      ]);
     if (!trips) {
       return res.status(404).json({ message: "No trips found" });
     }
@@ -20,7 +26,7 @@ export const getTrips = async (req, res) => {
       .status(500)
       .json({ message: error.message || "Internal server error" });
   }
-}
+};
 
 // Common populate used in getTrips
 const tripPopulate = [
@@ -65,22 +71,35 @@ export const getTripsByDepot = async (req, res) => {
   try {
     const { depotId } = req.params;
     if (!isValidObjectId(depotId)) {
-      return res.status(400).json({ success: false, message: "Invalid depot ID" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid depot ID" });
     }
 
-    const { pageNum, limitNum, skip, sort, textFilter } = buildTripQueryParams(req);
+    const { pageNum, limitNum, skip, sort, textFilter } =
+      buildTripQueryParams(req);
 
     // Assuming TripConfig has a direct depot field (ObjectId -> Depot model)
     // If not, and depot comes via route.depot, switch to aggregation below.
     const filter = { depot: depotId, ...textFilter };
 
     const [items, total] = await Promise.all([
-      TripConfig.find(filter).populate(tripPopulate).sort(sort).skip(skip).limit(limitNum),
+      TripConfig.find(filter)
+        .populate(tripPopulate)
+        .sort(sort)
+        .skip(skip)
+        .limit(limitNum),
       TripConfig.countDocuments(filter),
     ]);
 
     if (items.length === 0) {
-      return res.status(200).json({ success: true, message: "No trips found for depot" , data: items});
+      return res
+        .status(200)
+        .json({
+          success: true,
+          message: "No trips found for depot",
+          data: items,
+        });
     }
 
     const totalPages = Math.ceil(total / limitNum);
@@ -100,7 +119,12 @@ export const getTripsByDepot = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ success: false, message: error.message || "Internal server error" });
+    return res
+      .status(500)
+      .json({
+        success: false,
+        message: error.message || "Internal server error",
+      });
   }
 };
 
@@ -108,11 +132,14 @@ export const getTripsByRegion = async (req, res) => {
   try {
     const { regionId } = req.params;
     if (!isValidObjectId(regionId)) {
-      return res.status(400).json({ success: false, message: "Invalid region ID" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid region ID" });
     }
 
     const regionObjId = new Types.ObjectId(regionId);
-    const { pageNum, limitNum, skip, sort, textFilter } = buildTripQueryParams(req);
+    const { pageNum, limitNum, skip, sort, textFilter } =
+      buildTripQueryParams(req);
 
     // Use the same $match for both data and count pipelines to keep totals accurate
     const matchStage = [{ $match: { ...textFilter } }];
@@ -121,7 +148,7 @@ export const getTripsByRegion = async (req, res) => {
       ...matchStage,
       {
         $lookup: {
-          from: "routes",              // ensure this matches Route collection name
+          from: "routes", // ensure this matches Route collection name
           localField: "route",
           foreignField: "_id",
           as: "route",
@@ -132,7 +159,7 @@ export const getTripsByRegion = async (req, res) => {
       // Optional lookups
       {
         $lookup: {
-          from: "depotcustomers",      // actual collection name for Depot model
+          from: "depotcustomers", // actual collection name for Depot model
           localField: "depot",
           foreignField: "_id",
           as: "depot",
@@ -141,7 +168,7 @@ export const getTripsByRegion = async (req, res) => {
       { $unwind: { path: "$depot", preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
-          from: "seatlayouts",         // actual collection name for SeatLayout
+          from: "seatlayouts", // actual collection name for SeatLayout
           localField: "seatLayout",
           foreignField: "_id",
           as: "seatLayout",
@@ -189,7 +216,9 @@ export const getTripsByRegion = async (req, res) => {
     const totalPages = Math.ceil(total / limitNum);
     return res.status(200).json({
       success: true,
-      message: items.length ? "Trips retrieved successfully" : "No trips found for region",
+      message: items.length
+        ? "Trips retrieved successfully"
+        : "No trips found for region",
       data: items,
       pagination: {
         currentPage: pageNum,
@@ -203,7 +232,12 @@ export const getTripsByRegion = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ success: false, message: error.message || "Internal server error" });
+    return res
+      .status(500)
+      .json({
+        success: false,
+        message: error.message || "Internal server error",
+      });
   }
 };
 
@@ -669,6 +703,69 @@ export const updateTrip = async (req, res) => {
         process.env.NODE_ENV === "development"
           ? error.message
           : "Something went wrong",
+    });
+  }
+};
+
+export const getTodayTrips = async (req, res) => {
+  try {
+    // Parse date
+    const todayParam = req.query.today;
+    const today = todayParam ? new Date(todayParam) : new Date();
+
+    if (isNaN(today)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Invalid date format. Please use YYYY-MM-DD or a valid ISO date.",
+      });
+    }
+
+    // Convert today into start and end of the day
+    const startOfDay = new Date(today);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(today);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Pagination setup
+    const page = parseInt(req.query.page) || 1; // default page = 1
+    const limit = parseInt(req.query.limit) || 10; // default limit = 10
+    const skip = (page - 1) * limit;
+
+    // Query filter
+    const filter = {
+      startDate: { $lte: endOfDay },
+      endDate: { $gte: startOfDay },
+      status: "APPROVED",
+    };
+
+    // Total count before pagination
+    const total = await TripConfig.countDocuments(filter);
+
+    // Get paginated trips
+    const trips = await TripConfig.find(filter)
+      .populate(tripPopulate)
+      .skip(skip)
+      .limit(limit)
+      .sort({ startDate: 1 }); // optional sorting
+
+    // Response
+    return res.status(200).json({
+      success: true,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      count: trips.length,
+      data: trips,
+    });
+  } catch (error) {
+    console.error("Error fetching today's trips:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching today's trips",
+      error: error.message,
     });
   }
 };
