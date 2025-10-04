@@ -9,7 +9,8 @@ export const journeyHistory = async (req, res) => {
       startDate, 
       endDate, 
       includeLocation = 'false',
-      limit = 500 
+      page = 1,
+      limit = 10
     } = req.query;
 
     // Validate vehicle number
@@ -21,9 +22,8 @@ export const journeyHistory = async (req, res) => {
       });
     }
 
-    // Calculate date range based on period
-    let dateRange = calculateDateRange(period, startDate, endDate);
-    
+    // Calculate date range
+    const dateRange = calculateDateRange(period, startDate, endDate);
     if (!dateRange.success) {
       return res.status(400).json({
         success: false,
@@ -32,24 +32,33 @@ export const journeyHistory = async (req, res) => {
       });
     }
 
-    // Validate limit
-    const queryLimit = Math.min(parseInt(limit) || 500, 1000);
+    // Pagination setup
+    const currentPage = parseInt(page) || 1;
+    const pageLimit = Math.min(parseInt(limit) || 500, 1000);
+    const skip = (currentPage - 1) * pageLimit;
 
-    // Query tracking data
-    const trackingData = await TrackingPacket.find({
+    // Filter
+    const filter = {
       vehicle_reg_no: vehicleNumber,
       timestamp: {
         $gte: dateRange.startDate,
         $lte: dateRange.endDate
       }
-    })
-    .select(`
-      vehicle_reg_no timestamp latitude longitude speed_kmh 
-      ignition main_power imei formatted_datetime
-      satellites fix_status gsm_signal heading
-    `)
-    .sort({ timestamp: 1 })
-    .limit(queryLimit);
+    };
+
+    // Get total count
+    const totalRecords = await TrackingPacket.countDocuments(filter);
+
+    // Query tracking data with pagination
+    const trackingData = await TrackingPacket.find(filter)
+      .select(`
+        vehicle_reg_no timestamp latitude longitude speed_kmh 
+        ignition main_power imei formatted_datetime
+        satellites fix_status gsm_signal heading
+      `)
+      .sort({ timestamp: 1 })
+      .skip(skip)
+      .limit(pageLimit);
 
     if (trackingData.length === 0) {
       return res.status(404).json({
@@ -59,14 +68,14 @@ export const journeyHistory = async (req, res) => {
       });
     }
 
-    // Format response data similar to Journey History table
+    // Format response data
     let formattedData = trackingData.map((record, index) => ({
-      serialNumber: index + 1,
+      serialNumber: skip + index + 1,
       vehicleNumber: record.vehicle_reg_no,
       dateTime: formatDateTime(record.timestamp),
       latitude: record.latitude || 0,
       longitude: record.longitude || 0,
-      location: null, // Will be populated if includeLocation is true
+      location: null, // will be added if includeLocation=true
       ignition: record.ignition ? 'ON' : 'OFF',
       speedKmh: record.speed_kmh || 0,
       mainPower: record.main_power ? 'Connected' : 'Disconnected',
@@ -76,7 +85,7 @@ export const journeyHistory = async (req, res) => {
       heading: record.heading || 0
     }));
 
-    // Add location information if requested
+    // Add location info if requested
     if (includeLocation === 'true') {
       formattedData = await addLocationData(formattedData);
     }
@@ -85,18 +94,21 @@ export const journeyHistory = async (req, res) => {
     res.status(200).json({
       success: true,
       vehicleNumber: vehicleNumber.toUpperCase(),
-      period: period,
+      pagination: {
+        currentPage,
+        limit: pageLimit,
+        totalRecords,
+        totalPages: Math.ceil(totalRecords / pageLimit),
+        hasNextPage: currentPage * pageLimit < totalRecords,
+        hasPrevPage: currentPage > 1
+      },
+      period,
       dateRange: {
         startDate: dateRange.startDate.toISOString(),
         endDate: dateRange.endDate.toISOString(),
         duration: `${Math.round((dateRange.endDate - dateRange.startDate) / (1000 * 60 * 60))} hours`
       },
-      totalRecords: formattedData.length,
-      filters: {
-        vehicleNumber: vehicleNumber.toUpperCase(),
-        startDateTime: dateRange.startDate.toISOString(),
-        endDateTime: dateRange.endDate.toISOString()
-      },
+      count: formattedData.length,
       data: formattedData
     });
 
@@ -109,6 +121,7 @@ export const journeyHistory = async (req, res) => {
     });
   }
 };
+
 
 /**
  * Calculate date range based on period - FIXED VERSION
@@ -205,43 +218,58 @@ function formatDateTime(date) {
 /**
  * Add location data using reverse geocoding - Improved version
  */
-async function addLocationData(data) {
-  // Limit geocoding to first 20 records to avoid rate limiting
-  const maxGeocode = Math.min(data.length, 50);
-  
-  for (let i = 0; i < maxGeocode; i++) {
-    const record = data[i];
-    
-    if (record.latitude && record.longitude && record.latitude !== 0 && record.longitude !== 0) {
-      try {
-        const location = await reverseGeocode(record.latitude, record.longitude);
-        record.location = location || `${record.latitude}, ${record.longitude}`;
-        
-        // Rate limiting - wait between requests
-        if (i < maxGeocode - 1) {
-          await new Promise(resolve => setTimeout(resolve, 200));
-        }
-      } catch (error) {
-        console.error(`Geocoding failed for ${record.latitude}, ${record.longitude}:`, error.message);
-        record.location = `${record.latitude}, ${record.longitude}`;
+ async function addLocationData(data) {
+  const maxGeocode = Math.min(data.length, 10); // limit how many records get geocoded
+  const concurrencyLimit = 3; // how many geocode calls run at once
+
+  // Pre-fill all records with fallback locations
+  const results = data.map((record) => ({
+    ...record,
+    location:
+      record.latitude && record.longitude && record.latitude !== 0 && record.longitude !== 0
+        ? `${record.latitude}, ${record.longitude}`
+        : 'Invalid Coordinates'
+  }));
+
+  // Helper: concurrency pool
+  async function asyncPool(limit, array, iteratorFn) {
+    const ret = [];
+    const executing = [];
+    for (const item of array) {
+      const p = Promise.resolve().then(() => iteratorFn(item, array.indexOf(item)));
+      ret.push(p);
+      if (limit <= array.length) {
+        const e = p.then(() => executing.splice(executing.indexOf(e), 1));
+        executing.push(e);
+        if (executing.length >= limit) await Promise.race(executing);
       }
-    } else {
-      record.location = 'Invalid Coordinates';
     }
+    return Promise.all(ret);
   }
-  
-  // For remaining records without geocoding, just show coordinates
-  for (let i = maxGeocode; i < data.length; i++) {
-    const record = data[i];
-    if (record.latitude && record.longitude && record.latitude !== 0 && record.longitude !== 0) {
-      record.location = `${record.latitude}, ${record.longitude}`;
-    } else {
-      record.location = 'Invalid Coordinates';
+
+  // Run reverse geocode on first `maxGeocode` records with concurrency control
+  await asyncPool(concurrencyLimit, results.slice(0, maxGeocode), async (record, i) => {
+    try {
+      if (
+        record.latitude &&
+        record.longitude &&
+        record.latitude !== 0 &&
+        record.longitude !== 0
+      ) {
+        const location = await reverseGeocode(record.latitude, record.longitude);
+        results[i].location = location || `${record.latitude}, ${record.longitude}`;
+      }
+    } catch (error) {
+      console.error(
+        `Geocoding failed for ${record.latitude}, ${record.longitude}:`,
+        error.message
+      );
     }
-  }
-  
-  return data;
+  });
+
+  return results;
 }
+
 
 /**
  * Reverse geocode coordinates to address - Improved version
