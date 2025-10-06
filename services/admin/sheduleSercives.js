@@ -30,7 +30,7 @@ export const createScheduleConfiguration = async (req, res) => {
     // 🔹 Calculate scheduleKm
     let totalKm = 0;
     for (const trip of trips) {
-      const tripConfig = await TripConfig.findByIdAndUpdate(trip.trip,{$set: {startDate: start, endDate: end}},{new: true}).populate("route", "routeLength");
+      const tripConfig = await TripConfig.findByIdAndUpdate(trip.trip,{$set: {startDate: start, endDate: end ,scheduleLabel}},{new: true}).populate("route", "routeLength");
       if (!tripConfig) continue;
       
       if (!tripConfig.route || !tripConfig.route.routeLength) continue;
