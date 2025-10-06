@@ -266,8 +266,8 @@ export const getSchedulesByDepot = async (req, res) => {
 
 export const getByRegion = async (req, res) => {
   try {
-    const { regionId } = req.query;
-    
+    const { regionId } = req.params;
+    console.log(regionId)
     if (!regionId || !isValidObjectId(regionId)) {
       return res.status(400).json({ success: false, error: "Invalid regionId" });
     }
