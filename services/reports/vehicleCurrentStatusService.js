@@ -79,20 +79,18 @@ export const getVehicleCurrentStatusWithLocation = async (req, res) => {
         else if (vehicle.ignition && vehicle.main_power) status = "Idle";
         else if (!vehicle.main_power) status = "Offline";
 
-        const lastUpdate = vehicle.timestamp
-          ? new Date(vehicle.timestamp)
+        const lastUpdate =  vehicle.createdAt
               .toLocaleString("en-IN", {
-                timeZone: "Asia/Kolkata",
                 day: "2-digit",
                 month: "2-digit",
                 year: "numeric",
                 hour: "2-digit",
                 minute: "2-digit",
                 second: "2-digit",
-                hour12: false,
+                hour12: true,
               })
               .replace(",", "")
-          : "N/A";
+          
 
         return {
           vehicleNumber: vehicle.vehicle_reg_no || "N/A",

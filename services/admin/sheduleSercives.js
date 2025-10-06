@@ -35,7 +35,7 @@ export const createScheduleConfiguration = async (req, res) => {
       
       if (!tripConfig.route || !tripConfig.route.routeLength) continue;
 
-      totalKm += trip.day * tripConfig.route.routeLength;
+      totalKm += tripConfig.route.routeLength;
     }
 
     const scheduleConfig = new ScheduleConfiguration({
@@ -165,7 +165,7 @@ export const updateScheduleConfiguration = async (req, res) => {
         if (!tripConfig) continue;
         if (!tripConfig.route || !tripConfig.route.routeLength) continue;
 
-        totalKm += trip.day * tripConfig.route.routeLength;
+        totalKm += tripConfig.route.routeLength;
       }
       updateData.scheduleKm = totalKm;
     }
