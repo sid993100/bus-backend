@@ -3,20 +3,33 @@ import Duty from "../../../models/dutyModel.js";
 
 // Is function mein koi badlav nahi hai
 export const getDuty = async (req, res) => {
+    const { pageNum, limitNum, skip, sort } = req.query;
     try {
         const duties = await Duty.find({})
             .populate('conductorName', 'driverName')
             .populate('driverName', 'driverName')
             .populate('supportDriver', 'driverName')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .skip((pageNum - 1) * limitNum)
+            .limit(limitNum);
             
-        if (!duties || duties.length === 0) {
+        if (!duties ) {
             return res.status(404).json({
-                message: "No Duties Found"
+              success:false,
+              message: "No Duties Found"
             });
         }
         return res.status(200).json({
-            message: duties
+            success:true,
+            message: duties,
+            pagination: {
+        currentPage: pageNum,
+        totalPages,
+        totalItems: total,
+        itemsPerPage: limitNum,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1,
+      },
         });
     } catch (error) {
         console.error("Error fetching duties:", error);
@@ -113,8 +126,7 @@ export const getDutyByRegion = async (req, res) => {
 
     const { pageNum, limitNum, skip, sort, textFilter } = buildDutyQueryParams(req);
 
-    // If Duty has direct region field, use simple find; else filter via related Route/Depot
-    // Here assuming a direct 'region' ObjectId on Duty:
+  
     const filter = { region: regionId, ...textFilter };
 
     const [items, total] = await Promise.all([

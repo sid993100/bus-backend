@@ -32,6 +32,7 @@ router.get("/todaySchedule/region/:regionId", isLogin ,getSchedulesByDateAndRegi
 router.get("/vltsim", isLogin ,getAllSims);
 
 
+
 router.post("/seatlayout",isLogin ,checkPermission("seatLayout","create"),addSeatLayout);
 router.post("/route",isLogin ,checkPermission("route","create"),addRoute);
 router.post("/trip",isLogin ,checkPermission("trip","create"),addTrip)
