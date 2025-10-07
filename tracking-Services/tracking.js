@@ -110,7 +110,6 @@ io.on("connection", async (socket) => {
       if (res?.data?.success && res?.data?.data) {
         res.data.data.new=true; // mark as new data
         socket.emit("track", res.data.data);
-        
       }
     } catch (e) {
       consoleManager.log("prefetch error",  e.message);

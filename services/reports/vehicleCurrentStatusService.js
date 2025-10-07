@@ -161,6 +161,7 @@ export const getVehicleByVehicleNumber = async (req, res) => {
         satellites: 1,
         timestamp: 1,
         packet_status: 1,
+        updatedAt: 1,
       }
     )
       .sort({ timestamp: -1 })
@@ -197,8 +198,8 @@ export const getVehicleByVehicleNumber = async (req, res) => {
       status = "Offline";
     }
 
-    const lastUpdate = vehicle.timestamp
-      ? new Date(vehicle.timestamp)
+    const lastUpdate = vehicle.updatedAt
+      ? new Date(vehicle.updatedAt)
           .toLocaleString("en-IN", {
             timeZone: "Asia/Kolkata",
             day: "2-digit",
