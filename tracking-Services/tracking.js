@@ -102,6 +102,9 @@ io.on("connection", async (socket) => {
 
   socket.on("trackBus", async (busIdOrReg) => {
     try {
+       const room = `bus_${busIdOrReg}`;
+    socket.join(room);
+    socket.emit("join", busIdOrReg);
       
       const res = await axios.get(`${axiosApi}/api/tracking/tracking/${busIdOrReg.trim()}`);
       if (res?.data?.success && res?.data?.data) {
@@ -113,9 +116,7 @@ io.on("connection", async (socket) => {
       consoleManager.log("prefetch error",  e.message);
     }
 
-    const room = `bus_${busIdOrReg}`;
-    socket.join(room);
-    socket.emit("join", busIdOrReg); // confirm to requester only
+    // confirm to requester only
   });
 
   socket.on("stopTracking", (busIdOrReg) => {
