@@ -28,6 +28,7 @@ import { addPisModel, getAllPisModels, updatePisModel } from "../../services/otc
 import { createEmployType, getAllEmployTypes, updateEmployType } from "../../services/master/empolyType/empolyTypeService.js";
 import { addVltDevices, getVltDevices, getVltDevicesByDepot, getVltDevicesByRegion, updateVltDevices } from "../../services/admin/vltDevices/vltDevicesServices.js";
 import { addSubscription, getSubscription, getSubscriptionsByDepot, getSubscriptionsByRegion, updateSubscription } from "../../services/admin/subscription/subscriptionServices.js";
+import { createDeviceEvent, getDeviceEventById, getDeviceEvents, updateDeviceEvent } from "../../services/master/deviceEventServer.js";
 
 
 
@@ -66,10 +67,17 @@ router.get("/vltdevice/depot/:depotId", isLogin,getVltDevicesByDepot);
 router.get("/subscription",isLogin, getSubscription)
 router.get("/subscription/:regionId",isLogin, getSubscriptionsByRegion)
 router.get("/subscription/:depotId",isLogin, getSubscriptionsByDepot)
+router.get("/deviceevents",isLogin, getDeviceEvents);
+router.get("/deviceevents/:id",isLogin, getDeviceEventById);
 
 
 
 
+
+
+
+
+router.post("/deviceevents",isLogin, createDeviceEvent);
 router.post("/addvltdevice",isLogin,checkPermission("vltDevice","create"),addVltDevices);
 router.post("/subscription",isLogin,checkPermission("subscription","create"),addSubscription)
 router.post("/account", isLogin,  checkPermission("account", "create"), addAccount);
@@ -127,5 +135,6 @@ router.put('/pismanufacturer/:id',isLogin, checkPermission("pismanuf","update"),
 router.put('/pistype/:id',isLogin, checkPermission("pisType","update"),updatepisType);
 router.put('/pismodel/:id',isLogin, checkPermission("pisModel","update"),updatePisModel);
 router.put('/employtype/:id',isLogin, checkPermission("employType","update"),updateEmployType);
+router.put("/deviceevents/:id",isLogin, updateDeviceEvent);
 
 export default router

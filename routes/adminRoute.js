@@ -31,7 +31,7 @@ router.get("/hierarchy",isLogin,getHierarchy)
 
 
 router.post("/pisreg",isLogin,addPisRegistration);
-router.post("/addsim",isLogin,addSim);
+router.post("/addsim",isLogin,checkPermission(),addSim);
 router.post("/addplan",isLogin,checkPermission("plan","create"),addPlan)
 router.post("/addvltdmanufacturer",isLogin,addVltdManufacturer)
 router.post("/addvltmodel",isLogin,addVltModel)

@@ -3,7 +3,6 @@ import SimService from "../../../models/simServiceModel.js";
 import consoleManager from "../../../utils/consoleManager.js";
 
 export const getSim=async (req,res) => {
-  const user = req.user;
      try {
       const sim= await SimService.find({})
       if (!sim) {
@@ -23,7 +22,6 @@ export const getSim=async (req,res) => {
      }
 }
 export const addSim=async (req,res) => {
-  const user=req.user
   const {name,shortName}=req.body
 
 
