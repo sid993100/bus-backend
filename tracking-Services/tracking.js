@@ -123,7 +123,6 @@ io.on("connection", async (socket) => {
     const room = `bus_${busIdOrReg}`;
     socket.leave(room);
     socket.emit("stopped", { message: `Stopped tracking bus ${busIdOrReg}` });
-    consoleManager.log(`Client ${socket.id} stopped tracking ${busIdOrReg}`);
   });
 });
 
