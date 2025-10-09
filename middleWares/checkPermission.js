@@ -1,5 +1,6 @@
 import Role from "../models/roleModel.js";
 import User from "../models/userModel.js";
+import { MODULE_ACTIONS } from "../utils/moduleActions.js";
 
 export const checkPermission = (resource, action) => {
   return async (req, res, next) => {
@@ -20,7 +21,16 @@ export const checkPermission = (resource, action) => {
         return res.status(403).json({ message: "Role not found" });
       }
 
-      const resourcePermissions = role.permissions[resource];
+      // Validate resource and action against the central MODULE_ACTIONS map first
+      const allowedActions = MODULE_ACTIONS[resource];
+      if (!allowedActions) {
+        return res.status(400).json({ message: `Unknown resource: ${resource}` });
+      }
+      if (!allowedActions.includes(action)) {
+        return res.status(400).json({ message: `Unknown action '${action}' for resource '${resource}'` });
+      }
+
+      const resourcePermissions = role.permissions?.[resource];
 
       if (!resourcePermissions) {
         return res.status(403).json({ message: `No permissions for ${resource}` });
