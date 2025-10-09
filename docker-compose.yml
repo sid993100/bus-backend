@@ -18,6 +18,7 @@ services:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: zookeeper
     restart: unless-stopped
+    condition: service_healthy
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -26,6 +27,7 @@ services:
     image: confluentinc/cp-kafka:7.5.0
     container_name: kafka
     restart: unless-stopped
+    condition: service_healthy
     ports:
       - "9092:9092"
     environment:
