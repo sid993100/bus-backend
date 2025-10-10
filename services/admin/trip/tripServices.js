@@ -132,93 +132,47 @@ export const getTripsByRegion = async (req, res) => {
   try {
     const { regionId } = req.params;
     if (!isValidObjectId(regionId)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid region ID" });
+      return res.status(400).json({ success: false, message: "Invalid region ID" });
     }
 
-    const regionObjId = new Types.ObjectId(regionId);
-    const { pageNum, limitNum, skip, sort, textFilter } =
-      buildTripQueryParams(req);
+    const { pageNum, limitNum, skip, sort, textFilter } = buildTripQueryParams(req);
 
-    // Use the same $match for both data and count pipelines to keep totals accurate
-    const matchStage = [{ $match: { ...textFilter } }];
+    // Base filter only uses text; region is applied via populate match
+    const filter = { ...textFilter };
 
-    const dataPipeline = [
-      ...matchStage,
-      {
-        $lookup: {
-          from: "routes", // ensure this matches Route collection name
-          localField: "route",
-          foreignField: "_id",
-          as: "route",
+    // Fetch a page and populate with match on route.region
+    const itemsRaw = await TripConfig.find(filter)
+      .populate([
+        { path: "depot", select: "depotCustomer code" },
+        { path: "seatLayout", select: "layoutName" },
+        {
+          path: "route",
+          select: "routeName depot region",
+          match: { region: regionId },
+          populate: [{ path: "depot", select: "depotCustomer code" }],
         },
-      },
-      { $unwind: "$route" },
-      { $match: { "route.region": regionObjId } },
-      // Optional lookups
-      {
-        $lookup: {
-          from: "depotcustomers", // actual collection name for Depot model
-          localField: "depot",
-          foreignField: "_id",
-          as: "depot",
-        },
-      },
-      { $unwind: { path: "$depot", preserveNullAndEmptyArrays: true } },
-      {
-        $lookup: {
-          from: "seatlayouts", // actual collection name for SeatLayout
-          localField: "seatLayout",
-          foreignField: "_id",
-          as: "seatLayout",
-        },
-      },
-      { $unwind: { path: "$seatLayout", preserveNullAndEmptyArrays: true } },
-      { $sort: sort },
-      { $skip: skip },
-      { $limit: limitNum },
-      {
-        $project: {
-          tripName: 1,
-          tripCode: 1,
-          createdAt: 1,
-          depot: { depotCustomer: 1, code: 1, _id: 1 },
-          seatLayout: { layoutName: 1, _id: 1 },
-          route: { routeName: 1, depot: 1, region: 1, _id: 1 },
-        },
-      },
-    ];
+      ])
+      .sort(sort)
+      .skip(skip)
+      .limit(limitNum)
+      .lean();
 
-    const countPipeline = [
-      ...matchStage,
-      {
-        $lookup: {
-          from: "routes",
-          localField: "route",
-          foreignField: "_id",
-          as: "route",
-        },
-      },
-      { $unwind: "$route" },
-      { $match: { "route.region": regionObjId } },
-      { $count: "total" },
-    ];
+    // Keep only docs whose populated route matched the region
+    const items = itemsRaw.filter((t) => t.route);
 
-    const [items, countAgg] = await Promise.all([
-      TripConfig.aggregate(dataPipeline),
-      TripConfig.aggregate(countPipeline),
-    ]);
+    // For an approximate total consistent enough for paging without aggregation:
+    // do a second lightweight query to count ids with the same filter and match
+    const idsForCount = await TripConfig.find(filter)
+      .select("_id")
+      .populate({ path: "route", select: "_id region", match: { region: regionId } })
+      .lean();
 
-    const total = countAgg[0]?.total || 0;
-
-    // Always return success with data array; empty is not an error
+    const total = idsForCount.filter((d) => d.route).length;
     const totalPages = Math.ceil(total / limitNum);
+
     return res.status(200).json({
       success: true,
-      message: items.length
-        ? "Trips retrieved successfully"
-        : "No trips found for region",
+      message: items.length ? "Trips retrieved successfully" : "No trips found for region",
       data: items,
       pagination: {
         currentPage: pageNum,
@@ -232,12 +186,7 @@ export const getTripsByRegion = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: error.message || "Internal server error",
-      });
+    return res.status(500).json({ success: false, message: error.message || "Internal server error" });
   }
 };
 
