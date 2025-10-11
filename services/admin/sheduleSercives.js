@@ -59,7 +59,6 @@ export const createScheduleConfiguration = async (req, res) => {
         path: "trips.trip",
         populate: { path: "route", select: "routeName routeCode routeLength source destination" }
       });
-
     res.status(201).json({
       success: true,
       message: 'Schedule configuration created successfully',

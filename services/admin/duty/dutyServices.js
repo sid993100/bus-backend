@@ -9,6 +9,14 @@ export const getDuty = async (req, res) => {
             .populate('conductorName', 'driverName')
             .populate('driverName', 'driverName')
             .populate('supportDriver', 'driverName')
+            .populate('depot', 'depotName depotCode')
+            .populate('seatLayout', 'layoutName totalSeats')
+            .populate('busService', 'serviceName serviceType')
+            .populate({
+               path: "trips.trip",
+              populate: { path: "route", select: "routeName routeCode routeLength source destination" }
+            })
+            .populate("route.routeName")
             .sort({ createdAt: -1 })
             .skip((pageNum - 1) * limitNum)
             .limit(limitNum);
@@ -44,6 +52,8 @@ const dutyPopulate = [
   { path: "conductorName", select: "driverName" },
   { path: "driverName", select: "driverName" },
   { path: "supportDriver", select: "driverName" },
+  {path: "route", select: "routeName" },
+  {path: "scheduleNumber", select: "scheduleName" }
 ];
 
 function buildDutyQueryParams(req) {
@@ -87,7 +97,16 @@ export const getDutyByDepot = async (req, res) => {
     const filter = { depot: depotId, ...textFilter };
 
     const [items, total] = await Promise.all([
-      Duty.find(filter).populate(dutyPopulate).sort(sort).skip(skip).limit(limitNum),
+      Duty.find(filter).populate(dutyPopulate)
+      .populate('depot', 'depotName depotCode')
+      .populate('seatLayout', 'layoutName totalSeats')
+      .populate('busService', 'serviceName serviceType')
+      .populate({
+        path: "trips.trip",
+        populate: { path: "route", select: "routeName routeCode routeLength source destination" }
+      })
+      .populate("route.routeName")
+      .sort(sort).skip(skip).limit(limitNum),
       Duty.countDocuments(filter),
     ]);
 
@@ -116,7 +135,6 @@ export const getDutyByDepot = async (req, res) => {
   }
 };
 
-
 export const getDutyByRegion = async (req, res) => {
   try {
     const { regionId } = req.params;
@@ -130,7 +148,16 @@ export const getDutyByRegion = async (req, res) => {
     const filter = { region: regionId, ...textFilter };
 
     const [items, total] = await Promise.all([
-      Duty.find(filter).populate(dutyPopulate).sort(sort).skip(skip).limit(limitNum),
+      Duty.find(filter).populate(dutyPopulate)
+      .populate('depot', 'depotName depotCode')
+      .populate('seatLayout', 'layoutName totalSeats')
+      .populate('busService', 'serviceName serviceType')
+      .populate({
+        path: "trips.trip",
+        populate: { path: "route", select: "routeName routeCode routeLength source destination" }
+      })
+      .populate("route.routeName")
+      .sort(sort).skip(skip).limit(limitNum),
       Duty.countDocuments(filter),
     ]);
 

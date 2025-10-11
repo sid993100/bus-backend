@@ -37,10 +37,9 @@ export const journeyHistoryReplay = async (req, res) => {
     // Build query for tracking data
     const trackingQuery = {
       vehicle_reg_no: vehicleNumber,
-      packet_status: "L",
       timestamp: {
-        $gte: dateRange.startDate,
-        $lte: dateRange.endDate
+        $gte: String(dateRange.startDate),
+        $lte: String(dateRange.endDate)
       }
     };
 
@@ -124,9 +123,7 @@ export const journeyHistoryReplay = async (req, res) => {
   }
 };
 
-/**
- * Calculate date range with 24-hour limit validation for custom period
- */
+
 function calculateDateRange(period, startDate, endDate) {
   const now = new Date();
 
@@ -224,9 +221,7 @@ function calculateDateRange(period, startDate, endDate) {
   };
 }
 
-/**
- * Process tracking data with marker information
- */
+
 async function processReplayData(trackingData, markers, includeLocation=false) {
   const markerTypes = markers === 'all' ? 
     ['vehicleNumber', 'vehicleType', 'vehicleModel', 'imeiNumber', 'location', 'reportedDateTime', 'speed', 'powerStatus', 'routeName'] :
@@ -311,9 +306,7 @@ async function processReplayData(trackingData, markers, includeLocation=false) {
   return processedData;
 }
 
-/**
- * Format datetime (already IST, no conversion)
- */
+
 function formatDateTimeIST(dateObj) {
   const date = new Date(dateObj); 
 
@@ -327,9 +320,6 @@ function formatDateTimeIST(dateObj) {
   return `${day}-${month}-${year} ${hours}:${minutes}:${seconds} IST`;
 }
 
-/**
- * Reverse geocode coordinates to address
- */
 async function reverseGeocode(lat, lon) {
   try {
     const url = `http://nominatim.locationtrack.in/reverse?format=json&lat=${lat}&lon=${lon}`;

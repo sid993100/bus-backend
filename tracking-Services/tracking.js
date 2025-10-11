@@ -64,7 +64,9 @@ async function connectKafka() {
       try {
         if (parsed.packet_type === "tracking") {
           await axios.post(`${axiosApi}/api/tracking/track`, { data: parsed });
-          consoleManager.log("✅ Data saved to API successfully");
+          await axios.post(`${axiosApi}/api/tracking/event`, { vehicleNo: parsed.vehicle_reg_no, imei: parsed.imei, eventName: parsed.message_description, dateAndTime: parsed.timestamp, latitude: parsed.latitude, longitude: parsed.longitude });
+        consoleManager.log("✅ Data saved to API successfully");
+
         } else if (parsed.packet_type === "login") {
           await axios.post(`${axiosApi}/api/tracking/login`, { data: parsed });
           consoleManager.log("✅ Login Data saved to API successfully");
@@ -80,6 +82,7 @@ async function connectKafka() {
       } catch (error) {
         console.error("❌ Failed to save to API:", error.message);
       }
+
 
       // Emit to WebSocket
       if (topic === "bharatBusTrack") {

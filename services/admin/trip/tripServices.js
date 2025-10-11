@@ -658,50 +658,79 @@ export const updateTrip = async (req, res) => {
 
 export const getTodayTrips = async (req, res) => {
   try {
-    // Parse date
-    const todayParam = req.query.today;
-    const today = todayParam ? new Date(todayParam) : new Date();
+   
+    const { startDay, endDay } = req.query;
 
-    if (isNaN(today)) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Invalid date format. Please use YYYY-MM-DD or a valid ISO date.",
-      });
+    // Helper: build start/end of a given date
+    const toStartOfDay = (d) => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
+    const toEndOfDay = (d) => { const x = new Date(d); x.setHours(23,59,59,999); return x; };
+
+    const now = new Date();
+    const todayStart = toStartOfDay(now);
+    const todayEnd   = toEndOfDay(now);
+
+    let rangeStart, rangeEnd;
+
+    if (!startDay && !endDay) {
+      // Default to today's full range
+      rangeStart = todayStart;
+      rangeEnd = todayEnd;
+    } else if (startDay && !endDay) {
+      // Single-day window using startDay
+      const d = new Date(startDay);
+      if (isNaN(d)) {
+        return res.status(400).json({ success: false, message: "Invalid startDay format" });
+      }
+      rangeStart = toStartOfDay(d);
+      rangeEnd = toEndOfDay(d);
+    } else if (!startDay && endDay) {
+      // Single-day window using endDay
+      const d = new Date(endDay);
+      if (isNaN(d)) {
+        return res.status(400).json({ success: false, message: "Invalid endDay format" });
+      }
+      rangeStart = toStartOfDay(d);
+      rangeEnd = toEndOfDay(d);
+    } else {
+      // Both provided: multi-day window inclusive
+      const s = new Date(startDay);
+      const e = new Date(endDay);
+      if (isNaN(s) || isNaN(e)) {
+        return res.status(400).json({ success: false, message: "Invalid startDay or endDay format" });
+      }
+      rangeStart = toStartOfDay(s);
+      rangeEnd = toEndOfDay(e);
     }
 
-    // Convert today into start and end of the day
-    const startOfDay = new Date(today);
-    startOfDay.setHours(0, 0, 0, 0);
+    // Validate chronological order
+    if (rangeStart > rangeEnd) {
+      return res.status(400).json({ success: false, message: "startDay must be <= endDay" });
+    }
 
-    const endOfDay = new Date(today);
-    endOfDay.setHours(23, 59, 59, 999);
-
-    // Pagination setup
-    const page = parseInt(req.query.page) || 1; // default page = 1
-    const limit = parseInt(req.query.limit) || 10; // default limit = 10
+    // Pagination
+    const page = Math.max(parseInt(req.query.page || "1", 10), 1);
+    const limit = Math.max(parseInt(req.query.limit || "10", 10), 1);
     const skip = (page - 1) * limit;
 
-    // Query filter
+    // Overlap filter: trip window intersects [rangeStart, rangeEnd]
     const filter = {
-      startDate: { $lte: endOfDay },
-      endDate: { $gte: startOfDay },
+      startDate: { $lte: rangeEnd },
+      endDate: { $gte: rangeStart },
       status: "APPROVED",
     };
 
-    // Total count before pagination
-    const total = await TripConfig.countDocuments(filter);
+    const [total, trips] = await Promise.all([
+      TripConfig.countDocuments(filter),
+      TripConfig.find(filter)
+        .populate(tripPopulate)
+        .skip(skip)
+        .limit(limit)
+        .sort({ startDate: 1 }),
+    ]);
 
-    // Get paginated trips
-    const trips = await TripConfig.find(filter)
-      .populate(tripPopulate)
-      .skip(skip)
-      .limit(limit)
-      .sort({ startDate: 1 }); // optional sorting
-
-    // Response
     return res.status(200).json({
       success: true,
+      range: { startDay: rangeStart, endDay: rangeEnd },
       page,
       limit,
       total,
@@ -710,11 +739,61 @@ export const getTodayTrips = async (req, res) => {
       data: trips,
     });
   } catch (error) {
-    console.error("Error fetching today's trips:", error);
+    console.error("Error fetching trips by day range:", error);
     return res.status(500).json({
       success: false,
-      message: "Error fetching today's trips",
+      message: "Error fetching trips by day range",
       error: error.message,
     });
   }
 };
+
+
+
+
+export const updateTripStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    // Validate ID
+    if (!id || !isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Valid trip ID is required",
+      });
+    }
+
+    // Check if trip exists
+    const existingTrip = await TripConfig.findById(id);
+    if (!existingTrip) {
+      return res.status(404).json({
+        success: false,
+        message: "Trip not found",
+      });
+    }
+
+    // Update status
+    existingTrip.status = status;
+    await existingTrip.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Trip status updated successfully",
+      data: {
+        tripId: existingTrip.tripId,
+        status: existingTrip.status,
+      },
+    });
+  } catch (error) {
+    console.error("Error updating trip status:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error:
+        process.env.NODE_ENV === "development"
+          ? error.message
+          : "Something went wrong",
+    });
+  }
+}

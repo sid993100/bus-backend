@@ -37,6 +37,7 @@ export const MODULE_ACTIONS = {
   zone: ["create", "read", "update", "delete"],
   toll: ["create", "read", "update", "delete"],
   serviceType: ["create", "read", "update", "delete"],
+  deviceEvent:["create", "read", "update", "delete"],
 
   // ----- Operations -----
   busStop: ["create", "read", "update", "delete"],

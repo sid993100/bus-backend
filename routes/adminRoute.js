@@ -10,15 +10,18 @@ import { addVltModel, getVltModel, updateVltModel } from "../services/admin/vltM
 import { addOwnerType, getOwnerType, updateOwnerType } from "../services/admin/owner/ownerServices.js";
 // import { roleBaseAuth } from "../middleWares/rolebaseAuth.js";
 
-import { addSubscription, getSubscription, updateSubscription } from "../services/admin/subscription/subscriptionServices.js";
+import {  updateSubscription } from "../services/admin/subscription/subscriptionServices.js";
 import { checkPermission } from "../middleWares/checkPermission.js";
 import { getIncident } from "../services/admin/Incident/IncidentService.js";
 import {  getHierarchy, updateHierarchy } from "../services/admin/hierarchy/hierarchyServices.js";
+import { createDeviceEvent, getDeviceEventById, getDeviceEvents, updateDeviceEvent } from "../services/otc/deviceEventServices.js";
 
 
 const router = Router();
 
 
+router.get("/deviceevents", isLogin,checkPermission("deviceEvent","read"), getDeviceEvents);
+router.get("/deviceevents/:id", isLogin,checkPermission("deviceEvent","read"), getDeviceEventById);
 router.get("/pisreg", isLogin, getpisReg);
 router.get("/sim",isLogin,getSim)
 router.get("/plan",isLogin,getPlan)
@@ -30,6 +33,7 @@ router.get("/hierarchy",isLogin,getHierarchy)
 
 
 
+router.post("/deviceevents",isLogin,checkPermission("deviceEvent","create"), createDeviceEvent);
 router.post("/pisreg",isLogin,addPisRegistration);
 router.post("/addsim",isLogin,checkPermission(),addSim);
 router.post("/addplan",isLogin,checkPermission("plan","create"),addPlan)
@@ -43,7 +47,7 @@ router.post("/ownertype",isLogin,checkPermission("ownerType","create"),addOwnerT
 
 
 
-
+router.put("/deviceevents/:id", isLogin,checkPermission("deviceEvent","update"), updateDeviceEvent);
 router.put("/sim/:id",isLogin, updateSim);
 router.put("/vltdevice/:id",isLogin, updateVltDevices);
 router.put("/vltmanufacturer/:id",isLogin, updateVltdManufacturer);
@@ -57,6 +61,9 @@ router.put("/subscription/:id",isLogin,updateSubscription);
 
 
 
+
+
+// router.delete("/deviceevents/:id", isLogin, deleteDeviceEvent);
 
 
 export default router;

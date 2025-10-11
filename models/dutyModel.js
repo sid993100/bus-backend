@@ -32,35 +32,20 @@ const dutySchema = new Schema({
     default: "SCHEDULED"
   },
   scheduleNumber: {
-    type: String,
-    uppercase: true
+    type: Schema.Types.ObjectId,
+    ref: "ScheduleConfiguration"
   },
-  dutyNumber: {
-    type: String,
-    required: true,
-    unique: true,
-    uppercase: true
+  route:[{
+    routeName:{type: Schema.Types.ObjectId,
+    ref: "Route",
   },
-  serviceType: {
-    type: String,
-    required: true,
-    uppercase: true
+  day:{
+    type:Number
   },
-  scheduledKM: {
-    type: Number,
-    required: true,
-    min: 0
-  },
-  scheduledTrips: {
-    type: Number,
-    required: true,
-    min: 1
-  },
-  nightOuts: {
-    type: Number,
-    required: true,
-    min: 0
-  },
+  night:{
+    type:Boolean
+  }
+  }],
   accountStatus: {
     type: String,
     required: true,
