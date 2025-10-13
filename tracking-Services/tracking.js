@@ -63,6 +63,9 @@ async function connectKafka() {
       // Fix: Send to correct endpoint with raw_data included
       try {
         if (parsed.packet_type === "tracking") {
+          if(parsed.latitude===0 || parsed.longitude===0){
+            return;
+          }
           await axios.post(`${axiosApi}/api/tracking/track`, { data: parsed });
           await axios.post(`${axiosApi}/api/tracking/event`, { vehicleNo: parsed.vehicle_reg_no, imei: parsed.imei,eventNumber:parsed.message_id, dateAndTime: parsed.timestamp, latitude: parsed.latitude, longitude: parsed.longitude,vendor_id:parsed.vendor_id });
         consoleManager.log("✅ Data saved to API successfully");

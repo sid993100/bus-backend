@@ -27,6 +27,9 @@ const eventSchema = new Schema({
     longitude:{ 
         type:Number,
         required:true
+    },
+    location:{
+        type:String
     }
 
 })

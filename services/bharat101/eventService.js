@@ -2,27 +2,53 @@
 import mongoose from "mongoose";
 import Event from "../../models/eventModel.js";
 import DeviceEvent from "../../models/deviceEventModel.js";
+import axios from "axios";
 
 
 const isValidDate = (d) => !isNaN(new Date(d).getTime());
 
-// Create
+
+const locCache = new Map();
+const key = (lat, lon) => `${lat.toFixed(5)},${lon.toFixed(5)}`;
+
+async function reverseGeocode(lat, lon) {
+  const k = key(lat, lon);
+  if (locCache.has(k)) return locCache.get(k);
+
+  const url = "https://nominatim.openstreetmap.org/reverse";
+  const { data } = await axios.get(url, {
+    params: { format: "jsonv2", lat, lon },
+    headers: { "User-Agent": "events-app/1.0", "Accept-Language": "en" },
+    timeout: 8000,
+  });
+
+  const address = data?.display_name || null;
+  locCache.set(k, address);
+  return address;
+}
+
 export const createEvent = async (req, res) => {
   try {
-    const { vehicleNo, imei,eventNumber, dateAndTime, latitude, longitude,vendor_id } = req.body;    
-    if (!vehicleNo || !imei  || !eventNumber || !dateAndTime || latitude === undefined || longitude === undefined) {
+    const { vehicleNo, imei, eventNumber, dateAndTime, latitude, longitude, vendor_id } = req.body;
+    if (!vehicleNo || !imei || !eventNumber || !dateAndTime || latitude === undefined || longitude === undefined) {
       return res.status(400).json({ success: false, message: "All fields are required" });
     }
 
+    const deviceName = await DeviceEvent
+      .findOne({ messageId: eventNumber })
+      .populate({
+        path: "vlt",
+        match: { manufacturerName: vendor_id },
+        select: "manufacturerName"
+      });
 
-const deviceName = await DeviceEvent
-  .findOne({ messageId: eventNumber })
-  .populate({
-    path: "vlt",
-    match: { manufacturerName: vendor_id },
-    select: "manufacturerName"
-  });
-  
+    let location = null;
+    try {
+      location = await reverseGeocode(Number(latitude), Number(longitude));
+    } catch {
+      location = null; // continue without location if API fails
+    }
+
     const doc = await Event.create({
       vehicleNo: String(vehicleNo).trim(),
       imei: Number(imei),
@@ -30,11 +56,12 @@ const deviceName = await DeviceEvent
       dateAndTime: new Date(dateAndTime),
       latitude: Number(latitude),
       longitude: Number(longitude),
-      eventName: deviceName ? deviceName._id : ""
+      eventName: deviceName ? deviceName._id : "",
+      location,
     });
-    
-    if(!doc) {
-        return res.status(500).json({ success: false, message: "Failed to create event" });
+
+    if (!doc) {
+      return res.status(500).json({ success: false, message: "Failed to create event" });
     }
 
     return res.status(201).json({ success: true, data: doc });
@@ -42,6 +69,7 @@ const deviceName = await DeviceEvent
     return res.status(500).json({ success: false, message: "Failed to create event", error: err.message });
   }
 };
+
 
 // Get list (filters: vehicleNo, imei, eventName, startDay, endDay)
 export const getEvents = async (req, res) => {
@@ -69,7 +97,7 @@ export const getEvents = async (req, res) => {
     const sort = { [sortBy]: sortOrder === "asc" ? 1 : -1 };
 
     const [items, total] = await Promise.all([
-      Event.find(filter).sort(sort).skip(skip).limit(limitNum).populate({ path: 'eventName', populate: { path: 'vlt', select: 'manufacturerName modelName shortName' } }),
+      Event.find(filter).sort(sort).skip(skip).limit(limitNum).populate( 'eventName'),
       Event.countDocuments(filter),
     ]);
 
