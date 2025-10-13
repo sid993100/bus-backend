@@ -9,7 +9,7 @@ const eventSchema = new Schema({
         required:true
     },
     eventName:{
-        type:Schema.Types.String,
+        type:Schema.Types.ObjectId,
         ref:"DeviceEvent"
     },
     eventNumber:{
