@@ -6,7 +6,6 @@ export const MODULE_ACTIONS = {
   user: ["create", "read", "update", "delete"],
   userProfile: ["create", "read", "update", "delete"],
   accessControl: ["create", "read", "update", "delete"],
-  roleAccessControl: ["create", "read", "update", "delete", "accessControl"],
 
   // ----- Masters -----
   account: ["create", "read", "update", "delete"],
@@ -61,12 +60,9 @@ export const MODULE_ACTIONS = {
   pisReg: ["create", "read", "update", "delete"], // pisScreens
 
   // ----- Tracking & Events -----
-  liveTrack: ["read"], // new
   liveTracking: ["read"],
-  journey: ["read"], // new
   journeyHistory: ["read"],
   journeyHistoryReplay: ["read"],
-  event: ["read"], // new
   events: ["read"],
 
   // ----- Reports -----
@@ -94,5 +90,7 @@ export const MODULE_ACTIONS = {
   faq: ["create", "read", "update", "delete"],
   faqCategory: ["create", "read", "update", "delete"],
   geofence: ["create", "read", "update", "delete"],
+
+  eventCategory: ["create", "read", "update", "delete"],
 
 };
