@@ -8,7 +8,7 @@ const { isValidObjectId } = mongoose;
 // Create
 export const createDeviceEvent = async (req, res) => {
   try {
-    const { vlt, messageId, eventName, description } = req.body;
+    const { vlt, messageId, eventName, description , category } = req.body;
 
     if (!vlt || !isValidObjectId(vlt)) {
       return res.status(400).json({ success: false, message: "Valid 'vlt' is required" });
@@ -25,9 +25,10 @@ export const createDeviceEvent = async (req, res) => {
       messageId: Number(messageId),
       eventName: eventName.trim(),
       description: description.trim(),
+      category
     });
 
-    const populated = await created.populate("vlt", "manufacturerName modelName shortName");
+    const populated = (await created.populate("vlt", "manufacturerName modelName shortName")).populate("category");
     return res.status(201).json({ success: true, data: populated });
   } catch (err) {
     return res.status(500).json({ success: false, message: "Failed to create device event", error: err.message });
@@ -65,6 +66,7 @@ export const getDeviceEvents = async (req, res) => {
     const [items, total] = await Promise.all([
       DeviceEvent.find(filter)
         .populate("vlt", "manufacturerName modelName shortName")
+        .populate("category")
         .sort(sort)
         .skip(skip)
         .limit(limitNum),
@@ -96,7 +98,7 @@ export const getDeviceEventById = async (req, res) => {
     if (!isValidObjectId(id)) {
       return res.status(400).json({ success: false, message: "Invalid id" });
     }
-    const doc = await DeviceEvent.findById(id).populate("vlt", "manufacturerName modelName shortName");
+    const doc = await DeviceEvent.findById(id).populate("vlt", "manufacturerName modelName shortName").populate("category");
     if (!doc) return res.status(404).json({ success: false, message: "Device event not found" });
     return res.status(200).json({ success: true, data: doc });
   } catch (err) {
@@ -125,7 +127,8 @@ export const updateDeviceEvent = async (req, res) => {
     const updated = await DeviceEvent.findByIdAndUpdate(id, payload, {
       new: true,
       runValidators: true,
-    }).populate("vlt", "manufacturerName modelName shortName");
+    }).populate("vlt", "manufacturerName modelName shortName")
+    .populate("category");
 
     if (!updated) return res.status(404).json({ success: false, message: "Device event not found" });
     return res.status(200).json({ success: true, data: updated });
@@ -133,18 +136,17 @@ export const updateDeviceEvent = async (req, res) => {
     return res.status(500).json({ success: false, message: "Failed to update device event", error: err.message });
   }
 };
-
 // Delete
-export const deleteDeviceEvent = async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (!isValidObjectId(id)) {
-      return res.status(400).json({ success: false, message: "Invalid id" });
-    }
-    const deleted = await DeviceEvent.findByIdAndDelete(id);
-    if (!deleted) return res.status(404).json({ success: false, message: "Device event not found" });
-    return res.status(200).json({ success: true, message: "Device event deleted" });
-  } catch (err) {
-    return res.status(500).json({ success: false, message: "Failed to delete device event", error: err.message });
-  }
-};
+// export const deleteDeviceEvent = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     if (!isValidObjectId(id)) {
+//       return res.status(400).json({ success: false, message: "Invalid id" });
+//     }
+//     const deleted = await DeviceEvent.findByIdAndDelete(id);
+//     if (!deleted) return res.status(404).json({ success: false, message: "Device event not found" });
+//     return res.status(200).json({ success: true, message: "Device event deleted" });
+//   } catch (err) {
+//     return res.status(500).json({ success: false, message: "Failed to delete device event", error: err.message });
+//   }
+// };
