@@ -74,12 +74,16 @@ export const createEvent = async (req, res) => {
 // Get list (filters: vehicleNo, imei, eventName, startDay, endDay)
 export const getEvents = async (req, res) => {
   try {
-    const { vehicleNo, imei, eventName, startDay, endDay, page = "1", limit = "20", sortBy = "dateAndTime", sortOrder = "desc" } = req.query;
+    const { vehicleNo, imei, category, startDay, endDay, page = "1", limit = "20", sortBy = "dateAndTime", sortOrder = "desc" } = req.query;
 
     const filter = {};
     if (vehicleNo) filter.vehicleNo = new RegExp(String(vehicleNo).trim(), "i");
     if (imei) filter.imei = Number(imei);
-
+    if (category && mongoose.isValidObjectId(category)) {
+      const events = await DeviceEvent.find({ category }).select("_id");
+      const eventIds = events.map(e => e._id);
+      filter.eventName = { $in: eventIds };
+    }
     if (startDay || endDay) {
       const s = startDay ? new Date(startDay) : null;
       const e = endDay ? new Date(endDay) : null;
