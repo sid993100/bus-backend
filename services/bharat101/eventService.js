@@ -22,7 +22,6 @@ const deviceName = await DeviceEvent
     match: { manufacturerName: vendor_id },
     select: "manufacturerName"
   });
-  console.log("device name ",deviceName);
   
     const doc = await Event.create({
       vehicleNo: String(vehicleNo).trim(),
@@ -33,7 +32,6 @@ const deviceName = await DeviceEvent
       longitude: Number(longitude),
       eventName: deviceName ? deviceName._id : ""
     });
-    console.log("doc ",doc);
     
     if(!doc) {
         return res.status(500).json({ success: false, message: "Failed to create event" });
@@ -71,7 +69,7 @@ export const getEvents = async (req, res) => {
     const sort = { [sortBy]: sortOrder === "asc" ? 1 : -1 };
 
     const [items, total] = await Promise.all([
-      Event.find(filter).sort(sort).skip(skip).limit(limitNum),
+      Event.find(filter).sort(sort).skip(skip).limit(limitNum).populate({ path: 'eventName', populate: { path: 'vlt', select: 'manufacturerName modelName shortName' } }),
       Event.countDocuments(filter),
     ]);
 
