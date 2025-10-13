@@ -16,7 +16,7 @@ export const createEvent = async (req, res) => {
 
 
 const deviceName = await DeviceEvent
-  .findOne({ messageId: eventNumber })
+  .find({ messageId: eventNumber })
   .populate({
     path: "vlt",
     match: { manufacturerName: vendor_id },
