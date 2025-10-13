@@ -16,12 +16,14 @@ export const createEvent = async (req, res) => {
 
 
 const deviceName = await DeviceEvent
-  .find({ messageId: eventNumber })
+  .findOne({ messageId: eventNumber })
   .populate({
     path: "vlt",
     match: { manufacturerName: vendor_id },
     select: "manufacturerName"
   });
+  console.log("device name ",deviceName);
+  
     const doc = await Event.create({
       vehicleNo: String(vehicleNo).trim(),
       imei: Number(imei),
@@ -31,6 +33,8 @@ const deviceName = await DeviceEvent
       longitude: Number(longitude),
       eventName: deviceName ? deviceName._id : ""
     });
+    console.log("doc ",doc);
+    
     if(!doc) {
         return res.status(500).json({ success: false, message: "Failed to create event" });
     }
