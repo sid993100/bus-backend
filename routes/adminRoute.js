@@ -35,7 +35,7 @@ router.get("/hierarchy",isLogin,getHierarchy)
 
 router.post("/deviceevents",isLogin,checkPermission("deviceEvent","create"), createDeviceEvent);
 router.post("/pisreg",isLogin,addPisRegistration);
-router.post("/addsim",isLogin,checkPermission(),addSim);
+router.post("/addsim",isLogin,addSim);
 router.post("/addplan",isLogin,checkPermission("plan","create"),addPlan)
 router.post("/addvltdmanufacturer",isLogin,addVltdManufacturer)
 router.post("/addvltmodel",isLogin,addVltModel)
@@ -48,7 +48,7 @@ router.post("/ownertype",isLogin,checkPermission("ownerType","create"),addOwnerT
 
 
 router.put("/deviceevents/:id", isLogin,checkPermission("deviceEvent","update"), updateDeviceEvent);
-router.put("/sim/:id",isLogin, updateSim);
+router.put("/sim/:id",isLogin,checkPermission("simServiceProvider","update"), updateSim);
 router.put("/vltdevice/:id",isLogin, updateVltDevices);
 router.put("/vltmanufacturer/:id",isLogin, updateVltdManufacturer);
 router.put("/vltmodel/:id",isLogin, updateVltModel); 

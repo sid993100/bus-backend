@@ -14,15 +14,34 @@ const populateUser = (query) => {
 };
 
 
+function buildSearchQuery(search) {
+  const q = {};
+  if (search) {
+    q.$or = [
+      { username: { $regex: search, $options: "i" } },
+      { email: { $regex: search, $options: "i" } },
+      { state: { $regex: search, $options: "i" } },
+    ];
+  }
+  return q;
+}
+
+function paging(req) {
+  const page = Math.max(parseInt(req.query.page || "1", 10), 1);
+  const limit = Math.max(parseInt(req.query.limit || "10", 10), 1);
+  const skip = (page - 1) * limit;
+  const sortBy = req.query.sortBy || "username";
+  const sortOrder = req.query.sortOrder === "desc" ? -1 : 1;
+  return { page, limit, skip, sort: { [sortBy]: sortOrder } };
+}
+
+
 export const getUsers = async (req, res) => {
     try {
         const { 
             page = 1, 
-            limit = 50, 
+            limit = 10, 
             search, 
-            hierarchy, 
-            region, 
-            roleName,
             sortBy = 'username',
             sortOrder = 'asc'
         } = req.query;
@@ -38,17 +57,7 @@ export const getUsers = async (req, res) => {
             ];
         }
 
-        if (hierarchy && isValidObjectId(hierarchy)) {
-            query.hierarchy = hierarchy;
-        }
-
-        if (region && isValidObjectId(region)) {
-            query.region = region;
-        }
-
-        if (roleName && isValidObjectId(roleName)) {
-            query.roleName = roleName;
-        }
+       
 
         // Pagination
         const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -94,6 +103,90 @@ export const getUsers = async (req, res) => {
             error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
         });
     }
+};
+
+
+export const getUsersByDepot = async (req, res) => {
+  try {
+    const { depotId } = req.params;
+    if (!isValidObjectId(depotId)) {
+      return res.status(400).json({ success: false, message: "Invalid depot ID" });
+    }
+
+    const base = buildSearchQuery(req.query.search);
+    const { page, limit, skip, sort } = paging(req);
+
+    const query = { ...base, depot: depotId }; // assumes User has a 'depot' ObjectId field
+
+    const userQuery = User.find(query)
+      .select("-password -resetCode -resetCodeExpires")
+      .sort(sort)
+      .skip(skip)
+      .limit(limit);
+
+    const [users, totalCount] = await Promise.all([
+      populateUser(userQuery),
+      User.countDocuments(query),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: users.length ? "Users retrieved successfully" : "No users found",
+      data: users,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalCount / limit),
+        totalCount,
+        hasNext: skip + users.length < totalCount,
+        hasPrev: page > 1,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching users by depot:", error);
+    return res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+
+export const getUsersByRegion = async (req, res) => {
+  try {
+    const { regionId } = req.params;
+    if (!isValidObjectId(regionId)) {
+      return res.status(400).json({ success: false, message: "Invalid region ID" });
+    }
+
+    const base = buildSearchQuery(req.query.search);
+    const { page, limit, skip, sort } = paging(req);
+
+    const query = { ...base, region: regionId }; // assumes User has a 'region' ObjectId field
+
+    const userQuery = User.find(query)
+      .select("-password -resetCode -resetCodeExpires")
+      .sort(sort)
+      .skip(skip)
+      .limit(limit);
+
+    const [users, totalCount] = await Promise.all([
+      populateUser(userQuery),
+      User.countDocuments(query),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: users.length ? "Users retrieved successfully" : "No users found",
+      data: users,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalCount / limit),
+        totalCount,
+        hasNext: skip + users.length < totalCount,
+        hasPrev: page > 1,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching users by region:", error);
+    return res.status(500).json({ success: false, message: "Internal server error" });
+  }
 };
 
 

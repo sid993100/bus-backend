@@ -64,7 +64,7 @@ async function connectKafka() {
       try {
         if (parsed.packet_type === "tracking") {
           await axios.post(`${axiosApi}/api/tracking/track`, { data: parsed });
-          await axios.post(`${axiosApi}/api/tracking/event`, { vehicleNo: parsed.vehicle_reg_no, imei: parsed.imei, eventName: parsed.message_description, dateAndTime: parsed.timestamp, latitude: parsed.latitude, longitude: parsed.longitude });
+          await axios.post(`${axiosApi}/api/tracking/event`, { vehicleNo: parsed.vehicle_reg_no, imei: parsed.imei, eventName: parsed.message_description,eventNumber:parsed.message_id, dateAndTime: parsed.timestamp, latitude: parsed.latitude, longitude: parsed.longitude,vendor_id:parsed.vendor_id });
         consoleManager.log("✅ Data saved to API successfully");
 
         } else if (parsed.packet_type === "login") {

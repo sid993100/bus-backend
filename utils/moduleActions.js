@@ -9,7 +9,7 @@ export const MODULE_ACTIONS = {
   roleAccessControl: ["create", "read", "update", "delete", "accessControl"],
 
   // ----- Masters -----
-  department: ["create", "read", "update", "delete"],
+  account: ["create", "read", "update", "delete"],
   tollType: ["create", "read", "update", "delete"],
   serviceCategory: ["create", "read", "update", "delete"],
   seatLayout: ["create", "read", "update", "delete"],
@@ -57,7 +57,6 @@ export const MODULE_ACTIONS = {
   vltDevice: ["create", "read", "update", "delete", "sim"], // vltDevices
   vltSim: ["create", "read", "update", "delete"], // new
   vehicle: ["create", "read", "update", "delete", "vltd"], // vehicles
-  sim: ["create", "read", "update", "delete"], // expanded from ["read"]
   subscription: ["create", "read", "update", "delete"], // expanded from ["read"]
   pisReg: ["create", "read", "update", "delete"], // pisScreens
 

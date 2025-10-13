@@ -8,8 +8,8 @@ const isValidDate = (d) => !isNaN(new Date(d).getTime());
 // Create
 export const createEvent = async (req, res) => {
   try {
-    const { vehicleNo, imei,eventName, dateAndTime, latitude, longitude } = req.body;    
-    if (!vehicleNo || !imei || !dateAndTime || latitude === undefined || longitude === undefined) {
+    const { vehicleNo, imei,eventName,eventNumber, dateAndTime, latitude, longitude } = req.body;    
+    if (!vehicleNo || !imei  || !eventNumber || !dateAndTime || latitude === undefined || longitude === undefined) {
       return res.status(400).json({ success: false, message: "All fields are required" });
     }
 
@@ -18,6 +18,7 @@ export const createEvent = async (req, res) => {
       vehicleNo: String(vehicleNo).trim(),
       imei: Number(imei),
       eventName: String(eventName).trim()||"",
+      eventNumber: Number(eventNumber),
       dateAndTime: new Date(dateAndTime),
       latitude: Number(latitude),
       longitude: Number(longitude),

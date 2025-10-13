@@ -324,30 +324,48 @@ export const getScheduleConfigurationById = async (req, res) => {
   }
 };
 
+const normalizeDate = (dateStr) => {
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return null;
+  date.setHours(0, 0, 0, 0);
+  return date;
+};
+
+// Utility: default to today's start & end
+const getDefaultDateRange = () => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  return { startDate: today, endDate: tomorrow };
+};
+
+
 export const getSchedulesByDate = async (req, res) => {
   try {
     const {
-      date = new Date().toISOString().split("T")[0],          // e.g., 2025-10-01 or ISO string
-      depot,         // optional
+      startDate,
+      endDate,
+      depot,
       page = "1",
       limit = "10",
       sortBy = "createdAt",
       sortOrder = "desc",
     } = req.query;
 
-    if (!date) {
-      return res.status(400).json({ success: false, error: "Missing required 'date' query param" });
+    // parse and validate date range
+    let start = normalizeDate(startDate);
+    let end = normalizeDate(endDate);
+
+    if (!start || !end) {
+      const defaults = getDefaultDateRange();
+      start = defaults.startDate;
+      end = defaults.endDate;
     }
 
-    const target = new Date(date);
-    if (isNaN(target.getTime())) {
-      return res.status(400).json({ success: false, error: "Invalid 'date' format" });
-    }
-
-    // Inclusive window: startDate <= target <= endDate
     const filter = {
-      startDate: { $lte: target },
-      endDate: { $gte: target },
+      startDate: { $lte: end },
+      endDate: { $gte: start },
     };
 
     if (depot) filter.depot = depot;
@@ -361,7 +379,7 @@ export const getSchedulesByDate = async (req, res) => {
       ScheduleConfiguration.find(filter)
         .populate("depot", "depotCustomer depotCode region")
         .populate("seatLayout", "layoutName totalSeats seatConfiguration")
-        .populate("busService","name")
+        .populate("busService", "name")
         .populate({
           path: "trips.trip",
           select: "tripId origin destination originTime destinationTime cycleDay day status route",
@@ -384,7 +402,7 @@ export const getSchedulesByDate = async (req, res) => {
         hasNextPage: pageNum * limitNum < total,
         hasPrevPage: pageNum > 1,
       },
-      filters: { date, ...(depot && { depot }) },
+      filters: { startDate: start, endDate: end, ...(depot && { depot }) },
     });
   } catch (error) {
     console.error("Error fetching schedules by date:", error);
@@ -396,27 +414,33 @@ export const getSchedulesByDate = async (req, res) => {
 export const getSchedulesByDateAndDepot = async (req, res) => {
   try {
     const {
-      date = new Date().toISOString().split("T")[0], // required for this endpoint
+      startDate,
+      endDate,
       page = "1",
       limit = "10",
       sortBy = "createdAt",
       sortOrder = "desc",
     } = req.query;
+
     const depot = req.params.depotId;
 
     if (!depot || !isValidObjectId(depot)) {
       return res.status(400).json({ success: false, error: "Valid 'depot' is required" });
     }
 
-    const target = new Date(date);
-    if (isNaN(target.getTime())) {
-      return res.status(400).json({ success: false, error: "Invalid 'date' format" });
+    let start = normalizeDate(startDate);
+    let end = normalizeDate(endDate);
+
+    if (!start || !end) {
+      const defaults = getDefaultDateRange();
+      start = defaults.startDate;
+      end = defaults.endDate;
     }
 
     const filter = {
       depot,
-      startDate: { $lte: target },
-      endDate: { $gte: target },
+      startDate: { $lte: end },
+      endDate: { $gte: start },
     };
 
     const pageNum = Math.max(parseInt(page, 10), 1);
@@ -451,7 +475,7 @@ export const getSchedulesByDateAndDepot = async (req, res) => {
         hasNextPage: pageNum * limitNum < total,
         hasPrevPage: pageNum > 1,
       },
-      filters: { date, depot },
+      filters: { startDate: start, endDate: end, depot },
     });
   } catch (error) {
     console.error("Error fetching schedules by date+depot:", error);
@@ -460,30 +484,35 @@ export const getSchedulesByDateAndDepot = async (req, res) => {
 };
 
 
-
 export const getSchedulesByDateAndRegion = async (req, res) => {
   try {
     const {
-      date = new Date().toISOString().split("T")[0],
+      startDate,
+      endDate,
       page = "1",
       limit = "10",
       sortBy = "createdAt",
       sortOrder = "desc",
     } = req.query;
-const regionId = req.params.regionId;
+
+    const regionId = req.params.regionId;
+
     if (!regionId || !isValidObjectId(regionId)) {
       return res.status(400).json({ success: false, error: "Valid 'regionId' is required" });
     }
 
-    const target = new Date(date);
-    if (isNaN(target.getTime())) {
-      return res.status(400).json({ success: false, error: "Invalid 'date' format" });
+    let start = normalizeDate(startDate);
+    let end = normalizeDate(endDate);
+
+    if (!start || !end) {
+      const defaults = getDefaultDateRange();
+      start = defaults.startDate;
+      end = defaults.endDate;
     }
 
-    // Date-inclusive base filter
     const baseMatch = {
-      startDate: { $lte: target },
-      endDate: { $gte: target },
+      startDate: { $lte: end },
+      endDate: { $gte: start },
     };
 
     const pageNum = Math.max(parseInt(page, 10), 1);
@@ -491,7 +520,6 @@ const regionId = req.params.regionId;
     const skip = (pageNum - 1) * limitNum;
     const sortStage = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
 
-    // Use aggregation to enforce depot.region match
     const pipeline = [
       { $match: baseMatch },
       {
@@ -628,11 +656,12 @@ const regionId = req.params.regionId;
         hasNextPage: pageNum * limitNum < total,
         hasPrevPage: pageNum > 1,
       },
-      filters: { date, regionId },
+      filters: { startDate: start, endDate: end, regionId },
     });
   } catch (error) {
     console.error("Error fetching schedules by date+region:", error);
     return res.status(500).json({ success: false, error: "Failed to fetch schedules" });
   }
 };
+
 

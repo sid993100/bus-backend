@@ -7,9 +7,9 @@ import { roleBaseAuth } from "../middleWares/rolebaseAuth.js";
 const route= Router()
 
 
-route.get("/role",isLogin,roleBaseAuth("noone"),getRoles)
-route.post("/role",isLogin,roleBaseAuth("noone"),addRole)
-route.put("/role/:id",isLogin,roleBaseAuth("noone"),updateRole)
+route.get("/role",isLogin,getRoles)
+route.post("/role",isLogin,addRole)
+route.put("/role/:id",isLogin,updateRole)
 
 
 export default route

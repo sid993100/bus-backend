@@ -12,6 +12,10 @@ const eventSchema = new Schema({
         type:String,
        
     },
+    eventNumber:{
+        type:Number,
+        required:true
+    },
     dateAndTime:{
         type:Date,
         required:true
