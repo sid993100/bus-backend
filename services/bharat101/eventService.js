@@ -15,13 +15,13 @@ export const createEvent = async (req, res) => {
     }
 
 
-const eventName = await DeviceEvent
+const deviceName = await DeviceEvent
   .findOne({ messageId: eventNumber })
   .populate({
     path: "vlt",
     match: { manufacturerName: vendor_id },
     select: "manufacturerName"
-  }).select("-_id");
+  });
     const doc = await Event.create({
       vehicleNo: String(vehicleNo).trim(),
       imei: Number(imei),
@@ -29,7 +29,7 @@ const eventName = await DeviceEvent
       dateAndTime: new Date(dateAndTime),
       latitude: Number(latitude),
       longitude: Number(longitude),
-      eventName: eventName ? eventName._id : ""
+      eventName: deviceName ? deviceName._id : ""
     });
     if(!doc) {
         return res.status(500).json({ success: false, message: "Failed to create event" });
@@ -67,7 +67,7 @@ export const getEvents = async (req, res) => {
     const sort = { [sortBy]: sortOrder === "asc" ? 1 : -1 };
 
     const [items, total] = await Promise.all([
-      Event.find(filter).sort(sort).skip(skip).limit(limitNum).populate("eventName"),
+      Event.find(filter).sort(sort).skip(skip).limit(limitNum),
       Event.countDocuments(filter),
     ]);
 
