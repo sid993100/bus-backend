@@ -116,7 +116,7 @@ export const getEvents = async (req, res) => {
         hasNextPage: pageNum * limitNum < total,
         hasPrevPage: pageNum > 1,
       },
-      filters: { vehicleNo: vehicleNo || null, imei: imei || null, eventName: eventName || null, startDay: startDay || null, endDay: endDay || null },
+      filters: { vehicleNo: vehicleNo || null, imei: imei || null, eventName: category || null, startDay: startDay || null, endDay: endDay || null },
     });
   } catch (err) {
     return res.status(500).json({ success: false, message: "Failed to fetch events", error: err.message });
