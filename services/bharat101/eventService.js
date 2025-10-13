@@ -1,6 +1,7 @@
 // controllers/event.controller.js
 import mongoose from "mongoose";
 import Event from "../../models/eventModel.js";
+import DeviceEvent from "../../models/deviceEventModel.js";
 
 
 const isValidDate = (d) => !isNaN(new Date(d).getTime());
@@ -8,20 +9,27 @@ const isValidDate = (d) => !isNaN(new Date(d).getTime());
 // Create
 export const createEvent = async (req, res) => {
   try {
-    const { vehicleNo, imei,eventName,eventNumber, dateAndTime, latitude, longitude } = req.body;    
+    const { vehicleNo, imei,eventNumber, dateAndTime, latitude, longitude,vendor_id } = req.body;    
     if (!vehicleNo || !imei  || !eventNumber || !dateAndTime || latitude === undefined || longitude === undefined) {
       return res.status(400).json({ success: false, message: "All fields are required" });
     }
 
 
+const eventName = await DeviceEvent
+  .findOne({ messageId: eventNumber })
+  .populate({
+    path: "vlt",
+    match: { manufacturerName: vendor_id },
+    select: "manufacturerName"
+  }).select("-_id");
     const doc = await Event.create({
       vehicleNo: String(vehicleNo).trim(),
       imei: Number(imei),
-      eventName: String(eventName).trim()||"",
       eventNumber: Number(eventNumber),
       dateAndTime: new Date(dateAndTime),
       latitude: Number(latitude),
       longitude: Number(longitude),
+      eventName: eventName ? eventName._id : ""
     });
     if(!doc) {
         return res.status(500).json({ success: false, message: "Failed to create event" });
@@ -41,7 +49,6 @@ export const getEvents = async (req, res) => {
     const filter = {};
     if (vehicleNo) filter.vehicleNo = new RegExp(String(vehicleNo).trim(), "i");
     if (imei) filter.imei = Number(imei);
-    if (eventName) filter.eventName = new RegExp(String(eventName).trim(), "i");
 
     if (startDay || endDay) {
       const s = startDay ? new Date(startDay) : null;
@@ -60,7 +67,7 @@ export const getEvents = async (req, res) => {
     const sort = { [sortBy]: sortOrder === "asc" ? 1 : -1 };
 
     const [items, total] = await Promise.all([
-      Event.find(filter).sort(sort).skip(skip).limit(limitNum),
+      Event.find(filter).sort(sort).skip(skip).limit(limitNum).populate("eventName"),
       Event.countDocuments(filter),
     ]);
 

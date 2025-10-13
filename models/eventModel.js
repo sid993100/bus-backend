@@ -9,8 +9,8 @@ const eventSchema = new Schema({
         required:true
     },
     eventName:{
-        type:String,
-       
+        type:Schema.Types.String,
+        ref:"DeviceEvent"
     },
     eventNumber:{
         type:Number,
@@ -28,6 +28,7 @@ const eventSchema = new Schema({
         type:Number,
         required:true
     }
+
 })
 
 const Event = model("Event", eventSchema);
