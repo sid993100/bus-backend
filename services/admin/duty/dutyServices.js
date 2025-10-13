@@ -3,34 +3,52 @@ import Duty from "../../../models/dutyModel.js";
 
 // Is function mein koi badlav nahi hai
 export const getDuty = async (req, res) => {
-    const { pageNum, limitNum, skip, sort } = req.query;
-    try {
-        const duties = await Duty.find({})
-            .populate('conductorName', 'driverName')
-            .populate('driverName', 'driverName')
-            .populate('supportDriver', 'driverName')
-            .populate('depot', 'depotName depotCode')
-            .populate('seatLayout', 'layoutName totalSeats')
-            .populate('busService', 'serviceName serviceType')
-            .populate({
-               path: "trips.trip",
-              populate: { path: "route", select: "routeName routeCode routeLength source destination" }
-            })
-            .populate("route.routeName")
-            .sort({ createdAt: -1 })
-            .skip((pageNum - 1) * limitNum)
-            .limit(limitNum);
-            
-        if (!duties ) {
-            return res.status(404).json({
-              success:false,
-              message: "No Duties Found"
-            });
-        }
-        return res.status(200).json({
-            success:true,
-            message: duties,
-            pagination: {
+  try {
+    const { pageNum, limitNum, skip, sort, textFilter } = buildDutyQueryParams(req);
+
+    const filter = { ...textFilter };
+
+    const [items, total] = await Promise.all([
+      Duty.find(filter)
+        .populate(dutyPopulate)
+        .populate('depot', 'depotName depotCode')
+        .populate('seatLayout', 'layoutName totalSeats')
+        .populate('busService', 'serviceName serviceType')
+        .populate({
+          path: 'trips.trip',
+          populate: { path: 'route', select: 'routeName routeCode routeLength source destination' },
+        })
+        .populate('route.routeName')
+        .sort(sort)
+        .skip(skip)
+        .limit(limitNum),
+      Duty.countDocuments(filter),
+    ]);
+
+    if (!items || items.length === 0) {
+      const totalPages = Math.ceil((total || 0) / limitNum);
+      return res.status(200).json({
+        success: true,
+        message: 'No duties found',
+        data: [],
+        pagination: {
+          currentPage: pageNum,
+          totalPages,
+          totalItems: total || 0,
+          itemsPerPage: limitNum,
+          hasNextPage: pageNum < totalPages,
+          hasPrevPage: pageNum > 1,
+        },
+      });
+    }
+
+    const totalPages = Math.ceil(total / limitNum);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Duties retrieved successfully',
+      data: items,
+      pagination: {
         currentPage: pageNum,
         totalPages,
         totalItems: total,
@@ -38,13 +56,15 @@ export const getDuty = async (req, res) => {
         hasNextPage: pageNum < totalPages,
         hasPrevPage: pageNum > 1,
       },
-        });
-    } catch (error) {
-        console.error("Error fetching duties:", error);
-        return res.status(500).json({
-            message: "Server Error"
-        });
-    }
+    });
+  } catch (error) {
+    console.error('Error fetching duties:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server Error',
+      error: error.message,
+    });
+  }
 };
 
 

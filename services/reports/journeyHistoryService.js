@@ -40,6 +40,8 @@ export const journeyHistory = async (req, res) => {
     // Filter
     const filter = {
       vehicle_reg_no: vehicleNumber,
+      latitude: { $ne: 0 },
+      longitude: { $ne: 0 },
       timestamp: {
         $gte: dateRange.startDate,
         $lte: dateRange.endDate

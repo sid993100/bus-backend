@@ -89,6 +89,9 @@ async function connectKafka() {
 
       // Emit to WebSocket
       if (topic === "bharatBusTrack") {
+        if(parsed.latitude===0 || parsed.longitude===0){
+            return;
+          }
          if (parsed.packet_status==="L") {
            io.to(`bus_${parsed.vehicle_reg_no}`).emit("track",parsed)
          }
