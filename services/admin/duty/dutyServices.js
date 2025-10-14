@@ -14,10 +14,14 @@ export const getDuty = async (req, res) => {
         .populate('depot', 'depotName depotCode')
         .populate('seatLayout', 'layoutName totalSeats')
         .populate('busService', 'serviceName serviceType')
-        .populate({
+        .populate({path:"scheduleNumber",populate:{
           path: 'trips.trip',
           populate: { path: 'route', select: 'routeName routeCode routeLength source destination' },
-        })
+        }})
+        // .populate({
+        //   path: 'trips.trip',
+        //   populate: { path: 'route', select: 'routeName routeCode routeLength source destination' },
+        // })
         .populate('route.routeName')
         .sort(sort)
         .skip(skip)
@@ -211,22 +215,15 @@ export const getDutyByRegion = async (req, res) => {
 export const addDuty = async (req, res) => {
   try {
     const {
-      dutyDate, vehicleNumber, conductorName, driverName, supportDriver,
-      dutyType, scheduleNumber, dutyNumber, serviceType, scheduledKM,
-      scheduledTrips, nightOuts, accountStatus
+      data
     } = req.body;
 
-    if (!dutyDate || !vehicleNumber || !conductorName || !driverName || 
-        !dutyNumber || !serviceType || scheduledKM === undefined || 
-        scheduledTrips === undefined || nightOuts === undefined) {
+    if (!data.dutyDate || !data.vehicleNumber || !data.conductorName || !data.driverName  ) {
       return res.status(400).json({
         message: "All required fields must be provided"
       });
     }
 
-    const existingDuty = await Duty.findOne({ 
-      dutyNumber: dutyNumber.toUpperCase() 
-    });
     if (existingDuty) {
       return res.status(409).json({ 
         message: "Duty number already exists" 
@@ -235,26 +232,14 @@ export const addDuty = async (req, res) => {
 
     // Naya duty create karna
     const newDuty = await Duty.create({
-      dutyDate: new Date(dutyDate),
-      vehicleNumber: vehicleNumber.toUpperCase(),
-      conductorName,
-      driverName,
-      supportDriver,
-      dutyType: dutyType ? dutyType.toUpperCase() : 'SCHEDULED',
-      scheduleNumber: scheduleNumber ? scheduleNumber.toUpperCase() : undefined,
-      dutyNumber: dutyNumber.toUpperCase(),
-      serviceType: serviceType.toUpperCase(),
-      scheduledKM,
-      scheduledTrips,
-      nightOuts,
-      accountStatus: accountStatus ? accountStatus.toUpperCase() : 'PENDING'
+    data
     });
 
-    // Response bhejne se pehle naye duty ko populate karna
-    const populatedDuty = await Duty.findById(newDuty._id)
-        .populate('conductorName', 'driverName')
-        .populate('driverName', 'driverName')
-        .populate('supportDriver', 'driverName');
+    if(!newDuty){
+      return res.status(500).json({
+        message: "Failed to create duty"
+      });
+    } 
 
     res.status(201).json({
       message: "Duty created successfully",

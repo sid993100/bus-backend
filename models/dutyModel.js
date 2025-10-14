@@ -31,9 +31,12 @@ const dutySchema = new Schema({
     enum: ['SCHEDULED', 'EXTRA DUTY'],
     default: "SCHEDULED"
   },
-  scheduleNumber: {
+  scheduleNumber: [{
     type: Schema.Types.ObjectId,
     ref: "ScheduleConfiguration"
+  }],
+  scheduleKm:{
+    type:Number
   },
   route:[{
     routeName:{type: Schema.Types.ObjectId,
