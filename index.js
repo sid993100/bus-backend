@@ -18,6 +18,7 @@ import dashboardRoutes from "./routes/dashboardRoutes.js"
 import reportRoutes from "./routes/reports/reportRoute.js"
 import helpAndSupportRoutes from "./routes/helpAndSupport/helpAndSupportRoutes.js"
 import eventCategoryRoute from "./routes/otc/eventCategoryRoute.js";
+import deleteRoute from "./routes/delete/deleteRoute.js";
 
 
 dotenv.config();
@@ -68,6 +69,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/reports", reportRoutes); 
 app.use("/api/helpandsupport", helpAndSupportRoutes);
 app.use("/api/eventCategory", eventCategoryRoute);
+app.use("api/delete",deleteRoute)
 
 
 // ✅ Start Server

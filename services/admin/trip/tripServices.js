@@ -798,10 +798,20 @@ export const updateTripStatus = async (req, res) => {
   }
 }
 
-// export const deleteTrips = async (req, res) => {
-//   try {
-//     const 
-//   } catch (error) {
-    
-//   }
-// }
+export const deleteTrips = async (req, res) => {
+  try {
+    const deleteAll=await TripConfig.deleteMany({});
+    return res.status(200).json({
+      success: true,
+      message: "All trips deleted successfully",
+      deletedCount: deleteAll.deletedCount,
+    });
+  } catch (error) {
+    console.error("Error deleting trips:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error deleting trips",
+      error: error.message,
+    });
+  }
+}

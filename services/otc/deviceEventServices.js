@@ -65,7 +65,7 @@ export const getDeviceEvents = async (req, res) => {
 
     const [items, total] = await Promise.all([
       DeviceEvent.find(filter)
-        .populate("vlt", "manufacturerName modelName shortName")
+        .populate({path:"vlt",populate:{path:"manufacturerName" ,select:"manufacturerName shortName"}})
         .populate("category")
         .sort(sort)
         .skip(skip)

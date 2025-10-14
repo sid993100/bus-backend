@@ -50,4 +50,6 @@ router.put("/scheduleConfig/:id",isLogin ,checkPermission("scheduleConfig","upda
 router.put("/vltsim/:id",isLogin ,checkPermission("vltSim","update"), updateSim);
 
 
+
+
 export default router;
