@@ -797,3 +797,11 @@ export const updateTripStatus = async (req, res) => {
     });
   }
 }
+
+// export const deleteTrips = async (req, res) => {
+//   try {
+//     const 
+//   } catch (error) {
+    
+//   }
+// }

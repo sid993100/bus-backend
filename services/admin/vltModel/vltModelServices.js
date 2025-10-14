@@ -4,7 +4,7 @@ import VltdModel from "../../../models/vltdModelModel.js";
 export const getVltModel=async (req,res) => {
 
      try {
-      const vltModel= await VltdModel.find({})
+      const vltModel= await VltdModel.find({}).populate("manufacturerName","manufacturerName shortName")
       if (!vltModel) {
          return res.status(404).json({
             message: "Vlt Model Not Found",

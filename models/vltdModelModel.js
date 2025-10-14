@@ -3,9 +3,8 @@ import { model, Schema } from "mongoose";
 
 const vltdModelSchema = new Schema({
   manufacturerName: {
-    type: String,
+    type: Schema.Types.ObjectId,
     required: true,
-    uppercase: true,
   },
   modelName: {
     type: String,
