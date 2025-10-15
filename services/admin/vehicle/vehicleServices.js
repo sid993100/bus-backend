@@ -15,10 +15,14 @@ export const getVehicle = async (req, res) => {
       .populate('vehicleModel', 'vehicleModel')
       .populate({
         path: 'vltdDevice',
-        select: 'imeiNumber iccid simNumber deviceStatus',
+        select: 'imeiNumber iccid vlt',
         populate: {
           path: 'vlt',
-          select: 'manufacturerName modelName version'
+          select: 'manufacturerName modelName',
+          populate: {
+            path: 'manufacturerName',
+            select: 'manufacturerName shortName',
+          }
         }
       })
       .sort({ vehicleNumber: 1 });

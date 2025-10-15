@@ -69,7 +69,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/reports", reportRoutes); 
 app.use("/api/helpandsupport", helpAndSupportRoutes);
 app.use("/api/eventCategory", eventCategoryRoute);
-app.use("api/delete",deleteRoute)
+app.use("/api/delete",deleteRoute)
 
 
 // ✅ Start Server

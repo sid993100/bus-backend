@@ -93,11 +93,11 @@ async function connectKafka() {
             return;
           }
          if (parsed.packet_status==="L") {
-           io.to(`bus_${parsed.vehicle_reg_no}`).emit("track",parsed)
+           io.to(`bus_${parsed.imei}`).emit("track",parsed)
          }
       } else if (topic === "acuteBusTrack") {
         if (parsed.packet_status==="L") {
-           io.to(`bus_${parsed.vehicle_reg_no}`).emit("track",parsed)
+           io.to(`bus_${parsed.imei}`).emit("track",parsed)
          }
       }
     },
@@ -109,13 +109,13 @@ connectKafka().catch(console.error);
 // WebSocket events
 io.on("connection", async (socket) => {
 
-  socket.on("trackBus", async (busIdOrReg) => {
+  socket.on("trackBus", async (imei) => {
     try {
-       const room = `bus_${busIdOrReg}`;
+       const room = `bus_${imei}`;
     socket.join(room);
-    socket.emit("join", busIdOrReg);
-      
-      const res = await axios.get(`${axiosApi}/api/tracking/tracking/${busIdOrReg.trim()}`);
+    socket.emit("join", imei);
+
+      const res = await axios.get(`${axiosApi}/api/tracking/tracking/${imei.trim()}`);
       if (res?.data?.success && res?.data?.data) {
         res.data.data.new=true; // mark as new data
         socket.emit("track", res.data.data);

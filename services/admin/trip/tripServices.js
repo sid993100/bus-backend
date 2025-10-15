@@ -330,6 +330,7 @@ export const addTrip = async (req, res) => {
       busService,
       route,
       originTime,
+      status: { $nin: ['REJECTED', 'CANCELLED'] },
       $or: [
         { origin, destination },
         { origin: destination, destination: origin },

@@ -134,19 +134,17 @@ export const getVehicleCurrentStatusWithLocation = async (req, res) => {
 
 export const getVehicleByVehicleNumber = async (req, res) => {
   try {
-    const vehicleNumber = (req.params.vehicleNumber || req.query.vehicleNumber || "").toString().trim();
+    const vehicleNumber = (req.params.imei || req.query.imei || "").toString().trim();
 
     if (!vehicleNumber) {
       return res.status(400).json({ success: false, message: "vehicleNumber is required in params or query" });
     }
 
-    // helper escape to build a safe case-insensitive exact match regex
-    const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regex = new RegExp(`^${escapeRegExp(vehicleNumber)}$`, "i");
+  
 
     // Fetch latest tracking packet for this vehicle with packet_status 'L'
     const vehicle = await TrackingPacket.findOne(
-      { packet_type: "tracking", packet_status: "L", vehicle_reg_no: regex },
+      { packet_type: "tracking", packet_status: "L", imei: vehicleNumber },
       {
         vehicle_reg_no: 1,
         imei: 1,
