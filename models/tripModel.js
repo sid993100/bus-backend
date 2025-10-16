@@ -106,12 +106,7 @@ const tripConfigSchema = new Schema({
   
   },
   cancel:[{
-    date:{
-      type:Date,
-    },
-    status:{
-      type:Boolean
-    }
+    type: Date,
   }]
 }, {
   timestamps: true

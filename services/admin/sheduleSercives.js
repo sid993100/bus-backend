@@ -785,15 +785,36 @@ export const getSchedulesByDate = async (req, res) => {
 export const updateCancel = async (req, res) => {
   try {
     const { id } = req.params;
-    const { date } = req.body;
+    const {tripUpdates } = req.body;
     if (!date) {
       return res.status(400).json({ success: false, error: "Date is required" });
     }
-    const schedule = await ScheduleConfiguration.findByIdAndUpdate(
-      id,
-      { $push: { date: date } },
-      { new: true }
-    );
+    for (const { tripId, date } of tripUpdates) {
+   await ScheduleConfiguration.updateOne(
+    {
+      _id: id,
+      'trips.trip': mongoose.Types.ObjectId(tripId),
+    },
+    {
+      $addToSet: {
+        'trips.$[elem].date': new Date(date),
+      },
+    },
+    {
+      arrayFilters: [
+        { 'elem.trip': mongoose.Types.ObjectId(tripId) },
+      ],
+    }
+  );
+
+  await TripConfig.findByIdAndUpdate(
+    tripId,
+    { $addToSet: { cancel: new Date(date) } },
+    { new: true }
+  );
+}
+    const schedule = await ScheduleConfiguration.findById(id)
+
     if (!schedule) {
       return res.status(404).json({ success: false, error: "Schedule not found" });
     }

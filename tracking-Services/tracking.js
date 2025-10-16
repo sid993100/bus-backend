@@ -1,3 +1,4 @@
+
 import dotenv from "dotenv";
 import express from "express";
 import http from "http";
@@ -63,13 +64,8 @@ async function connectKafka() {
       // Fix: Send to correct endpoint with raw_data included
       try {
         if (parsed.packet_type === "tracking") {
-          if(parsed.latitude===0 || parsed.longitude===0){
-            return;
-          }
           await axios.post(`${axiosApi}/api/tracking/track`, { data: parsed });
-          await axios.post(`${axiosApi}/api/tracking/event`, { vehicleNo: parsed.vehicle_reg_no, imei: parsed.imei,eventNumber:parsed.message_id, dateAndTime: parsed.timestamp, latitude: parsed.latitude, longitude: parsed.longitude,vendor_id:parsed.vendor_id });
-        consoleManager.log("✅ Data saved to API successfully");
-
+          consoleManager.log("✅ Data saved to API successfully");
         } else if (parsed.packet_type === "login") {
           await axios.post(`${axiosApi}/api/tracking/login`, { data: parsed });
           consoleManager.log("✅ Login Data saved to API successfully");
@@ -86,18 +82,14 @@ async function connectKafka() {
         console.error("❌ Failed to save to API:", error.message);
       }
 
-
       // Emit to WebSocket
       if (topic === "bharatBusTrack") {
-        if(parsed.latitude===0 || parsed.longitude===0){
-            return;
-          }
          if (parsed.packet_status==="L") {
-           io.to(`bus_${parsed.imei}`).emit("track",parsed)
+           io.to(`bus_${parsed.vehicle_reg_no}`).emit("track",parsed)
          }
       } else if (topic === "acuteBusTrack") {
         if (parsed.packet_status==="L") {
-           io.to(`bus_${parsed.imei}`).emit("track",parsed)
+           io.to(`bus_${parsed.vehicle_reg_no}`).emit("track",parsed)
          }
       }
     },
@@ -109,16 +101,17 @@ connectKafka().catch(console.error);
 // WebSocket events
 io.on("connection", async (socket) => {
 
-  socket.on("trackBus", async (imei) => {
+  socket.on("trackBus", async (busIdOrReg) => {
     try {
-       const room = `bus_${imei}`;
+       const room = `bus_${busIdOrReg}`;
     socket.join(room);
-    socket.emit("join", imei);
-
-      const res = await axios.get(`${axiosApi}/api/tracking/tracking/${imei.trim()}`);
+    socket.emit("join", busIdOrReg);
+      
+      const res = await axios.get(`${axiosApi}/api/tracking/tracking/${busIdOrReg.trim()}`);
       if (res?.data?.success && res?.data?.data) {
         res.data.data.new=true; // mark as new data
         socket.emit("track", res.data.data);
+        
       }
     } catch (e) {
       consoleManager.log("prefetch error",  e.message);
@@ -127,10 +120,11 @@ io.on("connection", async (socket) => {
     // confirm to requester only
   });
 
-  socket.on("stopTracking", (imei) => {
-    const room = `bus_${imei}`;
+  socket.on("stopTracking", (busIdOrReg) => {
+    const room = `bus_${busIdOrReg}`;
     socket.leave(room);
-    socket.emit("stopped", { message: `Stopped tracking bus ${imei}` });
+    socket.emit("stopped", { message: `Stopped tracking bus ${busIdOrReg}` });
+    consoleManager.log(`Client ${socket.id} stopped tracking ${busIdOrReg}`);
   });
 });
 
