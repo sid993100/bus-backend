@@ -16,7 +16,7 @@ export const getVehicle = async (req, res) => {
       .populate('vltdDevice')
       .sort({ vehicleNumber: 1 });
 
-    // Check if vehicles array is empty
+
     if (!vehicles || vehicles.length === 0) {
       return res.status(404).json({
         success: false,

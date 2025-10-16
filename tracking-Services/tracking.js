@@ -127,10 +127,10 @@ io.on("connection", async (socket) => {
     // confirm to requester only
   });
 
-  socket.on("stopTracking", (busIdOrReg) => {
-    const room = `bus_${busIdOrReg}`;
+  socket.on("stopTracking", (imei) => {
+    const room = `bus_${imei}`;
     socket.leave(room);
-    socket.emit("stopped", { message: `Stopped tracking bus ${busIdOrReg}` });
+    socket.emit("stopped", { message: `Stopped tracking bus ${imei}` });
   });
 });
 

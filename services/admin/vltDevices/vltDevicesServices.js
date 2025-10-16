@@ -4,9 +4,10 @@ import consoleManager from "../../../utils/consoleManager.js";
 import VltdManufacturer from "../../../models/vltdManufacturerModel.js";
 
 import { isValidObjectId } from "mongoose";
+import { populate } from "dotenv";
 
 const populatedFields = [
-  { path: "vlt", select: "manufacturerName modelName" },
+  { path: "vlt", select: "manufacturerName modelName",populate:{path:"manufacturerName",select:"shortName manufacturerName"} },
   // { path: "region", select: "name" },
   // { path: "customer", select: "depotCustomer" }
 ];
