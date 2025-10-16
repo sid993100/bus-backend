@@ -19,6 +19,7 @@ import reportRoutes from "./routes/reports/reportRoute.js"
 import helpAndSupportRoutes from "./routes/helpAndSupport/helpAndSupportRoutes.js"
 import eventCategoryRoute from "./routes/otc/eventCategoryRoute.js";
 import deleteRoute from "./routes/delete/deleteRoute.js";
+import geoFenceRouter from "./routes/geoFenceRputer.js";
 
 
 dotenv.config();
@@ -70,6 +71,7 @@ app.use("/api/reports", reportRoutes);
 app.use("/api/helpandsupport", helpAndSupportRoutes);
 app.use("/api/eventCategory", eventCategoryRoute);
 app.use("/api/delete",deleteRoute)
+app.use("/api/geofence",geoFenceRouter)
 
 
 // ✅ Start Server

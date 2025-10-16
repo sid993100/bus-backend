@@ -43,7 +43,7 @@ const scheduleConfigurationSchema = new Schema({
     type:Number,
     required:true,
   },
-    date:[{
+    cancelDates:[{
       type:Date,
     }]
 }],
