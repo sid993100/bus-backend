@@ -2,7 +2,7 @@ import { isValidObjectId } from "mongoose";
 import ScheduleConfiguration from "../../models/scheduleModel.js";
 import TripConfig from "../../models/tripModel.js";
 
-// CREATE - Add new schedule configuration
+
 
 export const createScheduleConfiguration = async (req, res) => {
   try {
@@ -14,63 +14,122 @@ export const createScheduleConfiguration = async (req, res) => {
       trips,
       startDate,
       endDate,
+      days,
+      cycleDay = "Daily",
     } = req.body;
 
-    // Validation
     if (!depot || !scheduleLabel || !seatLayout || !busService || !trips || !startDate || !endDate) {
-      return res.status(400).json({ success: false, error: 'All required fields must be provided' });
+      return res.status(400).json({ success: false, error: "All required fields must be provided" });
     }
 
     const start = new Date(startDate);
     const end = new Date(endDate);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return res.status(400).json({ success: false, error: "Invalid startDate or endDate" });
+    }
     if (start >= end) {
-      return res.status(400).json({ success: false, error: 'Start date must be before end date' });
+      return res.status(400).json({ success: false, error: "Start date must be before end date" });
     }
 
-    // 🔹 Calculate scheduleKm
+    // Helpers
+    const addDays = (d, n) => {
+      const x = new Date(d);
+      x.setDate(x.getDate() + n);
+      return x;
+    };
+
+  
+    const weeklyDayToJs = (weeklyDay) => {
+    
+      return weeklyDay % 7;
+    };
+
+    const nextWeekdayOnOrAfter = (base, weeklyDay) => {
+      const targetJs = weeklyDayToJs(weeklyDay);
+      const baseJs = base.getDay();
+      const delta = (targetJs - baseJs + 7) % 7; 
+      return addDays(base, delta);
+    };
+
     let totalKm = 0;
-    for (const trip of trips) {
-      const tripConfig = await TripConfig.findByIdAndUpdate(trip.trip,{$set: {startDate: start, endDate: end ,scheduleLabel}},{new: true}).populate("route", "routeLength");
-      if (!tripConfig) continue;
-      
-      if (!tripConfig.route || !tripConfig.route.routeLength) continue;
 
-      totalKm += tripConfig.route.routeLength;
+    for (const t of trips) {
+      // Resolve the trip document and its route for distance
+      const tripDoc = await TripConfig.findById(t.trip).populate("route", "routeLength");
+      if (!tripDoc) continue;
+
+      const routeLen = tripDoc.route?.routeLength || 0;
+      totalKm += Number(routeLen) || 0;
+
+      // Determine effective start for this trip based on cycleDay and t.day
+      let effectiveStart;
+
+      if (cycleDay === "Weekly") {
+      
+        effectiveStart = nextWeekdayOnOrAfter(start, Number(t.day));
+      } else {
+     
+        const offset = Math.max(Number(t.day) - 1, 0);
+        effectiveStart = addDays(start, offset);
+      }
+
+
+      if (effectiveStart < start) effectiveStart = start;
+      if (effectiveStart > end) effectiveStart = end;
+
+      const effectiveEnd = end < effectiveStart ? effectiveStart : end;
+
+      
+      await TripConfig.findByIdAndUpdate(
+        t.trip,
+        {
+          $set: {
+            startDate: effectiveStart,
+            endDate: effectiveEnd,
+            scheduleLabel,
+          },
+        },
+        { new: true }
+      );
     }
 
+    // Create schedule
     const scheduleConfig = new ScheduleConfiguration({
       depot,
-      scheduleLabel: scheduleLabel.toUpperCase(),
+      scheduleLabel: String(scheduleLabel).toUpperCase(),
       seatLayout,
       busService,
       trips,
       scheduleKm: totalKm,
       startDate: start,
       endDate: end,
+      cycleDay,
+      days,
     });
 
     const savedSchedule = await scheduleConfig.save();
 
     const populatedSchedule = await ScheduleConfiguration.findById(savedSchedule._id)
-      .populate('depot', 'depotName depotCode')
-      .populate('seatLayout', 'layoutName totalSeats')
-      .populate('busService', 'serviceName serviceType')
+      .populate("depot", "depotName depotCode")
+      .populate("seatLayout", "layoutName totalSeats")
+      .populate("busService", "serviceName serviceType")
       .populate({
         path: "trips.trip",
-        populate: { path: "route", select: "routeName routeCode routeLength source destination" }
+        populate: { path: "route", select: "routeName routeCode routeLength source destination" },
       });
-    res.status(201).json({
-      success: true,
-      message: 'Schedule configuration created successfully',
-      data: populatedSchedule
-    });
 
+    return res.status(201).json({
+      success: true,
+      message: "Schedule configuration created successfully",
+      data: populatedSchedule,
+    });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    console.error("createScheduleConfiguration error:", error);
+    return res.status(500).json({ success: false, error: error.message });
   }
 };
 
-// GET ALL - Retrieve all schedule configurations
+
 export const getAllScheduleConfigurations = async (req, res) => {
   try {
     const {
@@ -138,7 +197,7 @@ export const getAllScheduleConfigurations = async (req, res) => {
   }
 };
 
-// UPDATE - Update schedule configuration
+
 export const updateScheduleConfiguration = async (req, res) => {
   try {
     const { id } = req.params;
@@ -199,7 +258,7 @@ export const updateScheduleConfiguration = async (req, res) => {
 };
 
 
-// DELETE - Delete schedule configuration
+
 export const deleteScheduleConfiguration = async (req, res) => {
   try {
     const { id } = req.params;
@@ -236,7 +295,7 @@ export const deleteScheduleConfiguration = async (req, res) => {
   }
 };
 
-// GET BY DEPOT - Get schedules by specific depot
+
 export const getSchedulesByDepot = async (req, res) => {
   try {
     const { depotId } = req.params;
@@ -284,7 +343,7 @@ export const getByRegion = async (req, res) => {
   }
 };
 
-// GET BY ID - Retrieve single schedule configuration
+
 export const getScheduleConfigurationById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -321,92 +380,6 @@ export const getScheduleConfigurationById = async (req, res) => {
       success: false,
       error: 'Failed to fetch schedule configuration'
     });
-  }
-};
-
-const normalizeDate = (dateStr) => {
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return null;
-  date.setHours(0, 0, 0, 0);
-  return date;
-};
-
-// Utility: default to today's start & end
-const getDefaultDateRange = () => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(today.getDate() + 1);
-  return { startDate: today, endDate: tomorrow };
-};
-
-
-export const getSchedulesByDate = async (req, res) => {
-  try {
-    const {
-      startDate,
-      endDate,
-      depot,
-      page = "1",
-      limit = "10",
-      sortBy = "createdAt",
-      sortOrder = "desc",
-    } = req.query;
-
-    // parse and validate date range
-    let start = normalizeDate(startDate);
-    let end = normalizeDate(endDate);
-
-    if (!start || !end) {
-      const defaults = getDefaultDateRange();
-      start = defaults.startDate;
-      end = defaults.endDate;
-    }
-
-    const filter = {
-      startDate: { $lte: end },
-      endDate: { $gte: start },
-    };
-
-    if (depot) filter.depot = depot;
-
-    const pageNum = Math.max(parseInt(page, 10), 1);
-    const limitNum = Math.max(parseInt(limit, 10), 1);
-    const skip = (pageNum - 1) * limitNum;
-    const sort = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
-
-    const [items, total] = await Promise.all([
-      ScheduleConfiguration.find(filter)
-        .populate("depot", "depotCustomer depotCode region")
-        .populate("seatLayout", "layoutName totalSeats seatConfiguration")
-        .populate("busService", "name")
-        .populate({
-          path: "trips.trip",
-          select: "tripId origin destination originTime destinationTime cycleDay day status route",
-          populate: [{ path: "route", select: "routeName" }],
-        })
-        .sort(sort)
-        .skip(skip)
-        .limit(limitNum),
-      ScheduleConfiguration.countDocuments(filter),
-    ]);
-
-    return res.status(200).json({
-      success: true,
-      data: items,
-      pagination: {
-        currentPage: pageNum,
-        totalPages: Math.ceil(total / limitNum),
-        totalItems: total,
-        itemsPerPage: limitNum,
-        hasNextPage: pageNum * limitNum < total,
-        hasPrevPage: pageNum > 1,
-      },
-      filters: { startDate: start, endDate: end, ...(depot && { depot }) },
-    });
-  } catch (error) {
-    console.error("Error fetching schedules by date:", error);
-    return res.status(500).json({ success: false, error: "Failed to fetch schedules by date" });
   }
 };
 
@@ -665,3 +638,168 @@ export const getSchedulesByDateAndRegion = async (req, res) => {
 };
 
 
+// Helpers
+function normalizeDate(input) {
+  if (!input) return null;
+  const d = new Date(input);
+  if (isNaN(d.getTime())) return null;
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function endOfDay(d) {
+  const x = new Date(d);
+  x.setHours(23, 59, 59, 999);
+  return x;
+}
+
+function getDefaultDateRange() {
+  const today = new Date();
+  const start = new Date(today);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(today);
+  end.setHours(23, 59, 59, 999);
+  return { startDate: start, endDate: end };
+}
+
+function daysBetween(a, b) {
+  const MS = 24 * 60 * 60 * 1000;
+  return Math.floor((b - a) / MS);
+}
+
+const WEEKDAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+export const getSchedulesByDate = async (req, res) => {
+  try {
+    const {
+      startDate,
+      endDate,
+      depot,
+      page = "1",
+      limit = "10",
+      sortBy = "createdAt",
+      sortOrder = "desc",
+    } = req.query;
+
+    // Parse range (defaults to today)
+    let start = normalizeDate(startDate);
+    let end = normalizeDate(endDate);
+    if (!start || !end) {
+      const def = getDefaultDateRange();
+      start = def.startDate;
+      end = def.endDate;
+    }
+    const startBound = start;
+    const endBound = endOfDay(end);
+
+    // Base overlap filter
+    const baseFilter = {
+      startDate: { $lte: endBound },
+      endDate: { $gte: startBound },
+    };
+    if (depot) baseFilter.depot = depot;
+
+    const pageNum = Math.max(parseInt(page, 10), 1);
+    const limitNum = Math.max(parseInt(limit, 10), 1);
+    const skip = (pageNum - 1) * limitNum;
+    const sort = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
+
+    // Fetch a superset by overlap; apply cycle semantics in memory
+    const [rawItems, totalOverlap] = await Promise.all([
+      ScheduleConfiguration.find(baseFilter)
+        .populate("depot", "depotCustomer depotCode region")
+        .populate("seatLayout", "layoutName totalSeats seatConfiguration")
+        .populate("busService", "name")
+        .populate({
+          path: "trips.trip",
+          select: "tripId origin destination originTime destinationTime cycleDay day status route",
+          populate: [{ path: "route", select: "routeName" }],
+        })
+        .sort(sort)
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
+      ScheduleConfiguration.countDocuments(baseFilter),
+    ]);
+
+    // To compute accurate pagination respecting cycle semantics, a second pass is needed for total.
+    // For simplicity, compute eligibility for current page and also count on a separate query without skip/limit.
+    const allOverlap = await ScheduleConfiguration.find(baseFilter).select("startDate endDate cycleDay days").lean();
+
+    const isEligibleOnAnyDay = (sch) => {
+      // Iterate each day in requested window, clamp to schedule range
+      const from = new Date(Math.max(startBound.getTime(), new Date(sch.startDate).setHours(0,0,0,0)));
+      const to = new Date(Math.min(endBound.getTime(), endOfDay(new Date(sch.endDate)).getTime()));
+      if (from > to) return false;
+
+      for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
+        const d0 = new Date(d); d0.setHours(0,0,0,0);
+
+        if (sch.cycleDay === "Daily" || !sch.cycleDay) {
+          return true;
+        }
+
+        if (sch.cycleDay === "Alternative") {
+          // Include only when offset from schedule start is even
+          const schStart0 = new Date(sch.startDate); schStart0.setHours(0,0,0,0);
+          const delta = daysBetween(schStart0, d0);
+          if (delta % 2 === 0) return true;
+        }
+
+        if (sch.cycleDay === "Weekly") {
+          const wdName = WEEKDAYS[d0.getDay()];
+          // Include if schedule.days includes this weekday
+          if (Array.isArray(sch.days) && sch.days.includes(wdName)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+
+    // Page items have the full document; check eligibility on rawItems for response
+    const pageEligible = rawItems.filter(isEligibleOnAnyDay);
+
+    // Accurate total respecting cycle semantics
+    const totalEligible = allOverlap.filter(isEligibleOnAnyDay).length;
+
+    return res.status(200).json({
+      success: true,
+      data: pageEligible,
+      pagination: {
+        currentPage: pageNum,
+        totalPages: Math.ceil(totalEligible / limitNum),
+        totalItems: totalEligible,
+        itemsPerPage: limitNum,
+        hasNextPage: pageNum * limitNum < totalEligible,
+        hasPrevPage: pageNum > 1,
+      },
+      filters: { startDate: startBound, endDate: endBound, ...(depot && { depot }) },
+    });
+  } catch (error) {
+    console.error("Error fetching schedules by date:", error);
+    return res.status(500).json({ success: false, error: "Failed to fetch schedules by date" });
+  }
+};
+
+export const updateCancel = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { date } = req.body;
+    if (!date) {
+      return res.status(400).json({ success: false, error: "Date is required" });
+    }
+    const schedule = await ScheduleConfiguration.findByIdAndUpdate(
+      id,
+      { $push: { date: date } },
+      { new: true }
+    );
+    if (!schedule) {
+      return res.status(404).json({ success: false, error: "Schedule not found" });
+    }
+    return res.status(200).json({ success: true, message: "Cancel date added", data: schedule });
+  } catch (error) {
+    console.error("Error updating cancel date:", error);
+    return res.status(500).json({ success: false, error: "Failed to update cancel date" });
+  }
+};

@@ -5,7 +5,7 @@ import { addSeatLayout, getSeatLayout, updateSeatLayout } from "../../services/a
 import { addTrip, getTodayTrips, getTrips, getTripsByDepot, getTripsByRegion, updateTrip, updateTripStatus } from "../../services/admin/trip/tripServices.js";
 import { addRoute, updateRoute ,getRoutes, getRoutesByDepot, getRoutesByRegion} from "../../services/admin/route/routeService.js";
 import { addDuty, getDuty, getDutyByDepot, getDutyByRegion, updateDuty } from "../../services/admin/duty/dutyServices.js";
-import { createScheduleConfiguration, getAllScheduleConfigurations, getByRegion, getSchedulesByDate, getSchedulesByDateAndDepot, getSchedulesByDateAndRegion, getSchedulesByDepot, updateScheduleConfiguration } from "../../services/admin/sheduleSercives.js";
+import { createScheduleConfiguration, getAllScheduleConfigurations, getByRegion, getSchedulesByDate, getSchedulesByDateAndDepot, getSchedulesByDateAndRegion, getSchedulesByDepot, updateCancel, updateScheduleConfiguration } from "../../services/admin/sheduleSercives.js";
 import { addSim, getAllSims, updateSim } from "../../services/master/sim/simServices.js";
 
 
@@ -46,8 +46,9 @@ router.put("/route/:id",isLogin ,checkPermission("route","update"), updateRoute)
 router.put("/trip/:id",isLogin ,checkPermission("trip","update"), updateTrip);
 router.put("/tripstatus/:id",isLogin ,checkPermission("trip","approval"), updateTripStatus);
 router.put("/duty/:id",isLogin ,checkPermission("duty","update"), updateDuty);
-router.put("/scheduleConfig/:id",isLogin ,checkPermission("scheduleConfig","update"), updateScheduleConfiguration);
+router.put("/scheduleConfig/cancel/:id",isLogin ,checkPermission("scheduleConfig","update"), updateScheduleConfiguration);
 router.put("/vltsim/:id",isLogin ,checkPermission("vltSim","update"), updateSim);
+router.put("/vltsim/:id",isLogin ,checkPermission("","update"), updateCancel);
 
 
 

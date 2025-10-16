@@ -95,7 +95,7 @@ const vehicleSchema = new Schema(
     vltdDevice: {
       type: Schema.Types.ObjectId,
       ref: "VltDevice",
-    },
+    }
   },
   {
     timestamps: true,

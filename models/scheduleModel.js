@@ -42,8 +42,11 @@ const scheduleConfigurationSchema = new Schema({
   day:{
     type:Number,
     required:true,
-  }
- }],
+  },
+    date:[{
+      type:Date,
+    }]
+}],
   startDate: {
     type: Date,
     required: true
@@ -58,6 +61,11 @@ const scheduleConfigurationSchema = new Schema({
     enum: ['Daily', 'Alternative', 'Weekly'],
     default: 'Daily'
   },
+  days:[{
+    type:String,
+    enum:['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
+  }],
+
 }, {
   timestamps: true
 });

@@ -13,18 +13,7 @@ export const getVehicle = async (req, res) => {
       .populate('vehicleManufacturer', 'make shortName')
       .populate('vehicleType', 'vehicleType')
       .populate('vehicleModel', 'vehicleModel')
-      .populate({
-        path: 'vltdDevice',
-        select: 'imeiNumber iccid vlt',
-        populate: {
-          path: 'vlt',
-          select: 'manufacturerName modelName',
-          populate: {
-            path: 'manufacturerName',
-            select: 'manufacturerName shortName',
-          }
-        }
-      })
+      .populate('vltdDevice')
       .sort({ vehicleNumber: 1 });
 
     // Check if vehicles array is empty
