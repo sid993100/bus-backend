@@ -1,4 +1,4 @@
-import { isValidObjectId } from "mongoose";
+import mongoose, { isValidObjectId } from "mongoose";
 import ScheduleConfiguration from "../../models/scheduleModel.js";
 import TripConfig from "../../models/tripModel.js";
 

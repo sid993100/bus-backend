@@ -46,7 +46,7 @@ router.put("/route/:id",isLogin ,checkPermission("route","update"), updateRoute)
 router.put("/trip/:id",isLogin ,checkPermission("trip","update"), updateTrip);
 router.put("/tripstatus/:id",isLogin ,checkPermission("trip","approval"), updateTripStatus);
 router.put("/duty/:id",isLogin ,checkPermission("duty","update"), updateDuty);
-router.put("/scheduleConfig/cancel/:id",isLogin ,checkPermission("scheduleConfig","update"), updateScheduleConfiguration);
+router.put("/scheduleConfig/cancel/:id",isLogin ,checkPermission("scheduleConfig","update"), updateCancel);
 router.put("/vltsim/:id",isLogin ,checkPermission("vltSim","update"), updateSim);
 router.put("/vltsim/:id",isLogin ,checkPermission("","update"), updateCancel);
 
