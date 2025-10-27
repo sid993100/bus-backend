@@ -12,19 +12,6 @@ export const getDuty = async (req, res) => {
     const [items, total] = await Promise.all([
       Duty.find(filter)
         .populate(dutyPopulate)
-        .populate('depot', 'depotName depotCode')
-        .populate('seatLayout', 'layoutName totalSeats')
-        .populate('busService', 'serviceName serviceType')
-        .populate({
-          path: "scheduleNumber",
-          populate: {
-            path: 'trips.trip',
-            populate: { 
-              path: 'route', 
-              select: 'routeName routeCode routeLength source destination' 
-            },
-          }
-        })
         .sort(sort || { createdAt: -1 })  // Latest first by default
         .skip(skip)
         .limit(limitNum),
