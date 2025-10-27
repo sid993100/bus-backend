@@ -142,51 +142,39 @@ export const getAllScheduleConfigurations = async (req, res) => {
       sortOrder = 'desc'
     } = req.query;
 
-    // Parse and normalize dates
-    let start = normalizeDate(startDate);
-    let end = normalizeDate(endDate);
-
-    // Default to today if no dates provided
-    if (!start || !end) {
-      const defaults = getDefaultDateRange();
-      start = defaults.startDate;
-      end = endOfDay(defaults.endDate);
-    } else {
-      end = endOfDay(end);
+    // Build filter object
+    const filter = {};
+    if (depot) filter.depot = depot;
+    if (startDate || endDate) {
+      filter.startDate = {};
+      if (startDate) filter.startDate.$gte = new Date(startDate);
+      if (endDate) filter.startDate.$lte = new Date(endDate);
     }
 
-    // Build filter with date overlap logic
-    const filter = {
-      startDate: { $lte: end },
-      endDate: { $gte: start }
-    };
-    if (depot) filter.depot = depot;
-
-    // Pagination and sorting
+    // Pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const sort = {};
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
-    // Fetch schedules
-    const [schedules, totalCount] = await Promise.all([
-      ScheduleConfiguration.find(filter)
-        .populate('depot', 'depotCustomer depotCode region')
-        .populate('seatLayout', 'layoutName totalSeats seatConfiguration')
-        .populate('busService', 'name serviceType fare')
-        .populate({
-          path: 'trips.trip',
-          select: 'tripId origin destination originTime destinationTime cycleDay day status route',
-          populate: [{ path: 'route', select: 'routeName routeLength' }]
-        })
-        .sort(sort)
-        .skip(skip)
-        .limit(parseInt(limit)),
-      ScheduleConfiguration.countDocuments(filter)
-    ]);
+    const schedules = await ScheduleConfiguration.find(filter)
+      .populate('depot', 'depotCustomer depotCode region')
+      .populate('seatLayout', 'layoutName totalSeats seatConfiguration')
+      .populate('busService', 'name serviceType fare')
+      .populate({
+        path: 'trips.trip',
+        select: 'tripId origin destination originTime destinationTime cycleDay day status route',
+        populate:[
+         { path:"route" , select:"routeName"}
+        ]
+      })
+      .sort(sort)
+      .skip(skip)
+      .limit(parseInt(limit));
 
+    // Get total count for pagination
+    const totalCount = await ScheduleConfiguration.countDocuments(filter);
     const totalPages = Math.ceil(totalCount / parseInt(limit));
 
-    // Respond
     res.status(200).json({
       success: true,
       data: schedules,
@@ -197,13 +185,9 @@ export const getAllScheduleConfigurations = async (req, res) => {
         itemsPerPage: parseInt(limit),
         hasNextPage: parseInt(page) < totalPages,
         hasPrevPage: parseInt(page) > 1
-      },
-      filters: {
-        startDate: start,
-        endDate: end,
-        depot: depot || undefined
       }
     });
+
   } catch (error) {
     console.error('Error fetching schedule configurations:', error);
     res.status(500).json({
@@ -312,28 +296,47 @@ export const deleteScheduleConfiguration = async (req, res) => {
 };
 
 
-export const getSchedulesByDepot = async (req, res) => {
+export const getSchedulesByDepotAndDate = async (req, res) => {
   try {
     const { depotId } = req.params;
+    const { date } = req.query; // example: ?date=2025-10-17
 
-    const schedules = await ScheduleConfiguration.find({ depot: depotId })
+    if (!depotId) {
+      return res.status(400).json({ success: false, error: 'Depot ID required' });
+    }
+
+    const selectedDate = date ? new Date(date) : new Date();
+
+    const startOfDayUTC = toUTCStart(selectedDate);
+    const endOfDayUTC = toUTCEnd(selectedDate);
+
+    // Filter: schedules active on that day
+    const filter = {
+      depot: depotId,
+      startDate: { $lte: endOfDayUTC },
+      endDate: { $gte: startOfDayUTC }
+    };
+
+    console.log('🧮 Filter being used:', filter);
+
+    const schedules = await ScheduleConfiguration.find(filter)
       .populate('depot', 'depotCustomer depotCode')
       .populate('seatLayout', 'layoutName totalSeats')
-      .populate('busService', 'name ')
-      // .populate('routeName', 'routeName routeCode source destination')
+      .populate('busService', 'name')
       .sort({ scheduleLabel: 1 });
 
     res.status(200).json({
       success: true,
       data: schedules,
-      count: schedules.length
+      count: schedules.length,
+      filterUsed: filter
     });
 
   } catch (error) {
-    console.error('Error fetching depot schedules:', error);
+    console.error('❌ Error fetching schedules:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch depot schedules'
+      error: 'Failed to fetch schedules'
     });
   }
 };
@@ -655,13 +658,11 @@ export const getSchedulesByDateAndRegion = async (req, res) => {
 
 
 // Helpers
-function normalizeDate(input) {
-  if (!input) return null;
-  const d = new Date(input);
-  if (isNaN(d.getTime())) return null;
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
+const normalizeDate = (date) => {
+  if (!date) return null;
+  const parsed = new Date(date);
+  return isNaN(parsed.getTime()) ? null : parsed;
+};
 
 function endOfDay(d) {
   const x = new Date(d);
@@ -669,14 +670,13 @@ function endOfDay(d) {
   return x;
 }
 
-function getDefaultDateRange() {
+const getDefaultDateRange = () => {
   const today = new Date();
-  const start = new Date(today);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(today);
-  end.setHours(23, 59, 59, 999);
-  return { startDate: start, endDate: end };
-}
+  return {
+    startDate: toUTCStart(today),
+    endDate: toUTCEnd(today)
+  };
+};
 
 function daysBetween(a, b) {
   const MS = 24 * 60 * 60 * 1000;
@@ -842,4 +842,18 @@ await TripConfig.updateOne(
     console.error("Error updating cancel date:", error);
     return res.status(500).json({ success: false, error: "Failed to update cancel date" });
   }
+};
+
+const toUTCStart = (date) => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d;
+};
+
+const toUTCEnd = (date) => {
+  const d = new Date(date);
+  d.setHours(23, 59, 59, 999);
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d;
 };

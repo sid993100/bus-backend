@@ -735,8 +735,6 @@ export const getTodayTrips = async (req, res) => {
   }
 };
 
-
-
 export const updateTripStatus = async (req, res) => {
   try {
     const { id } = req.params;
