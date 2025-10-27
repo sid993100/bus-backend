@@ -164,7 +164,7 @@ export const getAllScheduleConfigurations = async (req, res) => {
         path: 'trips.trip',
         select: 'tripId origin destination originTime destinationTime cycleDay day status route',
         populate:[
-         { path:"route" , select:"routeName"}
+         { path:"route" , select:"routeName routeLength"}
         ]
       })
       .sort(sort)

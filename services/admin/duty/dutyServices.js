@@ -130,7 +130,7 @@ export const getDutyByDepot = async (req, res) => {
         populate: { path: "route", select: "routeName routeCode routeLength source destination" }
       })
       .populate("route.routeName")
-      .sort(sort).skip(skip).limit(limitNum),
+      .sort(sort ||{createdAt:-1}).skip(skip).limit(limitNum),
       Duty.countDocuments(filter),
     ]);
 
@@ -181,7 +181,7 @@ export const getDutyByRegion = async (req, res) => {
         populate: { path: "route", select: "routeName routeCode routeLength source destination" }
       })
       .populate("route.routeName")
-      .sort(sort).skip(skip).limit(limitNum),
+      .sort(sort || {createdAt:-1}).skip(skip).limit(limitNum),
       Duty.countDocuments(filter),
     ]);
 
@@ -263,7 +263,8 @@ export const addDuty = async (req, res) => {
     }
 
     return res.status(500).json({
-      message: "Server Error"
+     success: false,
+     message:error.message
     });
   }
 };
