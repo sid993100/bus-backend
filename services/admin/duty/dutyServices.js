@@ -23,7 +23,7 @@ export const getDuty = async (req, res) => {
         //   populate: { path: 'route', select: 'routeName routeCode routeLength source destination' },
         // })
         .populate('route.routeName')
-        .sort(sort)
+        .sort(sort || {createdAt:-1})
         .skip(skip)
         .limit(limitNum),
       Duty.countDocuments(filter),

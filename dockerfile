@@ -1,7 +1,7 @@
-# ---- Base Build Image ----
+
 FROM node:18-alpine AS build
 
-# Set working directory
+
 WORKDIR /app
 
 # Copy package files first for better layer caching

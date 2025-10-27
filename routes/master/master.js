@@ -28,7 +28,7 @@ import { addPisModel, getAllPisModels, updatePisModel } from "../../services/otc
 import { createEmployType, getAllEmployTypes, updateEmployType } from "../../services/master/empolyType/empolyTypeService.js";
 import { addVltDevices, getVltDevices, getVltDevicesByDepot, getVltDevicesByRegion, updateVltDevices } from "../../services/admin/vltDevices/vltDevicesServices.js";
 import { addSubscription, getSubscription, getSubscriptionsByDepot, getSubscriptionsByRegion, updateSubscription } from "../../services/admin/subscription/subscriptionServices.js";
-import { createDeviceEvent, getDeviceEventById, getDeviceEvents, updateDeviceEvent } from "../../services/master/deviceEventServer.js";
+import { createDeviceEvent, getDeviceEventById, getDeviceEvents, updateDeviceEvent } from "../../services/otc/deviceEventServices.js";
 
 
 

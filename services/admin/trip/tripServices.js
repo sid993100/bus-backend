@@ -1,5 +1,5 @@
 import TripConfig from "../../../models/tripModel.js";
-import { isValidObjectId, Types } from "mongoose";
+import { isValidObjectId } from "mongoose";
 
 export const getTrips = async (req, res) => {
   try {
@@ -813,6 +813,39 @@ export const deleteTrips = async (req, res) => {
       success: false,
       message: "Error deleting trips",
       error: error.message,
+    });
+  }
+}
+export const breakdownTrip= async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { cancel } = req.body;
+    if (!id || !isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Valid trip ID is required",
+      });
+    }
+    const trip = await TripConfig.findByIdAndUpdate(id,{cancel},{new:true});
+    if (!trip) {
+      return res.status(404).json({
+        success: false,
+        message: "Trip not found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Trip breakdown dates updated successfully",
+      data: trip,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error:
+        process.env.NODE_ENV === "development"
+          ? error.message
+          : "Something went wrong",
     });
   }
 }

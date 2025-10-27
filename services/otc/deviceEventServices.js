@@ -25,11 +25,9 @@ export const createDeviceEvent = async (req, res) => {
       messageId: Number(messageId),
       eventName: eventName.trim(),
       description: description.trim(),
-      category
+      category: category
     });
-
-    const populated = (await created.populate("vlt", "manufacturerName modelName shortName")).populate("category");
-    return res.status(201).json({ success: true, data: populated });
+    return res.status(201).json({ success: true, data: created });
   } catch (err) {
     return res.status(500).json({ success: false, message: "Failed to create device event", error: err.message });
   }

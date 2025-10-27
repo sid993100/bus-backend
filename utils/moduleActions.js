@@ -42,11 +42,10 @@ export const MODULE_ACTIONS = {
   busStop: ["create", "read", "update", "delete"],
   route: ["create", "read", "update", "delete", "intermediateStop", "mapping"],
   trip: ["create", "read", "update", "delete", "approval"],
-  duty: ["create", "read", "update", "delete"],
   scheduleConfig: ["create", "read", "update", "delete"],
   todayTrips: ["read", "delay", "breakdown"],
   todaySchedules: ["read", "cancellation"],
-  dutyAllocation: ["create", "read", "update", "delete", "dutySlip", "cancellation"],
+  duty: ["create", "read", "update", "delete", "dutySlip", "cancellation"],
 
   // ----- Staff -----
   conductor: ["create", "read", "update", "delete"],

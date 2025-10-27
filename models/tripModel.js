@@ -14,7 +14,8 @@ const tripConfigSchema = new Schema({
   tripId: {
     type: String,
     unique: true,
-    uppercase: true
+    uppercase: true,
+    index:true
   },
   scheduleLabel: {
     type: String,
