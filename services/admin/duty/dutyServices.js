@@ -1,36 +1,40 @@
 import { isValidObjectId } from "mongoose";
 import Duty from "../../../models/dutyModel.js";
 
-// Is function mein koi badlav nahi hai
+
 export const getDuty = async (req, res) => {
   try {
     const { pageNum, limitNum, skip, sort, textFilter } = buildDutyQueryParams(req);
 
     const filter = { ...textFilter };
 
+    // Fetch duties and count in parallel for better performance
     const [items, total] = await Promise.all([
       Duty.find(filter)
         .populate(dutyPopulate)
         .populate('depot', 'depotName depotCode')
         .populate('seatLayout', 'layoutName totalSeats')
         .populate('busService', 'serviceName serviceType')
-        .populate({path:"scheduleNumber",populate:{
-          path: 'trips.trip',
-          populate: { path: 'route', select: 'routeName routeCode routeLength source destination' },
-        }})
-        // .populate({
-        //   path: 'trips.trip',
-        //   populate: { path: 'route', select: 'routeName routeCode routeLength source destination' },
-        // })
-        .populate('route.routeName')
-        .sort(sort || {createdAt:-1})
+        .populate({
+          path: "scheduleNumber",
+          populate: {
+            path: 'trips.trip',
+            populate: { 
+              path: 'route', 
+              select: 'routeName routeCode routeLength source destination' 
+            },
+          }
+        })
+        .sort(sort || { createdAt: -1 })  // Latest first by default
         .skip(skip)
         .limit(limitNum),
       Duty.countDocuments(filter),
     ]);
 
+    const totalPages = Math.ceil(total / limitNum);
+
+    // Handle empty results
     if (!items || items.length === 0) {
-      const totalPages = Math.ceil((total || 0) / limitNum);
       return res.status(200).json({
         success: true,
         message: 'No duties found',
@@ -46,8 +50,7 @@ export const getDuty = async (req, res) => {
       });
     }
 
-    const totalPages = Math.ceil(total / limitNum);
-
+    // Return successful response with data
     return res.status(200).json({
       success: true,
       message: 'Duties retrieved successfully',
@@ -70,6 +73,7 @@ export const getDuty = async (req, res) => {
     });
   }
 };
+
 
 
 const dutyPopulate = [

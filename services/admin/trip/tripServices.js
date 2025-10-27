@@ -870,14 +870,14 @@ export const breakdownTrip= async (req, res) => {
 export const delayTrip= async (req, res) => {
   try {
     const { id } = req.params;
-    const {  } = req.body;
+    const { delay } = req.body;
     if (!id || !isValidObjectId(id)) {
       return res.status(400).json({
         success: false,
         message: "Valid trip ID is required",
       });
     }
-    const trip = await TripConfig.findByIdAndUpdate(id,{breakdown},{new:true});
+    const trip = await TripConfig.findByIdAndUpdate(id,{delay},{new:true});
     if (!trip) {
       return res.status(404).json({
         success: false,
