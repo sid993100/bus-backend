@@ -6,9 +6,9 @@ const dutySchema = new Schema({
     required: true,
   },
   vehicleNumber: {
-    type: String,
+    type: Schema.Types.ObjectId,
+    ref: "Vehicle",
     required: true,
-    uppercase: true
   },
   conductorName: {
     type: Schema.Types.ObjectId,

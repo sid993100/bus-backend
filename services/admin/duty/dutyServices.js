@@ -12,6 +12,11 @@ export const getDuty = async (req, res) => {
     const [items, total] = await Promise.all([
       Duty.find(filter)
         .populate(dutyPopulate)
+        .populate({path:"vehicleNumber" , select:"vehicleNumber serviceType",
+        populate:{
+          path:"serviceType",select:'code name'
+        }
+        })
         .populate({
           path: 'scheduleNumber',
           select: 'scheduleLabel depot seatLayout busService trips startDate endDate cycleDay scheduleKm',
