@@ -12,6 +12,23 @@ export const getDuty = async (req, res) => {
     const [items, total] = await Promise.all([
       Duty.find(filter)
         .populate(dutyPopulate)
+        .populate({
+          path: 'scheduleNumber',
+          select: 'scheduleLabel depot seatLayout busService trips startDate endDate cycleDay scheduleKm',
+          populate: [
+            { path: 'depot', select: 'depotCustomer depotCode region' },
+            { path: 'seatLayout', select: 'layoutName totalSeats seatConfiguration' },
+            { path: 'busService', select: 'name serviceType fare' },
+            {
+              path: 'trips.trip',
+              select: 'tripId origin destination originTime destinationTime cycleDay day status route',
+              populate: {
+                path: 'route',
+                select: 'routeName routeCode routeLength source destination'
+              }
+            }
+          ]
+        })
         .sort(sort || { createdAt: -1 })  // Latest first by default
         .skip(skip)
         .limit(limitNum),
@@ -68,7 +85,7 @@ const dutyPopulate = [
   { path: "driverName", select: "driverName" },
   { path: "supportDriver", select: "driverName" },
   {path: "route", select: "routeName" },
-  {path: "scheduleNumber", select: "scheduleName" }
+  {path: "scheduleNumber", select: "scheduleLabel scheduleKm trips " }
 ];
 
 function buildDutyQueryParams(req) {
