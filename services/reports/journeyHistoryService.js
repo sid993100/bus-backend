@@ -58,7 +58,7 @@ export const journeyHistory = async (req, res) => {
         ignition main_power imei formatted_datetime
         satellites fix_status gsm_signal heading
       `)
-      .sort({ timestamp: 1 })
+      .sort({ time: 1 })
       .skip(skip)
       .limit(pageLimit);
 
@@ -124,10 +124,6 @@ export const journeyHistory = async (req, res) => {
   }
 };
 
-
-/**
- * Calculate date range based on period - FIXED VERSION
- */
 function calculateDateRange(period, startDate, endDate) {
   const now = new Date();
   let start, end = new Date(now);
@@ -196,10 +192,6 @@ function calculateDateRange(period, startDate, endDate) {
 }
 
 
-
-/**
- * Format datetime similar to Journey History format (03-03-2024 14:04:20)
- */
 function formatDateTime(date) {
   const d = new Date(date);
 
@@ -215,11 +207,6 @@ function formatDateTime(date) {
 }
 
 
-
-
-/**
- * Add location data using reverse geocoding - Improved version
- */
  async function addLocationData(data) {
   const maxGeocode = Math.min(data.length, 10); // limit how many records get geocoded
   const concurrencyLimit = 3; // how many geocode calls run at once
@@ -272,10 +259,6 @@ function formatDateTime(date) {
   return results;
 }
 
-
-/**
- * Reverse geocode coordinates to address - Improved version
- */
 async function reverseGeocode(lat, lon) {
   try {
     const url = `http://nominatim.locationtrack.in/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;

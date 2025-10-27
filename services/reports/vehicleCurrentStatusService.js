@@ -134,7 +134,8 @@ export const getVehicleCurrentStatusWithLocation = async (req, res) => {
 
 export const getVehicleByVehicleNumber = async (req, res) => {
   try {
-    const vehicleNumber = (req.params.imei || req.query.imei || "").toString().trim();
+    const vehicleNumber = (req.params.vehicleNumber || req.query.vehicleNumber || "").toString().trim();
+console.log(vehicleNumber);
 
     if (!vehicleNumber) {
       return res.status(400).json({ success: false, message: "vehicleNumber is required in params or query" });
@@ -144,7 +145,7 @@ export const getVehicleByVehicleNumber = async (req, res) => {
 
     // Fetch latest tracking packet for this vehicle with packet_status 'L'
     const vehicle = await TrackingPacket.findOne(
-      { packet_type: "tracking", packet_status: "L", imei: vehicleNumber },
+      { packet_type: "tracking", packet_status: "L", vehicle_reg_no: vehicleNumber },
       {
         vehicle_reg_no: 1,
         imei: 1,

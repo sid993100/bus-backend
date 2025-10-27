@@ -243,7 +243,7 @@ export const addDuty = async (req, res) => {
 
     res.status(201).json({
       message: "Duty created successfully",
-      data: populatedDuty // Populated data bhejna
+      data: newDuty 
     });
 
   } catch (error) {

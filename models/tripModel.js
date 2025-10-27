@@ -108,6 +108,11 @@ const tripConfigSchema = new Schema({
   },
   cancel:[{
     type: Date,
+  }],
+  breakdown: [{ type: Date  }],
+  delay:[{
+    date: Date,
+    time: String
   }]
 }, {
   timestamps: true

@@ -142,39 +142,51 @@ export const getAllScheduleConfigurations = async (req, res) => {
       sortOrder = 'desc'
     } = req.query;
 
-    // Build filter object
-    const filter = {};
-    if (depot) filter.depot = depot;
-    if (startDate || endDate) {
-      filter.startDate = {};
-      if (startDate) filter.startDate.$gte = new Date(startDate);
-      if (endDate) filter.startDate.$lte = new Date(endDate);
+    // Parse and normalize dates
+    let start = normalizeDate(startDate);
+    let end = normalizeDate(endDate);
+
+    // Default to today if no dates provided
+    if (!start || !end) {
+      const defaults = getDefaultDateRange();
+      start = defaults.startDate;
+      end = endOfDay(defaults.endDate);
+    } else {
+      end = endOfDay(end);
     }
 
-    // Pagination
+    // Build filter with date overlap logic
+    const filter = {
+      startDate: { $lte: end },
+      endDate: { $gte: start }
+    };
+    if (depot) filter.depot = depot;
+
+    // Pagination and sorting
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const sort = {};
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
-    const schedules = await ScheduleConfiguration.find(filter)
-      .populate('depot', 'depotCustomer depotCode region')
-      .populate('seatLayout', 'layoutName totalSeats seatConfiguration')
-      .populate('busService', 'name serviceType fare')
-      .populate({
-        path: 'trips.trip',
-        select: 'tripId origin destination originTime destinationTime cycleDay day status route',
-        populate:[
-         { path:"route" , select:"routeName routeLength"}
-        ]
-      })
-      .sort(sort)
-      .skip(skip)
-      .limit(parseInt(limit));
+    // Fetch schedules
+    const [schedules, totalCount] = await Promise.all([
+      ScheduleConfiguration.find(filter)
+        .populate('depot', 'depotCustomer depotCode region')
+        .populate('seatLayout', 'layoutName totalSeats seatConfiguration')
+        .populate('busService', 'name serviceType fare')
+        .populate({
+          path: 'trips.trip',
+          select: 'tripId origin destination originTime destinationTime cycleDay day status route',
+          populate: [{ path: 'route', select: 'routeName routeLength' }]
+        })
+        .sort(sort)
+        .skip(skip)
+        .limit(parseInt(limit)),
+      ScheduleConfiguration.countDocuments(filter)
+    ]);
 
-    // Get total count for pagination
-    const totalCount = await ScheduleConfiguration.countDocuments(filter);
     const totalPages = Math.ceil(totalCount / parseInt(limit));
 
+    // Respond
     res.status(200).json({
       success: true,
       data: schedules,
@@ -185,9 +197,13 @@ export const getAllScheduleConfigurations = async (req, res) => {
         itemsPerPage: parseInt(limit),
         hasNextPage: parseInt(page) < totalPages,
         hasPrevPage: parseInt(page) > 1
+      },
+      filters: {
+        startDate: start,
+        endDate: end,
+        depot: depot || undefined
       }
     });
-
   } catch (error) {
     console.error('Error fetching schedule configurations:', error);
     res.status(500).json({

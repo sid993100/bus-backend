@@ -659,61 +659,47 @@ export const updateTrip = async (req, res) => {
 
 export const getTodayTrips = async (req, res) => {
   try {
-   
     const { startDay, endDay } = req.query;
 
-    // Helper: build start/end of a given date
+    // Normalize date to start or end of the day
     const toStartOfDay = (d) => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
     const toEndOfDay = (d) => { const x = new Date(d); x.setHours(23,59,59,999); return x; };
-
-    const now = new Date();
-    const todayStart = toStartOfDay(now);
-    const todayEnd   = toEndOfDay(now);
 
     let rangeStart, rangeEnd;
 
     if (!startDay && !endDay) {
-      // Default to today's full range
-      rangeStart = todayStart;
-      rangeEnd = todayEnd;
+      // Default: today
+      const now = new Date();
+      rangeStart = toStartOfDay(now);
+      rangeEnd = toEndOfDay(now);
     } else if (startDay && !endDay) {
-      // Single-day window using startDay
       const d = new Date(startDay);
-      if (isNaN(d)) {
-        return res.status(400).json({ success: false, message: "Invalid startDay format" });
-      }
+      if (isNaN(d)) return res.status(400).json({ success: false, message: "Invalid startDay format" });
       rangeStart = toStartOfDay(d);
       rangeEnd = toEndOfDay(d);
     } else if (!startDay && endDay) {
-      // Single-day window using endDay
       const d = new Date(endDay);
-      if (isNaN(d)) {
-        return res.status(400).json({ success: false, message: "Invalid endDay format" });
-      }
+      if (isNaN(d)) return res.status(400).json({ success: false, message: "Invalid endDay format" });
       rangeStart = toStartOfDay(d);
       rangeEnd = toEndOfDay(d);
     } else {
-      // Both provided: multi-day window inclusive
       const s = new Date(startDay);
       const e = new Date(endDay);
-      if (isNaN(s) || isNaN(e)) {
+      if (isNaN(s) || isNaN(e))
         return res.status(400).json({ success: false, message: "Invalid startDay or endDay format" });
-      }
       rangeStart = toStartOfDay(s);
       rangeEnd = toEndOfDay(e);
     }
 
-    // Validate chronological order
     if (rangeStart > rangeEnd) {
       return res.status(400).json({ success: false, message: "startDay must be <= endDay" });
     }
 
-    // Pagination
     const page = Math.max(parseInt(req.query.page || "1", 10), 1);
     const limit = Math.max(parseInt(req.query.limit || "10", 10), 1);
     const skip = (page - 1) * limit;
 
-    // Overlap filter: trip window intersects [rangeStart, rangeEnd]
+    // Looks for trips APPROVED and whose window overlaps with the requested date range
     const filter = {
       startDate: { $lte: rangeEnd },
       endDate: { $gte: rangeStart },
@@ -726,7 +712,7 @@ export const getTodayTrips = async (req, res) => {
         .populate(tripPopulate)
         .skip(skip)
         .limit(limit)
-        .sort({ startDate: 1 }),
+        .sort({ startDate: -1 }) // Latest first
     ]);
 
     return res.status(200).json({
@@ -748,7 +734,6 @@ export const getTodayTrips = async (req, res) => {
     });
   }
 };
-
 
 
 
@@ -816,7 +801,7 @@ export const deleteTrips = async (req, res) => {
     });
   }
 }
-export const breakdownTrip= async (req, res) => {
+export const cancelTrip= async (req, res) => {
   try {
     const { id } = req.params;
     const { cancel } = req.body;
@@ -827,6 +812,72 @@ export const breakdownTrip= async (req, res) => {
       });
     }
     const trip = await TripConfig.findByIdAndUpdate(id,{cancel},{new:true});
+    if (!trip) {
+      return res.status(404).json({
+        success: false,
+        message: "Trip not found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Trip Cancel dates updated successfully",
+      data: trip,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error:
+        process.env.NODE_ENV === "development"
+          ? error.message
+          : "Something went wrong",
+    });
+  }
+}
+export const breakdownTrip= async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { breakdown } = req.body;
+    if (!id || !isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Valid trip ID is required",
+      });
+    }
+    const trip = await TripConfig.findByIdAndUpdate(id,{breakdown},{new:true});
+    if (!trip) {
+      return res.status(404).json({
+        success: false,
+        message: "Trip not found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Trip breakdown dates updated successfully",
+      data: trip,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error:
+        process.env.NODE_ENV === "development"
+          ? error.message
+          : "Something went wrong",
+    });
+  }
+}
+export const delayTrip= async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {  } = req.body;
+    if (!id || !isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Valid trip ID is required",
+      });
+    }
+    const trip = await TripConfig.findByIdAndUpdate(id,{breakdown},{new:true});
     if (!trip) {
       return res.status(404).json({
         success: false,
