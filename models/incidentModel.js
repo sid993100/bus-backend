@@ -1,55 +1,15 @@
 import { model, Schema } from "mongoose";
 
 const incidentSchema = new Schema({
-  vehicleNumber: {
-    type: String,
+  vehicle: {
+    type: Schema.Types.ObjectId,
+    ref: "Vehicle",
     required: true,
-    uppercase: true
+    
   },
-  imeiNumber: {
-    type: String,
-    required: true
-  },
-  eventType: {
-    type: String,
-    required: true,
-    uppercase: true,
-    enum: ['BD', 'TA', 'EA', 'SOS', 'HA', 'HB', 'RT', 'DT']
-  },
-  eventDescription: {
-    type: String,
-    required: true,
-    uppercase: true
-  },
-  eventDateTime: {
-    type: Date,
-    required: true
-  },
-  location: {
-    type: {
-      type: String,
-      enum: ['Point'],
-      default: 'Point'
-    },
-    coordinates: {
-      type: [Number],
-      required: true,
-      index: '2dsphere'
-    }
-  },
-  locationName: {
-    type: String,
-    uppercase: true
-  },
-  depotCustomer: {
-    type: String,
-    required: true,
-    uppercase: true
-  },
-  zoneRegion: {
-    type: String,
-    required: true,
-    uppercase: true
+  event: {
+    type:Schema.Types.ObjectId,
+    ref:"DeviceEvent"
   },
   eventStatus: {
     type: String,
@@ -58,12 +18,9 @@ const incidentSchema = new Schema({
     enum: ['OPEN', 'CLOSED', 'ESCALATED'],
     default: 'OPEN'
   },
-  handlerName: {
+  remarks: {
     type: String,
-    uppercase: true
-  },
-  handledDateTime: {
-    type: Date
+    uppercase: true,
   }
 }, {
   timestamps: true

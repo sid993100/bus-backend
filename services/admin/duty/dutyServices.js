@@ -227,9 +227,9 @@ export const getDutyByRegion = async (req, res) => {
 // addDuty function mein badlav
 export const addDuty = async (req, res) => {
   try {
-    const {
+    const 
       data
-    } = req.body;
+     = req.body;
 
     if (!data.dutyDate || !data.vehicleNumber || !data.conductorName || !data.driverName  ) {
       return res.status(400).json({
@@ -237,16 +237,16 @@ export const addDuty = async (req, res) => {
       });
     }
 
-    if (existingDuty) {
-      return res.status(409).json({ 
-        message: "Duty number already exists" 
-      });
-    }
+    // if (existingDuty) {
+    //   return res.status(409).json({ 
+    //     message: "Duty number already exists" 
+    //   });
+    // }
 
     // Naya duty create karna
-    const newDuty = await Duty.create({
+    const newDuty = await Duty.create(
     data
-    });
+    );
 
     if(!newDuty){
       return res.status(500).json({
@@ -301,7 +301,7 @@ export const updateDuty = async (req, res) => {
     
     const {conductorName,driverName,supportDriver,vehicleNumber,scheduleNumber, dutyType,dutyDate} = req.body;
   
-    const updatedDuty = await Duty.findByIdAndUpdate(id,conductorName,driverName,supportDriver,vehicleNumber,scheduleNumber, dutyType,dutyDate , { new: true, runValidators: true })
+    const updatedDuty = await Duty.findByIdAndUpdate(id,{conductorName,driverName,supportDriver,vehicleNumber,scheduleNumber, dutyType,dutyDate }, { new: true, runValidators: true })
         .populate('conductorName', 'driverName')
         .populate('driverName', 'driverName')
         .populate('supportDriver', 'driverName');
