@@ -1,7 +1,6 @@
 import {Router} from 'express';
 import { isLogin } from '../../middleWares/isLogin.js';
 import { rawData } from '../../services/reports/rawServices.js';
-import { roleBaseAuth } from '../../middleWares/rolebaseAuth.js';
 import { checkPermission } from '../../middleWares/checkPermission.js';
 import { vehicleActivity } from '../../services/reports/vehicleActivityServices.js';
 import { journeyHistory } from '../../services/reports/journeyHistoryService.js';

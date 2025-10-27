@@ -299,11 +299,9 @@ export const updateDuty = async (req, res) => {
       });
     }
     
-    const {updateData} = req.body;
-    // ... (uppercase logic theek hai)
-
-    // Duty ko update karna aur saath hi mein populate karna
-    const updatedDuty = await Duty.findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
+    const {conductorName,driverName,supportDriver,vehicleNumber,scheduleNumber, dutyType,dutyDate} = req.body;
+  
+    const updatedDuty = await Duty.findByIdAndUpdate(id,conductorName,driverName,supportDriver,vehicleNumber,scheduleNumber, dutyType,dutyDate , { new: true, runValidators: true })
         .populate('conductorName', 'driverName')
         .populate('driverName', 'driverName')
         .populate('supportDriver', 'driverName');
