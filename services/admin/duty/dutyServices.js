@@ -299,7 +299,7 @@ export const updateDuty = async (req, res) => {
       });
     }
     
-    const updateData = { ...req.body };
+    const {updateData} = req.body;
     // ... (uppercase logic theek hai)
 
     // Duty ko update karna aur saath hi mein populate karna

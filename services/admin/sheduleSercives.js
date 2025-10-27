@@ -664,11 +664,6 @@ const normalizeDate = (date) => {
   return isNaN(parsed.getTime()) ? null : parsed;
 };
 
-function endOfDay(d) {
-  const x = new Date(d);
-  x.setHours(23, 59, 59, 999);
-  return x;
-}
 
 const getDefaultDateRange = () => {
   const today = new Date();
@@ -678,123 +673,106 @@ const getDefaultDateRange = () => {
   };
 };
 
-function daysBetween(a, b) {
-  const MS = 24 * 60 * 60 * 1000;
-  return Math.floor((b - a) / MS);
-}
+
 
 const WEEKDAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 
 export const getSchedulesByDate = async (req, res) => {
   try {
-    const {
-      startDate,
-      endDate,
-      depot,
-      page = "1",
-      limit = "10",
-      sortBy = "createdAt",
-      sortOrder = "desc",
-    } = req.query;
+    const { startDay, depot, page = 1, limit = 10, sortBy = "createdAt", sortOrder = "desc" } = req.query;
 
-    // Parse range (defaults to today)
-    let start = normalizeDate(startDate);
-    let end = normalizeDate(endDate);
-    if (!start || !end) {
-      const def = getDefaultDateRange();
-      start = def.startDate;
-      end = def.endDate;
+    const targetDate = normalizeDate(startDay);
+    if (!targetDate) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid or missing startDate in query",
+      });
     }
-    const startBound = start;
-    const endBound = endOfDay(end);
 
-    // Base overlap filter
-    const baseFilter = {
-      startDate: { $lte: endBound },
-      endDate: { $gte: startBound },
+    const startOfTarget = toStartOfDay(targetDate);
+    const endOfTarget = toEndOfDay(targetDate);
+
+    // Step 1️⃣ — Base filter: schedules that include this date
+    const filter = {
+      startDate: { $lte: endOfTarget },
+      endDate: { $gte: startOfTarget },
     };
-    if (depot) baseFilter.depot = depot;
+    if (depot) filter.depot = depot;
 
-    const pageNum = Math.max(parseInt(page, 10), 1);
-    const limitNum = Math.max(parseInt(limit, 10), 1);
-    const skip = (pageNum - 1) * limitNum;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
     const sort = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
 
-    // Fetch a superset by overlap; apply cycle semantics in memory
-    const [rawItems, totalOverlap] = await Promise.all([
-      ScheduleConfiguration.find(baseFilter)
+    // Step 2️⃣ — Fetch possible schedules
+    const [allSchedules, totalCount] = await Promise.all([
+      ScheduleConfiguration.find(filter)
         .populate("depot", "depotCustomer depotCode region")
         .populate("seatLayout", "layoutName totalSeats seatConfiguration")
-        .populate("busService", "name")
+        .populate("busService", "name serviceType fare")
         .populate({
           path: "trips.trip",
           select: "tripId origin destination originTime destinationTime cycleDay day status route",
-          populate: [{ path: "route", select: "routeName" }],
+          populate: [{ path: "route", select: "routeName routeLength" }],
         })
         .sort(sort)
         .skip(skip)
-        .limit(limitNum)
+        .limit(parseInt(limit))
         .lean(),
-      ScheduleConfiguration.countDocuments(baseFilter),
+      ScheduleConfiguration.countDocuments(filter),
     ]);
 
-    // To compute accurate pagination respecting cycle semantics, a second pass is needed for total.
-    // For simplicity, compute eligibility for current page and also count on a separate query without skip/limit.
-    const allOverlap = await ScheduleConfiguration.find(baseFilter).select("startDate endDate cycleDay days").lean();
+    // Step 3️⃣ — Apply cycleDay logic
+    const eligibleSchedules = allSchedules.filter((sch) => {
+      const schStart = toStartOfDay(sch.startDate);
+      const schEnd = toEndOfDay(sch.endDate);
 
-    const isEligibleOnAnyDay = (sch) => {
-      // Iterate each day in requested window, clamp to schedule range
-      const from = new Date(Math.max(startBound.getTime(), new Date(sch.startDate).setHours(0,0,0,0)));
-      const to = new Date(Math.min(endBound.getTime(), endOfDay(new Date(sch.endDate)).getTime()));
-      if (from > to) return false;
+      // Outside valid range
+      if (targetDate < schStart || targetDate > schEnd) return false;
 
-      for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
-        const d0 = new Date(d); d0.setHours(0,0,0,0);
-
-        if (sch.cycleDay === "Daily" || !sch.cycleDay) {
+      const cycle = sch.cycleDay || "Daily";
+      switch (cycle) {
+        case "Daily":
           return true;
+
+        case "Alternative": {
+          const diff = daysBetween(schStart, targetDate);
+          return diff % 2 === 0; // every 2nd day
         }
 
-        if (sch.cycleDay === "Alternative") {
-          // Include only when offset from schedule start is even
-          const schStart0 = new Date(sch.startDate); schStart0.setHours(0,0,0,0);
-          const delta = daysBetween(schStart0, d0);
-          if (delta % 2 === 0) return true;
+        case "Weekly": {
+          const targetDay = WEEKDAYS[targetDate.getDay()];
+          return Array.isArray(sch.days) && sch.days.includes(targetDay);
         }
 
-        if (sch.cycleDay === "Weekly") {
-          const wdName = WEEKDAYS[d0.getDay()];
-          // Include if schedule.days includes this weekday
-          if (Array.isArray(sch.days) && sch.days.includes(wdName)) {
-            return true;
-          }
-        }
+        default:
+          return false;
       }
-      return false;
-    };
+    });
 
-    // Page items have the full document; check eligibility on rawItems for response
-    const pageEligible = rawItems.filter(isEligibleOnAnyDay);
-
-    // Accurate total respecting cycle semantics
-    const totalEligible = allOverlap.filter(isEligibleOnAnyDay).length;
+    // Step 4️⃣ — Respond
+    const totalPages = Math.ceil(eligibleSchedules.length / parseInt(limit));
 
     return res.status(200).json({
       success: true,
-      data: pageEligible,
+      data: eligibleSchedules,
       pagination: {
-        currentPage: pageNum,
-        totalPages: Math.ceil(totalEligible / limitNum),
-        totalItems: totalEligible,
-        itemsPerPage: limitNum,
-        hasNextPage: pageNum * limitNum < totalEligible,
-        hasPrevPage: pageNum > 1,
+        currentPage: parseInt(page),
+        totalPages,
+        totalItems: eligibleSchedules.length,
+        itemsPerPage: parseInt(limit),
+        hasNextPage: parseInt(page) < totalPages,
+        hasPrevPage: parseInt(page) > 1,
       },
-      filters: { startDate: startBound, endDate: endBound, ...(depot && { depot }) },
+      filters: {
+        checkedDate: targetDate,
+        depot: depot || null,
+      },
     });
   } catch (error) {
-    console.error("Error fetching schedules by date:", error);
-    return res.status(500).json({ success: false, error: "Failed to fetch schedules by date" });
+    console.error("❌ Error fetching schedules by date:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to fetch schedules by date",
+    });
   }
 };
 
@@ -856,4 +834,19 @@ const toUTCEnd = (date) => {
   d.setHours(23, 59, 59, 999);
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   return d;
+};
+const toStartOfDay = (date) => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+const toEndOfDay = (date) => {
+  const d = new Date(date);
+  d.setHours(23, 59, 59, 999);
+  return d;
+};
+const daysBetween = (start, end) => {
+  const msPerDay = 24 * 60 * 60 * 1000;
+  return Math.floor((toStartOfDay(end) - toStartOfDay(start)) / msPerDay);
 };
