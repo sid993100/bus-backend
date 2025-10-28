@@ -8,6 +8,7 @@ export async function createIncident(req,res) {
     try {
         const { vehicle, messageid,long,lat } = req.body;
 
+        const incidentExists = await Incident.findOne({ vehicle: vehicle.toUpperCase()})
         const event= await DeviceEvent.findOne({messageId:Number(messageid)})
         const vehivleId= await Vehicle.findOne({vehicleNumber:vehicle.toUpperCase()})
 
@@ -136,6 +137,43 @@ export async function getIncidents(req, res) {
         res.status(500).json({
             success: false,
             message: "Failed to fetch incidents",
+            error: error.message
+        });
+    }
+}
+export async function setRemarks(req, res) {
+    try {
+        const { incidentId } = req.params;
+        const { remarks } = req.body;   
+        const incident = await Incident.findByIdAndUpdate(incidentId,{ remarks, }, { new: true });
+        if (!incident) {
+            return res.status(404).json({
+                success: false,
+                message: "Incident not found"
+            });
+        }
+}catch (error) {
+        console.error("Error updating incident remarks:", error);
+        res.status(500).json({  
+            success: false,
+            message: "Failed to update incident remarks",
+            error: error.message
+        });
+    }
+}
+
+export async function deleteAllIncidents(req,res){
+    try {
+        const result = await Incident.deleteMany({});
+        res.status(200).json({
+            success: true,
+            message: `Deleted ${result.deletedCount} incident(s)`
+        });
+    } catch (error) {
+        console.error("Error deleting incidents:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to delete incidents",
             error: error.message
         });
     }
