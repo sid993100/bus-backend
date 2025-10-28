@@ -4,28 +4,102 @@ import EventCategory from "../../models/eventCategoryModel.js";
 import Vehicle from "../../models/vehicleModel.js";
 
 
-export async function createIncident(req,res) {
+export async function createIncident(req, res) {
     try {
-        const { vehicle, messageid,long,lat } = req.body;
+        const { vehicle, messageid, long, lat } = req.body;
 
-        const incidentExists = await Incident.findOne({ vehicle: vehicle.toUpperCase()})
-        const event= await DeviceEvent.findOne({messageId:Number(messageid)})
-        const vehivleId= await Vehicle.findOne({vehicleNumber:vehicle.toUpperCase()})
+        // Validate required fields
+        if (!vehicle || messageid === undefined || long === undefined || lat === undefined) {
+            return res.status(400).json({
+                success: false,
+                message: "Missing required fields: vehicle, messageid, long, and lat are required"
+            });
+        }
 
-        const newIncident = await Incident.create({
-            vehicle:vehivleId._id,
-            event:event._id,
-            long:Number(long),
-            lat:Number(lat)
+        // Validate numeric fields
+        const messageIdNum = Number(messageid);
+        const longNum = Number(long);
+        const latNum = Number(lat);
+
+        if (isNaN(messageIdNum) || isNaN(longNum) || isNaN(latNum)) {
+            return res.status(400).json({
+                success: false,
+                message: "messageid, long, and lat must be valid numbers"
+            });
+        }
+
+        // Find event by messageId
+        const event = await DeviceEvent.findOne({ messageId: messageIdNum });
+        if (!event) {
+            return res.status(404).json({
+                success: false,
+                message: `Event with messageId ${messageid} not found`
+            });
+        }
+
+        // Find vehicle by vehicleNumber
+        const vehicleDoc = await Vehicle.findOne({ 
+            vehicleNumber: vehicle.toUpperCase().trim() 
         });
+        if (!vehicleDoc) {
+            return res.status(404).json({
+                success: false,
+                message: `Vehicle with number ${vehicle} not found`
+            });
+        }
+
+        // Find the latest incident for this vehicle
+        const latestIncident = await Incident.findOne({
+            vehicle: vehicleDoc._id
+        })
+        .sort({ createdAt: -1 })
+        .populate('event', 'messageId');
+
+        // If latest incident has the same messageId, don't create duplicate
+        if (latestIncident && latestIncident.event.messageId === messageIdNum) {
+            const populatedLatest = await Incident.findById(latestIncident._id)
+                .populate('vehicle', 'vehicleNumber registrationNumber model')
+                .populate('event', 'messageId eventType eventName description');
+
+            return res.status(200).json({
+                success: true,
+                message: "Incident already exists with the same messageId",
+                data: populatedLatest,
+                isNew: false
+            });
+        }
+
+        // Create new incident (new messageId detected)
+        const newIncident = await Incident.create({
+            vehicle: vehicleDoc._id,
+            event: event._id,
+            long: longNum,
+            lat: latNum
+        });
+
+        // Populate the new incident
+        const populatedIncident = await Incident.findById(newIncident._id)
+            .populate('vehicle', 'vehicleNumber registrationNumber model')
+            .populate('event', 'messageId eventType eventName description');
+
         res.status(201).json({
             success: true,
-            message: "Incident created successfully",
-            data: newIncident
+            message: "New incident created successfully",
+            data: populatedIncident,
+            isNew: true
         });
 
     } catch (error) {
         console.error("Error creating incident:", error);
+        
+        if (error.code === 11000) {
+            return res.status(409).json({
+                success: false,
+                message: "Duplicate incident entry",
+                error: error.message
+            });
+        }
+
         res.status(500).json({
             success: false,
             message: "Failed to create incident",
@@ -33,6 +107,7 @@ export async function createIncident(req,res) {
         });
     }
 }
+
 export async function getIncidents(req, res) {
     try {
         const {
