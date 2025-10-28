@@ -35,7 +35,9 @@ app.get("/", (req, res) => {
 
 const allowedOrigins = [
   "http://localhost:3000",
-  "http://31.97.235.221:3000"
+  "http://31.97.235.221:3000",
+  "https://roadtransit.in/",
+  "https://www.roadtransit.in/"
 ];
 
 app.use(

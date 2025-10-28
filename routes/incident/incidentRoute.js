@@ -5,8 +5,8 @@ import { createIncident, getIncidents } from "../../services/incidentHandling/in
 
 const router= Router();
 
-router.get("/", isLogin, getIncidents);
+router.get("/", getIncidents);
 
-router.post("/", isLogin, createIncident);
+router.post("/" , createIncident);
 
 export default router
