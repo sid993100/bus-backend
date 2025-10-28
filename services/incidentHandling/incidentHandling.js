@@ -8,14 +8,14 @@ export async function createIncident(req,res) {
     try {
         const { vehicle, messageid,long,lat } = req.body;
 
-        const event= await DeviceEvent.findOne({messageId:messageid})
+        const event= await DeviceEvent.findOne({messageId:Number(messageid)})
         const vehivleId= await Vehicle.findOne({vehicleNumber:vehicle.toUpperCase()})
 
         const newIncident = await Incident.create({
             vehicle:vehivleId._id,
             event:event._id,
-            long,
-            lat
+            long:Number(long),
+            lat:Number(lat)
         });
         res.status(201).json({
             success: true,
