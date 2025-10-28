@@ -50,7 +50,7 @@ export const journeyHistoryReplay = async (req, res) => {
         ignition main_power emergency_status satellites fix_status
         gsm_signal battery_voltage heading operator_name
       `)
-      .sort({ timestamp: 1 })
+      .sort({ formatted_datetime: 1 })
       .limit(2000);
 
     if (trackingData.length === 0) {

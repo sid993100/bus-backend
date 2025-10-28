@@ -1084,9 +1084,7 @@ export const getArrivalDeparture  = async (req, res) => {
   }
 };
 
-/**
- * Build aggregation pipeline for complex filters (region/depot)
- */
+
 function buildAggregationPipeline(baseFilter, regionId, depotId, skip, limit) {
   const pipeline = [
     { $match: baseFilter }
