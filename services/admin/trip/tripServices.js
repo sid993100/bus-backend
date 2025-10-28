@@ -1,5 +1,5 @@
 import TripConfig from "../../../models/tripModel.js";
-import { isValidObjectId } from "mongoose";
+import mongoose, { isValidObjectId } from "mongoose";
 
 export const getTrips = async (req, res) => {
   try {
