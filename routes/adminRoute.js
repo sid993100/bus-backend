@@ -12,7 +12,6 @@ import { addOwnerType, getOwnerType, updateOwnerType } from "../services/admin/o
 
 import {  updateSubscription } from "../services/admin/subscription/subscriptionServices.js";
 import { checkPermission } from "../middleWares/checkPermission.js";
-import { getIncident } from "../services/admin/Incident/IncidentService.js";
 import {  getHierarchy, updateHierarchy } from "../services/admin/hierarchy/hierarchyServices.js";
 import { createDeviceEvent, getDeviceEventById, getDeviceEvents, updateDeviceEvent } from "../services/otc/deviceEventServices.js";
 
@@ -28,7 +27,6 @@ router.get("/plan",isLogin,getPlan)
 router.get("/vltdmanufacturer",isLogin,getVltdManufacturer)
 router.get("/vltmodel",isLogin,getVltModel)
 router.get("/ownertype",isLogin,getOwnerType)
-router.get("/incident",isLogin,getIncident)
 router.get("/hierarchy",isLogin,getHierarchy)
 
 

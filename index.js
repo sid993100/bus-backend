@@ -61,7 +61,6 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/rbac", rbac);
-app.use("/api/incident", incident);
 app.use("/api/master", master);
 app.use("/api/usermanagement", userManegementRoute);
 app.use("/api/operation", operationRoute);
@@ -72,6 +71,7 @@ app.use("/api/helpandsupport", helpAndSupportRoutes);
 app.use("/api/eventCategory", eventCategoryRoute);
 app.use("/api/delete",deleteRoute)
 app.use("/api/geofence",geoFenceRouter)
+app.use("/api/incidenthandling",incident)
 
 
 // ✅ Start Server

@@ -21,7 +21,9 @@ const incidentSchema = new Schema({
   remarks: {
     type: String,
     uppercase: true,
-  }
+  },
+  long:Number,
+  lat:Number
 }, {
   timestamps: true
 });
