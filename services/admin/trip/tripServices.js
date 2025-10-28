@@ -898,3 +898,287 @@ export const delayTrip= async (req, res) => {
     });
   }
 }
+
+
+export const getArrivalDeparture  = async (req, res) => {
+  try {
+    const { 
+      startDay, 
+      endDay, 
+      scheduleId, 
+      regionId, 
+      depotId, 
+      vehicleNumber, 
+      routeId,
+      page = 1,
+      limit = 10
+    } = req.query;
+
+    // Normalize date to start or end of the day
+    const toStartOfDay = (d) => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
+    const toEndOfDay = (d) => { const x = new Date(d); x.setHours(23,59,59,999); return x; };
+
+    let rangeStart, rangeEnd;
+
+    // Handle date range logic
+    if (!startDay && !endDay) {
+      // Default: today
+      const now = new Date();
+      rangeStart = toStartOfDay(now);
+      rangeEnd = toEndOfDay(now);
+    } else if (startDay && !endDay) {
+      const d = new Date(startDay);
+      if (isNaN(d)) return res.status(400).json({ success: false, message: "Invalid startDay format" });
+      rangeStart = toStartOfDay(d);
+      rangeEnd = toEndOfDay(d);
+    } else if (!startDay && endDay) {
+      const d = new Date(endDay);
+      if (isNaN(d)) return res.status(400).json({ success: false, message: "Invalid endDay format" });
+      rangeStart = toStartOfDay(d);
+      rangeEnd = toEndOfDay(d);
+    } else {
+      const s = new Date(startDay);
+      const e = new Date(endDay);
+      if (isNaN(s) || isNaN(e))
+        return res.status(400).json({ success: false, message: "Invalid startDay or endDay format" });
+      rangeStart = toStartOfDay(s);
+      rangeEnd = toEndOfDay(e);
+    }
+
+    if (rangeStart > rangeEnd) {
+      return res.status(400).json({ success: false, message: "startDay must be <= endDay" });
+    }
+
+    // Parse pagination params
+    const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+    const limitNum = Math.max(parseInt(limit, 10) || 10, 1);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Build dynamic filter object
+    const filter = {
+      startDate: { $lte: rangeEnd },
+      endDate: { $gte: rangeStart },
+      status: "APPROVED"
+    };
+
+    // Add optional filters conditionally
+    if (scheduleId && scheduleId.trim() !== '') {
+      filter.scheduleLabel = scheduleId.trim();
+    }
+
+    if (routeId && routeId.trim() !== '') {
+      filter.route = routeId.trim();
+    }
+
+    if (vehicleNumber && vehicleNumber.trim() !== '') {
+      // Case-insensitive search for vehicle number
+      filter.vehicleNumber = { $regex: new RegExp(vehicleNumber.trim(), 'i') };
+    }
+
+    // For regionId and depotId, we need to use aggregation or populate+filter
+    // Since these are in related collections, we'll use aggregation for efficiency
+    
+    let query;
+    
+    if (regionId || depotId) {
+      // Use aggregation pipeline when filtering by region or depot
+      const pipeline = buildAggregationPipeline(filter, regionId, depotId, skip, limitNum);
+      
+      const [results, countResult] = await Promise.all([
+        TripConfig.aggregate(pipeline),
+        TripConfig.aggregate([
+          { $match: filter },
+          ...(depotId ? [{
+            $lookup: {
+              from: 'depotcustomers',
+              localField: 'depot',
+              foreignField: '_id',
+              as: 'depotData'
+            }
+          }, {
+            $match: { 'depotData._id': new mongoose.Types.ObjectId(depotId) }
+          }] : []),
+          ...(regionId ? [{
+            $lookup: {
+              from: 'depotcustomers',
+              localField: 'depot',
+              foreignField: '_id',
+              as: 'depotData'
+            }
+          }, {
+            $match: { 'depotData.region': new mongoose.Types.ObjectId(regionId) }
+          }] : []),
+          { $count: 'total' }
+        ])
+      ]);
+
+      const total = countResult[0]?.total || 0;
+      const totalPages = Math.ceil(total / limitNum);
+
+      return res.status(200).json({
+        success: true,
+        range: { startDay: rangeStart, endDay: rangeEnd },
+        filters: {
+          scheduleId: scheduleId || undefined,
+          regionId: regionId || undefined,
+          depotId: depotId || undefined,
+          vehicleNumber: vehicleNumber || undefined,
+          routeId: routeId || undefined
+        },
+        pagination: {
+          currentPage: pageNum,
+          totalPages,
+          totalItems: total,
+          itemsPerPage: limitNum,
+          hasNextPage: pageNum < totalPages,
+          hasPrevPage: pageNum > 1
+        },
+        count: results.length,
+        data: results
+      });
+    } else {
+      // Simple query without region/depot filters
+      const [total, trips] = await Promise.all([
+        TripConfig.countDocuments(filter),
+        TripConfig.find(filter)
+          .populate('route', 'routeName routeCode routeLength source destination')
+          .populate('depot', 'depotName depotCode region')
+          .populate('scheduleLabel', 'scheduleLabel scheduleKm')
+          .skip(skip)
+          .limit(limitNum)
+          .sort({ startDate: -1 })
+          .lean()
+      ]);
+
+      const totalPages = Math.ceil(total / limitNum);
+
+      return res.status(200).json({
+        success: true,
+        range: { startDay: rangeStart, endDay: rangeEnd },
+        filters: {
+          scheduleId: scheduleId || undefined,
+          regionId: regionId || undefined,
+          depotId: depotId || undefined,
+          vehicleNumber: vehicleNumber || undefined,
+          routeId: routeId || undefined
+        },
+        pagination: {
+          currentPage: pageNum,
+          totalPages,
+          totalItems: total,
+          itemsPerPage: limitNum,
+          hasNextPage: pageNum < totalPages,
+          hasPrevPage: pageNum > 1
+        },
+        count: trips.length,
+        data: trips
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching trips by day range:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching trips by day range",
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Build aggregation pipeline for complex filters (region/depot)
+ */
+function buildAggregationPipeline(baseFilter, regionId, depotId, skip, limit) {
+  const pipeline = [
+    { $match: baseFilter }
+  ];
+
+  // Lookup depot information
+  if (depotId || regionId) {
+    pipeline.push({
+      $lookup: {
+        from: 'depotcustomers',
+        localField: 'depot',
+        foreignField: '_id',
+        as: 'depotData'
+      }
+    });
+
+    pipeline.push({
+      $unwind: {
+        path: '$depotData',
+        preserveNullAndEmptyArrays: false
+      }
+    });
+
+    // Filter by depotId if provided
+    if (depotId) {
+      pipeline.push({
+        $match: {
+          'depotData._id': new mongoose.Types.ObjectId(depotId)
+        }
+      });
+    }
+
+    // Filter by regionId if provided
+    if (regionId) {
+      pipeline.push({
+        $match: {
+          'depotData.region': new mongoose.Types.ObjectId(regionId)
+        }
+      });
+    }
+  }
+
+  // Lookup route information
+  pipeline.push({
+    $lookup: {
+      from: 'routes',
+      localField: 'route',
+      foreignField: '_id',
+      as: 'routeData'
+    }
+  });
+
+  pipeline.push({
+    $unwind: {
+      path: '$routeData',
+      preserveNullAndEmptyArrays: true
+    }
+  });
+
+  // Sort, skip, and limit
+  pipeline.push(
+    { $sort: { startDate: -1 } },
+    { $skip: skip },
+    { $limit: limit }
+  );
+
+  // Project fields to match populate output
+  pipeline.push({
+    $project: {
+      tripId: 1,
+      origin: 1,
+      destination: 1,
+      originTime: 1,
+      destinationTime: 1,
+      startDate: 1,
+      endDate: 1,
+      cycleDay: 1,
+      day: 1,
+      status: 1,
+      vehicleNumber: 1,
+      scheduleLabel: 1,
+      route: '$routeData',
+      depot: {
+        _id: '$depotData._id',
+        depotName: '$depotData.depotName',
+        depotCode: '$depotData.depotCode',
+        region: '$depotData.region'
+      },
+      createdAt: 1,
+      updatedAt: 1
+    }
+  });
+
+  return pipeline;
+}

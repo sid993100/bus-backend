@@ -10,7 +10,7 @@ export const getCrowdManagement = async (req, res) => {
       endDate,
       page = 1,
       limit = 10
-    } = req.body;
+    } = req.query;
 
     // Validate inputs
     if (!geo ) {

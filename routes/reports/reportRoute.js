@@ -13,6 +13,7 @@ import { stopSummary } from '../../services/reports/stopSummaryServices.js';
 import { getVehicleCurrentStatusWithLocation } from '../../services/reports/vehicleCurrentStatusService.js';
 import { getVehiclesByLocation } from '../../services/reports/incidentManagmentService.js';
 import { getCrowdManagement } from '../../services/reports/crowdManagementService.js';
+import { getArrivalDeparture } from '../../services/admin/trip/tripServices.js';
 
 const router = Router();
 
@@ -31,6 +32,7 @@ router.get('/idlingdetailed',isLogin, checkPermission("idlingDetailedReport","re
 router.get('/vehiclecurrentstatus',isLogin, checkPermission("vehicleCurrentStatus","read"),getVehicleCurrentStatusWithLocation)
 router.get("/incidentmanagement", getVehiclesByLocation)
 router.get("/crowedmanagement", getCrowdManagement)
+router.get("/arrivaldeparture", getArrivalDeparture)
 
 
 export default router;
