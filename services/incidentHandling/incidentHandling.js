@@ -1,15 +1,18 @@
 import Incident from "../../models/incidentModel.js";
 import DeviceEvent from "../../models/deviceEventModel.js";
+import EventCategory from "../../models/eventCategoryModel.js";
+import Vehicle from "../../models/vehicleModel.js";
 
 
 export async function createIncident(req,res) {
     try {
         const { vehicle, messageid,long,lat } = req.body;
 
-        const event= await DeviceEvent.findone({messageId:messageid})
+        const event= await DeviceEvent.findOne({messageId:messageid})
+        const vehivleId= await Vehicle.findOne({vehicleNumber:vehicle.toUpperCase()})
 
         const newIncident = await Incident.create({
-            vehicle,
+            vehicle:vehivleId._id,
             event:event._id,
             long,
             lat
@@ -41,7 +44,8 @@ export async function getIncidents(req, res) {
             status,
             severity,
             startDate,
-            endDate
+            endDate,
+            eventCategoryId
         } = req.query;
 
         // Parse and validate pagination params
@@ -79,6 +83,12 @@ export async function getIncidents(req, res) {
                 end.setHours(23, 59, 59, 999);
                 filter.createdAt.$lte = end;
             }
+        }
+        if (eventCategoryId && eventCategoryId.trim() !== '') {
+            // Find events under the specified category
+            const events = await DeviceEvent.find({ eventCategory: eventCategoryId.trim() }).select('_id');
+            const eventIds = events.map(event => event._id);
+            filter.event = { $in: eventIds };
         }
 
         // Build sort object
