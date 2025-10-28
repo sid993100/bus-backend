@@ -16,7 +16,6 @@ export const getVehiclesByLocation = async (req, res) => {
       });
     }
 
-    // 1️⃣ Geocode if needed
     if (locationName && (!latitude || !longitude)) {
       const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
         locationName
@@ -47,22 +46,22 @@ export const getVehiclesByLocation = async (req, res) => {
 
     const radiusMeters = km * 1000;
 
-    // 2️⃣ Build $geoNear stage
+    
     const geoNearStage = {
       $geoNear: {
         near: { type: "Point", coordinates: [longitude, latitude] },
-        distanceField: "distance", // will be added to docs
+        distanceField: "distance", 
         spherical: true,
       },
     };
 
-    // 3️⃣ Add filter depending on direction
+   
     const matchStage =
       direction === "Towards"
         ? { $match: { distance: { $lte: radiusMeters } } }
         : { $match: { distance: { $gt: radiusMeters } } };
 
-    // 4️⃣ Group unique vehicles
+    
     const groupStage = {
       $group: {
         _id: "$vehicle_reg_no",
@@ -76,10 +75,10 @@ export const getVehiclesByLocation = async (req, res) => {
       },
     };
 
-    // 5️⃣ Sort by closest first
+   
     const sortStage = { $sort: { distance: 1 } };
 
-    // 6️⃣ Execute pipeline
+    
     const vehicles = await TrackingPacket.aggregate([
       geoNearStage,
       matchStage,

@@ -12,6 +12,7 @@ import { stoppageDetailedReport } from '../../services/reports/stoppageDetailedR
 import { stopSummary } from '../../services/reports/stopSummaryServices.js';
 import { getVehicleCurrentStatusWithLocation } from '../../services/reports/vehicleCurrentStatusService.js';
 import { getVehiclesByLocation } from '../../services/reports/incidentManagmentService.js';
+import { getCrowdManagement } from '../../services/reports/crowdManagementService.js';
 
 const router = Router();
 
@@ -29,6 +30,7 @@ router.get('/stoppagedetailed',isLogin, checkPermission("stoppageDetailedReport"
 router.get('/idlingdetailed',isLogin, checkPermission("idlingDetailedReport","read"),stoppageDetailedReport)
 router.get('/vehiclecurrentstatus',isLogin, checkPermission("vehicleCurrentStatus","read"),getVehicleCurrentStatusWithLocation)
 router.get("/incidentmanagement", getVehiclesByLocation)
+router.get("/crowedmanagement", getCrowdManagement)
 
 
 export default router;
