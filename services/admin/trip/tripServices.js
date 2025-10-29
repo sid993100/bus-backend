@@ -939,7 +939,8 @@ export const breakdownTrip= async (req, res) => {
         message: "Valid trip ID is required",
       });
     }
-    const trip = await TripConfig.findByIdAndUpdate(id,{breakdown},{new:true});
+    const newDate = new Date(breakdown)
+    const trip = await TripConfig.findByIdAndUpdate(id, { $addToSet: { breakdown: newDate } },{new:true});
     if (!trip) {
       return res.status(404).json({
         success: false,
@@ -972,8 +973,7 @@ export const delayTrip= async (req, res) => {
         message: "Valid trip ID is required",
       });
     }
-    const newDate = new Date(delay)
-    const trip = await TripConfig.findByIdAndUpdate(id, { $addToSet: { delay: newDate} },{new:true});
+    const trip = await TripConfig.findByIdAndUpdate(id,{$addToSet:{delay}},{new:true});
     if (!trip) {
       return res.status(404).json({
         success: false,
