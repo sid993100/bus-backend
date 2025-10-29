@@ -13,7 +13,7 @@ import { addOwnerType, getOwnerType, updateOwnerType } from "../services/admin/o
 import {  updateSubscription } from "../services/admin/subscription/subscriptionServices.js";
 import { checkPermission } from "../middleWares/checkPermission.js";
 import {  getHierarchy, updateHierarchy } from "../services/admin/hierarchy/hierarchyServices.js";
-import { createDeviceEvent, getDeviceEventById, getDeviceEvents, updateDeviceEvent } from "../services/otc/deviceEventServices.js";
+import { createDeviceEvent, deleteDeviceEvent, getDeviceEventById, getDeviceEvents, updateDeviceEvent } from "../services/otc/deviceEventServices.js";
 
 
 const router = Router();
@@ -59,9 +59,7 @@ router.put("/subscription/:id",isLogin,updateSubscription);
 
 
 
-
-
-// router.delete("/deviceevents/:id", isLogin, deleteDeviceEvent);
+router.delete("/deviceevents", isLogin, deleteDeviceEvent);
 
 
 export default router;

@@ -661,14 +661,21 @@ export const getTodayTrips = async (req, res) => {
   try {
     const { startDay, endDay } = req.query;
 
-    // Normalize date to start or end of the day
-    const toStartOfDay = (d) => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
-    const toEndOfDay = (d) => { const x = new Date(d); x.setHours(23,59,59,999); return x; };
+    const toStartOfDay = (d) => { 
+      const x = new Date(d); 
+      x.setHours(0, 0, 0, 0); 
+      return x; 
+    };
+    
+    const toEndOfDay = (d) => { 
+      const x = new Date(d); 
+      x.setHours(23, 59, 59, 999); 
+      return x; 
+    };
 
     let rangeStart, rangeEnd;
 
     if (!startDay && !endDay) {
-      // Default: today
       const now = new Date();
       rangeStart = toStartOfDay(now);
       rangeEnd = toEndOfDay(now);
@@ -699,21 +706,111 @@ export const getTodayTrips = async (req, res) => {
     const limit = Math.max(parseInt(req.query.limit || "10", 10), 1);
     const skip = (page - 1) * limit;
 
-    // Looks for trips APPROVED and whose window overlaps with the requested date range
     const filter = {
       startDate: { $lte: rangeEnd },
       endDate: { $gte: rangeStart },
       status: "APPROVED",
     };
 
-    const [total, trips] = await Promise.all([
-      TripConfig.countDocuments(filter),
-      TripConfig.find(filter)
-        .populate(tripPopulate)
-        .skip(skip)
-        .limit(limit)
-        .sort({ startDate: -1 }) // Latest first
-    ]);
+    const allTrips = await TripConfig.find(filter)
+      .populate('route', 'routeName routeCode routeLength source destination')
+      .populate('depot', 'depotName depotCode region')
+      .populate('seatLayout', 'layoutName totalSeats')
+      .populate('busService', 'serviceName serviceType')
+      .sort({ startDate: -1 })
+      .lean();
+
+    const dayNames = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+
+    // Filter trips based on logic
+    const eligibleTrips = allTrips.filter(trip => {
+      const tripStart = toStartOfDay(trip.startDate);
+      const tripEnd = toEndOfDay(trip.endDate);
+      const cycle = trip.cycleDay || 'Daily';
+
+      // For Daily and Alternative: check only first day
+      if (cycle === 'Daily' || cycle === 'Alternative') {
+        const checkDate = toStartOfDay(rangeStart);
+
+        // Must be within trip's valid range
+        if (checkDate < tripStart || checkDate > tripEnd) {
+          return false;
+        }
+
+        // Check cancellation
+        const isCancelled = Array.isArray(trip.cancel) && trip.cancel.some(cancelDate => {
+          const cd = toStartOfDay(new Date(cancelDate));
+          return cd.getTime() === checkDate.getTime();
+        });
+
+        if (isCancelled) return false;
+
+        // Check breakdown
+        const isBreakdown = Array.isArray(trip.breakdown) && trip.breakdown.some(breakdownDate => {
+          const bd = toStartOfDay(new Date(breakdownDate));
+          return bd.getTime() === checkDate.getTime();
+        });
+
+        if (isBreakdown) return false;
+
+        if (cycle === 'Daily') {
+          return true;
+        }
+
+        if (cycle === 'Alternative') {
+          const MS_PER_DAY = 24 * 60 * 60 * 1000;
+          const daysDiff = Math.floor((checkDate.getTime() - tripStart.getTime()) / MS_PER_DAY);
+          return daysDiff % 2 === 0;
+        }
+      }
+
+      // For Weekly: check ALL days in the requested range
+      if (cycle === 'Weekly') {
+        if (!Array.isArray(trip.day) || trip.day.length === 0) {
+          return false;
+        }
+
+        // Check each day in the range
+        for (let currentDate = new Date(rangeStart); currentDate <= rangeEnd; currentDate.setDate(currentDate.getDate() + 1)) {
+          const checkDate = toStartOfDay(currentDate);
+          
+          // Skip if outside trip's date range
+          if (checkDate < tripStart || checkDate > tripEnd) {
+            continue;
+          }
+
+          // Check cancellation for this specific day
+          const isCancelled = Array.isArray(trip.cancel) && trip.cancel.some(cancelDate => {
+            const cd = toStartOfDay(new Date(cancelDate));
+            return cd.getTime() === checkDate.getTime();
+          });
+
+          if (isCancelled) continue;
+
+          // Check breakdown for this specific day
+          const isBreakdown = Array.isArray(trip.breakdown) && trip.breakdown.some(breakdownDate => {
+            const bd = toStartOfDay(new Date(breakdownDate));
+            return bd.getTime() === checkDate.getTime();
+          });
+
+          if (isBreakdown) continue;
+
+          // Check if this day matches trip's configured days
+          const checkDayName = dayNames[checkDate.getDay()];
+          if (trip.day.includes(checkDayName)) {
+            return true; // Found at least one matching day
+          }
+        }
+
+        return false; // No matching days found
+      }
+
+      return false;
+    });
+
+    // Apply pagination
+    const total = eligibleTrips.length;
+    const paginatedTrips = eligibleTrips.slice(skip, skip + limit);
 
     return res.status(200).json({
       success: true,
@@ -722,11 +819,11 @@ export const getTodayTrips = async (req, res) => {
       limit,
       total,
       totalPages: Math.ceil(total / limit),
-      count: trips.length,
-      data: trips,
+      count: paginatedTrips.length,
+      data: paginatedTrips,
     });
   } catch (error) {
-    console.error("Error fetching trips by day range:", error);
+    console.error("Error fetching trips:", error);
     return res.status(500).json({
       success: false,
       message: "Error fetching trips by day range",
@@ -875,7 +972,8 @@ export const delayTrip= async (req, res) => {
         message: "Valid trip ID is required",
       });
     }
-    const trip = await TripConfig.findByIdAndUpdate(id,{delay},{new:true});
+    const newDate = new Date(delay)
+    const trip = await TripConfig.findByIdAndUpdate(id, { $addToSet: { delay: newDate} },{new:true});
     if (!trip) {
       return res.status(404).json({
         success: false,

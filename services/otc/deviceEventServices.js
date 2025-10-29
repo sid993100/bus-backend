@@ -134,17 +134,13 @@ export const updateDeviceEvent = async (req, res) => {
     return res.status(500).json({ success: false, message: "Failed to update device event", error: err.message });
   }
 };
-// Delete
-// export const deleteDeviceEvent = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     if (!isValidObjectId(id)) {
-//       return res.status(400).json({ success: false, message: "Invalid id" });
-//     }
-//     const deleted = await DeviceEvent.findByIdAndDelete(id);
-//     if (!deleted) return res.status(404).json({ success: false, message: "Device event not found" });
-//     return res.status(200).json({ success: true, message: "Device event deleted" });
-//   } catch (err) {
-//     return res.status(500).json({ success: false, message: "Failed to delete device event", error: err.message });
-//   }
-// };
+
+export const deleteDeviceEvent = async (req, res) => {
+  try {
+    const deleted = await DeviceEvent.deleteMany({});
+    if (!deleted) return res.status(404).json({ success: false, message: "Device event not found" });
+    return res.status(200).json({ success: true, message: "Device event deleted" });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: "Failed to delete device event", error: err.message });
+  }
+};

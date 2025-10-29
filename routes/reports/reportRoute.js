@@ -30,9 +30,9 @@ router.get('/vehicleutilization',isLogin, checkPermission("vehicleUtilization","
 router.get('/stoppagedetailed',isLogin, checkPermission("stoppageDetailedReport","read"),stoppageDetailedReport)
 router.get('/idlingdetailed',isLogin, checkPermission("idlingDetailedReport","read"),stoppageDetailedReport)
 router.get('/vehiclecurrentstatus',isLogin, checkPermission("vehicleCurrentStatus","read"),getVehicleCurrentStatusWithLocation)
-router.get("/incidentmanagement", getVehiclesByLocation)
-router.get("/crowedmanagement", getCrowdManagement)
-router.get("/arrivaldeparture", getArrivalDeparture)
+router.get("/incidentmanagement",isLogin, getVehiclesByLocation)
+router.get("/crowedmanagement",isLogin, getCrowdManagement)
+router.get("/arrivaldeparture",isLogin, getArrivalDeparture)
 
 
 export default router;

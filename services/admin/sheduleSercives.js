@@ -317,7 +317,6 @@ export const getSchedulesByDepotAndDate = async (req, res) => {
       endDate: { $gte: startOfDayUTC }
     };
 
-    console.log('🧮 Filter being used:', filter);
 
     const schedules = await ScheduleConfiguration.find(filter)
       .populate('depot', 'depotCustomer depotCode')
@@ -344,7 +343,7 @@ export const getSchedulesByDepotAndDate = async (req, res) => {
 export const getByRegion = async (req, res) => {
   try {
     const { regionId } = req.params;
-    console.log(regionId)
+   
     if (!regionId || !isValidObjectId(regionId)) {
       return res.status(400).json({ success: false, error: "Invalid regionId" });
     }
@@ -474,7 +473,6 @@ export const getSchedulesByDateAndDepot = async (req, res) => {
     return res.status(500).json({ success: false, error: "Failed to fetch schedules" });
   }
 };
-
 
 export const getSchedulesByDateAndRegion = async (req, res) => {
   try {
@@ -656,27 +654,6 @@ export const getSchedulesByDateAndRegion = async (req, res) => {
   }
 };
 
-
-// Helpers
-const normalizeDate = (date) => {
-  if (!date) return null;
-  const parsed = new Date(date);
-  return isNaN(parsed.getTime()) ? null : parsed;
-};
-
-
-const getDefaultDateRange = () => {
-  const today = new Date();
-  return {
-    startDate: toUTCStart(today),
-    endDate: toUTCEnd(today)
-  };
-};
-
-
-
-const WEEKDAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-
 export const getSchedulesByDate = async (req, res) => {
   try {
     const { startDay, depot, page = 1, limit = 10, sortBy = "createdAt", sortOrder = "desc" } = req.query;
@@ -692,7 +669,6 @@ export const getSchedulesByDate = async (req, res) => {
     const startOfTarget = toStartOfDay(targetDate);
     const endOfTarget = toEndOfDay(targetDate);
 
-    // Step 1️⃣ — Base filter: schedules that include this date
     const filter = {
       startDate: { $lte: endOfTarget },
       endDate: { $gte: startOfTarget },
@@ -702,7 +678,6 @@ export const getSchedulesByDate = async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const sort = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
 
-    // Step 2️⃣ — Fetch possible schedules
     const [allSchedules, totalCount] = await Promise.all([
       ScheduleConfiguration.find(filter)
         .populate("depot", "depotCustomer depotCode region")
@@ -720,27 +695,55 @@ export const getSchedulesByDate = async (req, res) => {
       ScheduleConfiguration.countDocuments(filter),
     ]);
 
-    // Step 3️⃣ — Apply cycleDay logic
+    // Get target day name
+    const jsDay = targetDate.getDay(); // 0=Sunday, 1=Monday, ..., 6=Saturday
+    const targetDayName = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'][jsDay];
+
     const eligibleSchedules = allSchedules.filter((sch) => {
       const schStart = toStartOfDay(sch.startDate);
       const schEnd = toEndOfDay(sch.endDate);
 
-      // Outside valid range
       if (targetDate < schStart || targetDate > schEnd) return false;
 
       const cycle = sch.cycleDay || "Daily";
+      
       switch (cycle) {
         case "Daily":
           return true;
 
         case "Alternative": {
           const diff = daysBetween(schStart, targetDate);
-          return diff % 2 === 0; // every 2nd day
+          return diff % 2 === 0;
         }
 
         case "Weekly": {
-          const targetDay = WEEKDAYS[targetDate.getDay()];
-          return Array.isArray(sch.days) && sch.days.includes(targetDay);
+          if (!Array.isArray(sch.trips) || sch.trips.length === 0) {
+           
+            return false;
+          }
+
+        
+
+          const hasMatch = sch.trips.some((tripObj, idx) => {
+            // The day array is in the POPULATED trip object, not in tripObj.day
+            const tripDays = tripObj.trip?.day;
+            
+  
+            
+            // Check if tripDays is an array
+            if (!Array.isArray(tripDays) || tripDays.length === 0) {
+          
+              return false;
+            }
+
+            // Check if target day is in the array
+            const matches = tripDays.includes(targetDayName);
+         
+            return matches;
+          });
+
+        
+          return hasMatch;
         }
 
         default:
@@ -748,7 +751,6 @@ export const getSchedulesByDate = async (req, res) => {
       }
     });
 
-    // Step 4️⃣ — Respond
     const totalPages = Math.ceil(eligibleSchedules.length / parseInt(limit));
 
     return res.status(200).json({
@@ -764,17 +766,20 @@ export const getSchedulesByDate = async (req, res) => {
       },
       filters: {
         checkedDate: targetDate,
+        targetDayName,
         depot: depot || null,
       },
     });
   } catch (error) {
-    console.error("❌ Error fetching schedules by date:", error);
+    console.error("❌ Error:", error);
     return res.status(500).json({
       success: false,
       error: "Failed to fetch schedules by date",
+      message: error.message
     });
   }
 };
+
 
 export const updateCancel = async (req, res) => {
   try {
@@ -835,18 +840,37 @@ const toUTCEnd = (date) => {
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   return d;
 };
-const toStartOfDay = (date) => {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  return d;
+
+const normalizeDate = (date) => {
+  if (!date) return null;
+  const parsed = new Date(date);
+  return isNaN(parsed.getTime()) ? null : parsed;
 };
 
-const toEndOfDay = (date) => {
-  const d = new Date(date);
-  d.setHours(23, 59, 59, 999);
-  return d;
+const getDefaultDateRange = () => {
+  const today = new Date();
+  return {
+    startDate: toUTCStart(today),
+    endDate: toUTCEnd(today)
+  };
 };
-const daysBetween = (start, end) => {
-  const msPerDay = 24 * 60 * 60 * 1000;
-  return Math.floor((toStartOfDay(end) - toStartOfDay(start)) / msPerDay);
-};
+
+
+function toStartOfDay(d) {
+  const date = new Date(d);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function toEndOfDay(d) {
+  const date = new Date(d);
+  date.setHours(23, 59, 59, 999);
+  return date;
+}
+
+function daysBetween(date1, date2) {
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+  const d1 = toStartOfDay(date1);
+  const d2 = toStartOfDay(date2);
+  return Math.floor((d2 - d1) / MS_PER_DAY);
+}

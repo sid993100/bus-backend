@@ -1,13 +1,14 @@
 import {Router} from "express";
-import { createEventCategory, getAllEventCategories, getEventCategoryById, updateEventCategory } from "../../services/otc/eventCategoryServer.js";
+import { createEventCategory, deleteEventCategory, getAllEventCategories, getEventCategoryById, updateEventCategory } from "../../services/otc/eventCategoryServer.js";
+import { isLogin } from "../../middleWares/isLogin.js";
 
 
 const router = Router();
 
-router.post("/", createEventCategory);  
-router.get("/", getAllEventCategories);
-router.get("/:id", getEventCategoryById);   
-router.put("/:id", updateEventCategory);  
-// router.delete("/:id", deleteEventCategory);  
+router.post("/",isLogin, createEventCategory);  
+router.get("/",isLogin, getAllEventCategories);
+router.get("/:id",isLogin, getEventCategoryById);   
+router.put("/:id",isLogin, updateEventCategory);  
+router.delete("/",isLogin, deleteEventCategory);  
 
 export default router;
