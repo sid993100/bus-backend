@@ -963,40 +963,94 @@ export const breakdownTrip= async (req, res) => {
     });
   }
 }
-export const delayTrip= async (req, res) => {
+export const delayTrip = async (req, res) => {
   try {
     const { id } = req.params;
     const { delay } = req.body;
+
+    // Validate trip ID
     if (!id || !isValidObjectId(id)) {
       return res.status(400).json({
         success: false,
         message: "Valid trip ID is required",
       });
     }
-    const trip = await TripConfig.findByIdAndUpdate(id,{$addToSet:{delay}},{new:true});
+
+    // Validate input
+    if (!delay.date || delay.delayDuration === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: "Both date and delayDuration are required",
+      });
+    }
+
+    // Normalize date to start of day
+    const delayDate = new Date(delay.date);
+    delayDate.setHours(0, 0, 0, 0);
+
+    if (isNaN(delayDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid date format",
+      });
+    }
+
+    // Find the trip
+    const trip = await TripConfig.findById(id);
+    
     if (!trip) {
       return res.status(404).json({
         success: false,
         message: "Trip not found",
       });
     }
+
+    // Check if delay for this date already exists
+    const existingDelayIndex = trip.delay.findIndex(d => {
+      const existingDate = new Date(d.date);
+      existingDate.setHours(0, 0, 0, 0);
+      return existingDate.getTime() === delayDate.getTime();
+    });
+
+    if (existingDelayIndex !== -1) {
+      // Update existing delay duration
+      trip.delay[existingDelayIndex].delayDuration = delay.delayDuration;
+      
+    } else {
+      // Add new delay entry
+      trip.delay.push({
+        date: delayDate,
+        delayDuration: Number(delay.delayDuration)
+      });
+     
+    }
+
+    // Save the trip
+    await trip.save();
+
+    // Populate and return
+    const updatedTrip = await TripConfig.findById(id)
+      .populate('route', 'routeName routeCode')
+      .populate('depot', 'depotName depotCode')
+      .populate('seatLayout', 'layoutName totalSeats');
+
     return res.status(200).json({
       success: true,
-      message: "Trip breakdown dates updated successfully",
-      data: trip,
+      message: existingDelayIndex !== -1 
+        ? "Delay duration updated successfully" 
+        : "Delay added successfully",
+      data: updatedTrip,
     });
+
   } catch (error) {
+    console.error("Error updating trip delay:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error",
-      error:
-        process.env.NODE_ENV === "development"
-          ? error.message
-          : "Something went wrong",
+      error: process.env.NODE_ENV === "development" ? error.message : "Something went wrong",
     });
   }
-}
-
+};
 
 export const getArrivalDeparture  = async (req, res) => {
   try {
