@@ -23,7 +23,8 @@ export const login= async(req,res)=>{
             const token = generateToken(user._id)
             return res.status(201).cookie("token",token).json({
                 success:true,
-                message:"Customer Registered Successfully"
+                message:"Customer Registered Successfully",
+                token
             })
         }
 
@@ -39,7 +40,8 @@ export const login= async(req,res)=>{
           
         res.status(200).cookie("token",token).json({
             success:true,
-            message:"login"
+            message:"login",
+            token
         })
     } catch (error) {
         consoleManager.log("login problem");

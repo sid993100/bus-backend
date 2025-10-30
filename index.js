@@ -29,7 +29,7 @@ dbConnection();
 
 const port = process.env.PORT || 5000;
 
-// ✅ Add Welcome Route First
+
 app.get("/", (req, res) => {
   res.send("Welcome to API server of Bus Track Application");
 });
@@ -59,6 +59,7 @@ app.get("/", (req, res) => {
 //   optionsSuccessStatus: 200 
 //   })
 // );
+
 
 
 app.use(cookieParser());
