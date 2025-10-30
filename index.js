@@ -60,8 +60,6 @@ app.get("/", (req, res) => {
 //   })
 // );
 
-app.use(cors());
-
 
 app.use(cookieParser());
 app.use(express.json());
