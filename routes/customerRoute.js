@@ -1,6 +1,6 @@
 import {Router} from 'express';
 import { check, getAllCustomers, login, logout } from '../services/customer/customerService.js';
-import { isLogin } from '../middlewares/authMiddleware.js';
+import { isLogin } from '../middlewares/isLogin.js';
 
 const router=Router();
 
