@@ -16,13 +16,17 @@ export const login= async(req,res)=>{
      
         
         if(!user){
-            res.status(404).json({
-                message:"User Not Found"
+           const newUser=await Customer.create({
+                email,
+                password
+            })
+            const token = generateToken(user._id)
+            return res.status(201).cookie("token",token).json({
+                success:true,
+                message:"Customer Registered Successfully"
             })
         }
-        if(user.isActive===false){
-          return res.status(403).json({message:"Access Denied"})
-        }
+
         const checkedPassword = await passwordCheck(password,user.password)
  
         
