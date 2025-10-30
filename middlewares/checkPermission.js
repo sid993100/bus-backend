@@ -12,7 +12,13 @@ export const checkPermission = (resource, action) => {
       const user = await User.findById(req.user._id).populate("roleName");
 
       if (!user) {
-        return res.status(404).json({ message: "User not found" });
+        const customerExists = await Customer.findById(req.user._id);
+        if(customerExists){
+            return next()
+        }else{
+          return res.status(404).json({ message: "User not found" });
+        }
+        
       }
 
       const role = await Role.findById(user.roleName);

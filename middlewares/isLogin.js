@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken"
 import User from "../models/userModel.js";
+import Customer from "../models/customerModel.js";
 
 
 export const isLogin=async(req,res,next)=>{
@@ -20,9 +21,14 @@ export const isLogin=async(req,res,next)=>{
         }
         const user=await User.findOne({_id:tokenUser.id}).populate("roleName").populate("hierarchy").populate("region").populate("depot").select("-password")
         if(!user){
+            const customerExists = await Customer.findById(tokenUser.id);
+            if(customerExists){
+                req.user=customerExists
+                return next()
+            }else{
             res.status(401).json({
                 message:"Not Found"
-            })
+            })}
         }
         
         req.user=user
