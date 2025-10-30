@@ -32,7 +32,6 @@ router.get("/todaySchedule/region/:regionId", isLogin ,getSchedulesByDateAndRegi
 router.get("/vltsim", isLogin ,getAllSims);
 
 
-
 router.post("/seatlayout",isLogin ,checkPermission("seatLayout","create"),addSeatLayout);
 router.post("/route",isLogin ,checkPermission("route","create"),addRoute);
 router.post("/trip",isLogin ,checkPermission("trip","create"),addTrip)
@@ -52,7 +51,6 @@ router.put("/scheduleConfig/cancel/:id",isLogin ,checkPermission("scheduleConfig
 router.put("/scheduleConfig/:id",isLogin ,checkPermission("scheduleConfig","update"), updateScheduleConfiguration);
 router.put("/vltsim/:id",isLogin ,checkPermission("vltSim","update"), updateSim);
 router.put("/vltsim/:id",isLogin ,checkPermission("","update"), updateCancel);
-
 
 
 

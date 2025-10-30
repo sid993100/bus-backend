@@ -8,7 +8,6 @@ export const getDuty = async (req, res) => {
 
     const filter = { ...textFilter };
 
-    // Fetch duties and count in parallel for better performance
     const [items, total] = await Promise.all([
       Duty.find(filter)
         .populate(dutyPopulate)
@@ -34,7 +33,7 @@ export const getDuty = async (req, res) => {
             }
           ]
         })
-        .sort(sort || { createdAt: -1 })  // Latest first by default
+        .sort(sort || { createdAt: -1 })
         .skip(skip)
         .limit(limitNum),
       Duty.countDocuments(filter),
@@ -42,7 +41,7 @@ export const getDuty = async (req, res) => {
 
     const totalPages = Math.ceil(total / limitNum);
 
-    // Handle empty results
+
     if (!items || items.length === 0) {
       return res.status(200).json({
         success: true,
@@ -59,7 +58,6 @@ export const getDuty = async (req, res) => {
       });
     }
 
-    // Return successful response with data
     return res.status(200).json({
       success: true,
       message: 'Duties retrieved successfully',
@@ -82,8 +80,6 @@ export const getDuty = async (req, res) => {
     });
   }
 };
-
-
 
 const dutyPopulate = [
   { path: "conductorName", select: "driverName" },
@@ -119,7 +115,6 @@ function buildDutyQueryParams(req) {
 
   return { pageNum, limitNum, skip, sort, textFilter };
 }
-
 
 export const getDutyByDepot = async (req, res) => {
   try {
@@ -223,8 +218,6 @@ export const getDutyByRegion = async (req, res) => {
   }
 };
 
-
-// addDuty function mein badlav
 export const addDuty = async (req, res) => {
   try {
     const 
@@ -282,7 +275,6 @@ export const addDuty = async (req, res) => {
   }
 };
 
-// updateDuty function mein badlav
 export const updateDuty = async (req, res) => {
   try {
     const { id } = req.params;

@@ -1,0 +1,94 @@
+import Customer from "../../models/customerModel.js"
+import generateToken from "../../utils/generateToken.js"
+import passwordCheck from "../../utils/passwordCheck.js"
+
+export const login= async(req,res)=>{
+    const {email,password}=req.body
+    
+    if(!email||!password){
+        res.status(403).json({
+            message:"All Detail Required"
+        })
+    }
+
+    try {
+        const user = await Customer.findOne({email})
+     
+        
+        if(!user){
+            res.status(404).json({
+                message:"User Not Found"
+            })
+        }
+        if(user.isActive===false){
+          return res.status(403).json({message:"Access Denied"})
+        }
+        const checkedPassword = await passwordCheck(password,user.password)
+ 
+        
+        if(!checkedPassword){
+            res.status(404).json({
+                message:" Detail Wrong"
+            })
+        }
+          const token = generateToken(user._id)
+          
+        res.status(200).cookie("token",token).json({
+            success:true,
+            message:"login"
+        })
+    } catch (error) {
+        consoleManager.log("login problem");
+        res.status(500).json({
+            success:false,
+            message:"Backend Error"
+        })
+    }
+}
+
+export const logout = async (req,res)=>{
+     try {
+        res.status(200)
+        .clearCookie("token")
+        .json({
+         message:"logout"
+        })
+    } catch (error) {
+        res.status(500)
+        .clearCookie("token")
+        .json({
+         message:"server error"
+        })
+    }
+}
+
+export const check=async(req,res)=>{
+    try {
+        res.status(200).json({
+            user:req.user
+        })
+    } catch (error) {
+        consoleManager.log(error +' check problem');
+        
+        res.status(500)
+        .json({
+         message:"server error"
+        })
+    }
+}
+
+export const getAllCustomers=async(req,res)=>{
+    try {
+        const customers= await Customer.find()  
+        res.status(200).json({
+           success:true,
+           date:customers
+        }) 
+    } catch (error) {
+        consoleManager.log("Get all customers problem");
+        res.status(500).json({
+            success:false,  
+            message:"server error"
+        }) 
+    }   
+}

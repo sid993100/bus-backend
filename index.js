@@ -20,6 +20,7 @@ import helpAndSupportRoutes from "./routes/helpAndSupport/helpAndSupportRoutes.j
 import eventCategoryRoute from "./routes/otc/eventCategoryRoute.js";
 import deleteRoute from "./routes/delete/deleteRoute.js";
 import geoFenceRouter from "./routes/geoFenceRputer.js";
+import customerRoutes from "./routes/customerRoute.js";
 
 
 dotenv.config();
@@ -37,7 +38,8 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://31.97.235.221:3000",
   "https://roadtransit.in",
-  "https://www.roadtransit.in"
+  "https://www.roadtransit.in",
+  "http://nominatim.locationtrack.in"
 ];
 
 app.use(
@@ -79,6 +81,7 @@ app.use("/api/eventCategory", eventCategoryRoute);
 app.use("/api/delete",deleteRoute)
 app.use("/api/geofence",geoFenceRouter)
 app.use("/api/incidenthandling",incident)
+app.use("/api/customer",customerRoutes)
 
 
 // ✅ Start Server
