@@ -5,6 +5,11 @@ const dutySchema = new Schema({
     type: Date,
     required: true,
   },
+  dutyId:{
+    type: String,
+    required: true,
+    unique: true
+  },
   vehicleNumber: {
     type: Schema.Types.ObjectId,
     ref: "Vehicle",

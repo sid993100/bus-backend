@@ -2,7 +2,10 @@ import { model, Schema } from "mongoose";
 import bcrypt from "bcrypt";
 
 const customerSchema= new Schema({
-   
+    username:{
+        type:String,
+        uppercase:true
+    },
     email:{
         type:String,
         required:true,
@@ -15,7 +18,7 @@ const customerSchema= new Schema({
     },
     phone:{
         type:Number,
-        index:true
+        unique:true,
     },
     address:{
         type:String,
@@ -24,7 +27,6 @@ const customerSchema= new Schema({
         type:Date,
     },
 })
-
 
 customerSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {

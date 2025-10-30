@@ -230,13 +230,6 @@ export const addDuty = async (req, res) => {
       });
     }
 
-    // if (existingDuty) {
-    //   return res.status(409).json({ 
-    //     message: "Duty number already exists" 
-    //   });
-    // }
-
-    // Naya duty create karna
     const newDuty = await Duty.create(
     data
     );
