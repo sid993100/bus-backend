@@ -51,7 +51,6 @@ export const login= async(req,res)=>{
         })
     }
 }
-
 export const logout = async (req,res)=>{
      try {
         res.status(200)
@@ -67,7 +66,6 @@ export const logout = async (req,res)=>{
         })
     }
 }
-
 export const check=async(req,res)=>{
     try {
         res.status(200).json({
@@ -104,7 +102,7 @@ export const updateCustomer=async(req,res)=>{
         const customer= await Customer.findByIdAndUpdate(id,{data},{new:true,runValidators:true})
         res.status(200).json({
            success:true,
-           date:customer
+           data:customer
         }) 
     } catch (error) {
         consoleManager.log("Update customer problem");

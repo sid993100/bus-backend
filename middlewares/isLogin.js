@@ -21,7 +21,7 @@ export const isLogin=async(req,res,next)=>{
         }
         const user=await User.findOne({_id:tokenUser.id}).populate("roleName").populate("hierarchy").populate("region").populate("depot").select("-password")
         if(!user){
-            const customerExists = await Customer.findById(tokenUser.id);
+            const customerExists = await Customer.findOne({_id:tokenUser.id}).select("-password");
             if(customerExists){
                 req.user=customerExists
                 return next()
