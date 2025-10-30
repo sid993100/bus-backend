@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken"
 import User from "../models/userModel.js";
-import consoleManager from "../utils/consoleManager.js";
+
 
 export const isLogin=async(req,res,next)=>{
 
@@ -29,7 +29,7 @@ export const isLogin=async(req,res,next)=>{
         next()
 
     } catch (error) {
-        consoleManager.log(error);
+       
         res.status(500).clearCookie("token").json({message:"islogin error"})
     }
 
