@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { addDriver, getAllDrivers, getDriversByDepot, getDriversByRegion, updateDriver } from "../../services/admin/driver/driverService.js";
 import { addConductor, getConductor, getConductorsByDepot, getConductorsByRegion, updateConductor } from "../../services/admin/conductor/conductorService.js";
-import { isLogin } from "../../middleWares/isLogin.js";
+import { isLogin } from "../../middlewares/isLogin.js";
 import { addUser, getUsers, updateUser, setActive, getUsersByRegion, getUsersByDepot } from "../../services/admin/user/userServices.js";
-import { checkPermission } from "../../middleWares/checkPermission.js";
+import { checkPermission } from "../../middlewares/checkPermission.js";
 const router = Router();
 
 router.get("/driver",isLogin,getAllDrivers)

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { isLogin } from "../middleWares/isLogin.js";
+import { isLogin } from "../middlewares/isLogin.js";
 
 import { addRole, getRoles, updateRole } from "../services/RBAC/role/roleServer.js";
 

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { isLogin } from "../../middleWares/isLogin.js";
+import { isLogin } from "../../middlewares/isLogin.js";
 import { createIncident, deleteAllIncidents, getIncidents } from "../../services/incidentHandling/incidentHandling.js";
 
 

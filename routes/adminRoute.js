@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { isLogin } from "../middleWares/isLogin.js";
+import { isLogin } from "../middlewares/isLogin.js";
 import { addVltDevices, getVltDevices, updateVltDevices } from "../services/admin/vltDevices/vltDevicesServices.js";
 import { addPisRegistration, getpisReg, updatePisRegistration } from "../services/admin/pisReg/pisRegService.js";
 
@@ -11,7 +11,7 @@ import { addOwnerType, getOwnerType, updateOwnerType } from "../services/admin/o
 // import { roleBaseAuth } from "../middleWares/rolebaseAuth.js";
 
 import {  updateSubscription } from "../services/admin/subscription/subscriptionServices.js";
-import { checkPermission } from "../middleWares/checkPermission.js";
+import { checkPermission } from "../middlewares/checkPermission.js";
 import {  getHierarchy, updateHierarchy } from "../services/admin/hierarchy/hierarchyServices.js";
 import { createDeviceEvent, deleteDeviceEvent, getDeviceEventById, getDeviceEvents, updateDeviceEvent } from "../services/otc/deviceEventServices.js";
 

@@ -1,6 +1,6 @@
 import {Router} from "express";
 import { createEventCategory, deleteEventCategory, getAllEventCategories, getEventCategoryById, updateEventCategory } from "../../services/otc/eventCategoryServer.js";
-import { isLogin } from "../../middleWares/isLogin.js";
+import { isLogin } from "../../middlewares/isLogin.js";
 
 
 const router = Router();

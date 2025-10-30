@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { deleteTrips } from "../../services/admin/trip/tripServices.js";
-import { isLogin } from "../../middleWares/isLogin.js";
+import { isLogin } from "../../middlewares/isLogin.js";
 
 
 const router = Router();

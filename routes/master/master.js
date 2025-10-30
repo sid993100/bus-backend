@@ -10,13 +10,13 @@ import { addStopGrade, getStopGrade, updateStopGrade } from "../../services/admi
 import { addArea, getArea, updateArea, updateAreaByName } from "../../services/admin/area/areaServices.js";
 import { addVehicle, getVehicle, getVehiclesByDepot, getVehiclesByRegion, updateVehicle } from "../../services/admin/vehicle/vehicleServices.js";
 import { addVehicleManufacturer, getVehicleManufacturer, updateVehicleManufacturer } from "../../services/admin/vehicleManufacturer/vehicleManufacturerServices.js";
-import { isLogin } from "../../middleWares/isLogin.js";
+import { isLogin } from "../../middlewares/isLogin.js";
 import { addVehicleType, getVehicleTypes, updateVehicleType } from "../../services/master/vehicleTypeService.js";
 import { updatePlan } from "../../services/admin/plan/planServices.js";
 import { updateOwnerType } from "../../services/admin/owner/ownerServices.js";
 import { addRegion, getRegion, getRegions, updateRegion } from "../../services/master/zoneRegionService.js";
 import { addDepotCustomer,  getDepotById,  getDepotCustomers, getDepotCustomersByRegion, updateDepotCustomer } from "../../services/master/depotService.js";
-import { checkPermission } from "../../middleWares/checkPermission.js";
+import { checkPermission } from "../../middlewares/checkPermission.js";
 import { addToll, getToll, updateToll } from "../../services/master/toll/tollService.js";
 import { updateDepartment, updateDepartmentByName } from "../../services/admin/department/departmentServices.js";
 import { addVehicleModel, getVehicleModels, updateVehicleModel } from "../../services/master/vehicleModelService.js";

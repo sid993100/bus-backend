@@ -1,7 +1,7 @@
 import {Router} from 'express';
-import { isLogin } from '../../middleWares/isLogin.js';
+import { isLogin } from '../../middlewares/isLogin.js';
 import { rawData } from '../../services/reports/rawServices.js';
-import { checkPermission } from '../../middleWares/checkPermission.js';
+import { checkPermission } from '../../middlewares/checkPermission.js';
 import { vehicleActivity } from '../../services/reports/vehicleActivityServices.js';
 import { journeyHistory } from '../../services/reports/journeyHistoryService.js';
 import { latestFirmware, latestFirmwareByImei } from '../../services/reports/firmwareVersionServices.js';

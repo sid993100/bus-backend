@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { isLogin } from "../../middleWares/isLogin.js";
+import { isLogin } from "../../middlewares/isLogin.js";
 import { addLoginPacket, getLoginPacketById, getLoginPackets } from "../../services/bharat101/loginPacketServer.js";
 import { addTrackingPacket, getTrackingPacketById, getTrackingPackets } from "../../services/bharat101/trackingPacketService.js";
 import { addHealthPacket, getAllHealthPackets } from "../../services/bharat101/healthMonitoringService.js";

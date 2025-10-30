@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { isLogin } from "../../middleWares/isLogin.js";
-import { checkPermission } from "../../middleWares/checkPermission.js";
+import { isLogin } from "../../middlewares/isLogin.js";
+import { checkPermission } from "../../middlewares/checkPermission.js";
 import { addSeatLayout, getSeatLayout, updateSeatLayout } from "../../services/admin/seatLayout/seatLayoutServices.js";
 import { addTrip, breakdownTrip, delayTrip, getTodayTrips, getTrips, getTripsByDepot, getTripsByRegion, updateTrip, updateTripStatus } from "../../services/admin/trip/tripServices.js";
 import { addRoute, updateRoute ,getRoutes, getRoutesByDepot, getRoutesByRegion} from "../../services/admin/route/routeService.js";

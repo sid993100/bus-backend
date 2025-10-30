@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { createGeoFence, deleteGeoFence, getGeoFenceById, getGeoFences, updateGeoFence } from "../services/admin/geo/geoService.js";
-import { isLogin } from "../middleWares/isLogin.js";
+import { isLogin } from "../middlewares/isLogin.js";
 
 const router = Router();
 
