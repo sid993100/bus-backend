@@ -100,8 +100,8 @@ export const getAllCustomers=async(req,res)=>{
 }
 export const updateCustomer=async(req,res)=>{
     try {
-        const {id}=req.params
-        const {date}=req.body
+
+        const id= req.user._id
         const customer= await Customer.findByIdAndUpdate(id,{date},{new:true,runValidators:true})
         res.status(200).json({
            success:true,
