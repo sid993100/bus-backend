@@ -60,7 +60,7 @@ app.get("/", (req, res) => {
 //   })
 // );
 
-app.use(cors("*"));
+app.use(cors());
 
 
 app.use(cookieParser());
