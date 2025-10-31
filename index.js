@@ -34,31 +34,31 @@ app.get("/", (req, res) => {
   res.send("Welcome to API server of Bus Track Application");
 });
 
-// const allowedOrigins = [
-//   "http://localhost:3000",
-//   "http://31.97.235.221:3000",
-//   "https://roadtransit.in",
-//   "https://www.roadtransit.in",
-//   "http://nominatim.locationtrack.in"
-// ];
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://31.97.235.221:3000",
+  "https://roadtransit.in",
+  "https://www.roadtransit.in",
+  "http://nominatim.locationtrack.in"
+];
 
-// app.use(
-//   cors({
-//     origin: (origin, callback) => {
-//       if (!origin || allowedOrigins.includes(origin)) {
-//         callback(null, true);
-//       } else {
-//         callback(new Error("Not allowed by CORS"));
-//       }
-//     },
-//     credentials: true, 
-//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-//   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-//   exposedHeaders: ['Content-Range', 'X-Content-Range'],
-//   maxAge: 86400, 
-//   optionsSuccessStatus: 200 
-//   })
-// );
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true, 
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400, 
+  optionsSuccessStatus: 200 
+  })
+);
 
 
 
