@@ -299,40 +299,63 @@ export const deleteScheduleConfiguration = async (req, res) => {
 export const getSchedulesByDepotAndDate = async (req, res) => {
   try {
     const { depotId } = req.params;
-    const { date } = req.query; // example: ?date=2025-10-17
+    const { date, page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
 
-    if (!depotId) {
-      return res.status(400).json({ success: false, error: 'Depot ID required' });
+    if (!depotId || !isValidObjectId(depotId)) {
+      return res.status(400).json({ success: false, error: 'Valid depot ID required' });
     }
 
-    const selectedDate = date ? new Date(date) : new Date();
+    // Build filter - if date is provided, filter by date range, otherwise return all schedules for depot
+    const filter = { depot: depotId };
 
-    const startOfDayUTC = toUTCStart(selectedDate);
-    const endOfDayUTC = toUTCEnd(selectedDate);
+    if (date) {
+      const selectedDate = new Date(date);
+      const startOfDayUTC = toUTCStart(selectedDate);
+      const endOfDayUTC = toUTCEnd(selectedDate);
 
-    // Filter: schedules active on that day
-    const filter = {
-      depot: depotId,
-      startDate: { $lte: endOfDayUTC },
-      endDate: { $gte: startOfDayUTC }
-    };
+      // Filter: schedules active on that day
+      filter.startDate = { $lte: endOfDayUTC };
+      filter.endDate = { $gte: startOfDayUTC };
+    }
 
+    // Pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const sort = {};
+    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
-    const schedules = await ScheduleConfiguration.find(filter)
-      .populate('depot', 'depotCustomer depotCode')
-      .populate('seatLayout', 'layoutName totalSeats')
-      .populate('busService', 'name')
-      .sort({ scheduleLabel: 1 });
+    const [schedules, totalCount] = await Promise.all([
+      ScheduleConfiguration.find(filter)
+        .populate('depot', 'depotCustomer code region')
+        .populate('seatLayout', 'layoutName totalSeats seatConfiguration')
+        .populate('busService', 'name')
+        .populate({
+          path: 'trips.trip',
+          select: 'tripId origin destination originTime destinationTime cycleDay day status route',
+          populate: [{ path: 'route', select: 'routeName' }]
+        })
+        .sort(sort)
+        .skip(skip)
+        .limit(parseInt(limit)),
+      ScheduleConfiguration.countDocuments(filter)
+    ]);
+
+    const totalPages = Math.ceil(totalCount / parseInt(limit));
 
     res.status(200).json({
       success: true,
       data: schedules,
-      count: schedules.length,
-      filterUsed: filter
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages,
+        totalItems: totalCount,
+        itemsPerPage: parseInt(limit),
+        hasNextPage: parseInt(page) < totalPages,
+        hasPrevPage: parseInt(page) > 1
+      }
     });
 
   } catch (error) {
-    console.error('❌ Error fetching schedules:', error);
+    console.error('Error fetching schedules by depot:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch schedules'

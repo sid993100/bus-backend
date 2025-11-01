@@ -4,15 +4,7 @@ import mongoose, { isValidObjectId } from "mongoose";
 export const getTrips = async (req, res) => {
   try {
     const trips = await TripConfig.find()
-      .populate("depot", "depotCustomer code ")
-      .populate("seatLayout", "layoutName")
-      .populate([
-        {
-          path: "route",
-          select: "routeName depot",
-          populate: [{ path: "depot", select: "depotCustomer code " }],
-        },
-      ]);
+      .populate(tripPopulate);
     if (!trips) {
       return res.status(404).json({ message: "No trips found" });
     }
@@ -30,12 +22,28 @@ export const getTrips = async (req, res) => {
 
 // Common populate used in getTrips
 const tripPopulate = [
-  { path: "depot", select: "depotCustomer code" },
+  { 
+    path: "depot", 
+    select: "depotCustomer code region",
+    populate: {
+      path: "region",
+      select: "name code communicationAddress location"
+    }
+  },
   { path: "seatLayout", select: "layoutName" },
   {
     path: "route",
     select: "routeName depot region", // include region here for region filter if needed
-    populate: [{ path: "depot", select: "depotCustomer code" }],
+    populate: [
+      { 
+        path: "depot", 
+        select: "depotCustomer code region",
+        populate: {
+          path: "region",
+          select: "name code communicationAddress location"
+        }
+      }
+    ],
   },
 ];
 
@@ -143,13 +151,27 @@ export const getTripsByRegion = async (req, res) => {
     // Fetch a page and populate with match on route.region
     const itemsRaw = await TripConfig.find(filter)
       .populate([
-        { path: "depot", select: "depotCustomer code" },
+        { 
+          path: "depot", 
+          select: "depotCustomer code region",
+          populate: {
+            path: "region",
+            select: "name code communicationAddress location"
+          }
+        },
         { path: "seatLayout", select: "layoutName" },
         {
           path: "route",
           select: "routeName depot region",
           match: { region: regionId },
-          populate: [{ path: "depot", select: "depotCustomer code" }],
+          populate: [{ 
+            path: "depot", 
+            select: "depotCustomer code region",
+            populate: {
+              path: "region",
+              select: "name code communicationAddress location"
+            }
+          }],
         },
       ])
       .sort(sort)
@@ -714,7 +736,14 @@ export const getTodayTrips = async (req, res) => {
 
     const allTrips = await TripConfig.find(filter)
       .populate('route', 'routeName routeCode routeLength source destination')
-      .populate('depot', 'depotName depotCode region')
+      .populate({
+        path: 'depot',
+        select: 'depotCustomer code region',
+        populate: {
+          path: 'region',
+          select: 'name code communicationAddress location'
+        }
+      })
       .populate('seatLayout', 'layoutName totalSeats')
       .populate('busService', 'serviceName serviceType')
       .sort({ startDate: -1 })
@@ -1194,7 +1223,14 @@ export const getArrivalDeparture  = async (req, res) => {
         TripConfig.countDocuments(filter),
         TripConfig.find(filter)
           .populate('route', 'routeName routeCode routeLength source destination')
-          .populate('depot', 'depotName depotCode region')
+          .populate({
+            path: 'depot',
+            select: 'depotCustomer code region',
+            populate: {
+              path: 'region',
+              select: 'name code communicationAddress location'
+            }
+          })
           .populate('scheduleLabel', 'scheduleLabel scheduleKm')
           .skip(skip)
           .limit(limitNum)
@@ -1242,42 +1278,57 @@ function buildAggregationPipeline(baseFilter, regionId, depotId, skip, limit) {
     { $match: baseFilter }
   ];
 
-  // Lookup depot information
-  if (depotId || regionId) {
+  // Always lookup depot information
+  pipeline.push({
+    $lookup: {
+      from: 'depotcustomers',
+      localField: 'depot',
+      foreignField: '_id',
+      as: 'depotData'
+    }
+  });
+
+  pipeline.push({
+    $unwind: {
+      path: '$depotData',
+      preserveNullAndEmptyArrays: true
+    }
+  });
+
+  // Filter by depotId if provided
+  if (depotId) {
     pipeline.push({
-      $lookup: {
-        from: 'depotcustomers',
-        localField: 'depot',
-        foreignField: '_id',
-        as: 'depotData'
+      $match: {
+        'depotData._id': new mongoose.Types.ObjectId(depotId)
       }
     });
-
-    pipeline.push({
-      $unwind: {
-        path: '$depotData',
-        preserveNullAndEmptyArrays: false
-      }
-    });
-
-    // Filter by depotId if provided
-    if (depotId) {
-      pipeline.push({
-        $match: {
-          'depotData._id': new mongoose.Types.ObjectId(depotId)
-        }
-      });
-    }
-
-    // Filter by regionId if provided
-    if (regionId) {
-      pipeline.push({
-        $match: {
-          'depotData.region': new mongoose.Types.ObjectId(regionId)
-        }
-      });
-    }
   }
+
+  // Filter by regionId if provided
+  if (regionId) {
+    pipeline.push({
+      $match: {
+        'depotData.region': new mongoose.Types.ObjectId(regionId)
+      }
+    });
+  }
+
+  // Always lookup region information for depot
+  pipeline.push({
+    $lookup: {
+      from: 'regions',
+      localField: 'depotData.region',
+      foreignField: '_id',
+      as: 'regionData'
+    }
+  });
+
+  pipeline.push({
+    $unwind: {
+      path: '$regionData',
+      preserveNullAndEmptyArrays: true
+    }
+  });
 
   // Lookup route information
   pipeline.push({
@@ -1321,9 +1372,21 @@ function buildAggregationPipeline(baseFilter, regionId, depotId, skip, limit) {
       route: '$routeData',
       depot: {
         _id: '$depotData._id',
-        depotName: '$depotData.depotName',
-        depotCode: '$depotData.depotCode',
-        region: '$depotData.region'
+        depotCustomer: '$depotData.depotCustomer',
+        code: '$depotData.code',
+        region: {
+          $cond: {
+            if: { $ne: ['$regionData', null] },
+            then: {
+              _id: '$regionData._id',
+              name: '$regionData.name',
+              code: '$regionData.code',
+              communicationAddress: '$regionData.communicationAddress',
+              location: '$regionData.location'
+            },
+            else: '$depotData.region'
+          }
+        }
       },
       createdAt: 1,
       updatedAt: 1
