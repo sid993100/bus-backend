@@ -4,9 +4,9 @@ import passwordCheck from "../../utils/passwordCheck.js"
 import consoleManager from "../../utils/consoleManager.js";
 
 export const login = async (req, res) => {
-    const { email, password } = req.body;
+    const data = req.body;
 
-    if (!email || !password) {
+    if (!data.email || !data.password) {
         return res.status(400).json({
             success: false,
             message: "All Details Required"
@@ -14,12 +14,10 @@ export const login = async (req, res) => {
     }
 
     try {
-        console.log(email, password);
-        let user = await Customer.findOne({ email });
+        let user = await Customer.findOne({email: data.email });
 
         if (!user) {
-            // New registration
-            user = new Customer({ email, password });
+            user = new Customer(data);
             await user.save();
             const token = generateToken(user._id);
             return res.status(201)
@@ -31,7 +29,7 @@ export const login = async (req, res) => {
                 });
         }
 
-        const checkedPassword = await passwordCheck(password, user.password);
+        const checkedPassword = await passwordCheck(data.password, user.password);
 
         if (!checkedPassword) {
             return res.status(401).json({

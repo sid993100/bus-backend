@@ -20,7 +20,6 @@ export const getTrips = async (req, res) => {
   }
 };
 
-// Common populate used in getTrips
 const tripPopulate = [
   { 
     path: "depot", 
@@ -47,14 +46,13 @@ const tripPopulate = [
   },
 ];
 
-// Helper to build query params
 function buildTripQueryParams(req) {
   const {
     page = "1",
     limit = "20",
     sortBy = "createdAt",
     sortOrder = "desc",
-    search, // optional: matches by tripName or code fields if present
+    search, 
   } = req.query;
 
   const pageNum = Math.max(parseInt(page, 10), 1);
@@ -74,7 +72,7 @@ function buildTripQueryParams(req) {
   return { pageNum, limitNum, skip, sort, textFilter };
 }
 
-// GET /api/trips/by-depot/:depotId
+
 export const getTripsByDepot = async (req, res) => {
   try {
     const { depotId } = req.params;

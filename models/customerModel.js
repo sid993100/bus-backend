@@ -2,17 +2,9 @@ import { model, Schema } from "mongoose";
 import bcrypt from "bcrypt";
 
 const customerSchema = new Schema({
-  firstName: {
-    type: String,
-    trim: true,
-  },
-  middleName: {
-    type: String,
-    trim: true,
-  },
-  lastName: {
-    type: String,
-    trim: true,
+  fullname:{
+    type:String,
+    uppercase:true,
   },
   gender: {
     type: String,
@@ -42,7 +34,7 @@ const customerSchema = new Schema({
     type: String,
     required: true,
   }
-  // Re-type Password is not stored in database
+ 
 });
 
 customerSchema.pre("save", async function (next) {

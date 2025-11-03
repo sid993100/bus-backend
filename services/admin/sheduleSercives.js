@@ -428,10 +428,9 @@ export const getScheduleConfigurationById = async (req, res) => {
 export const getSchedulesByDateAndDepot = async (req, res) => {
   try {
     const {
-      startDate,
-      endDate,
-      page = "1",
-      limit = "10",
+      startDay,                 // single-date like getSchedulesByDate
+      page = 1,
+      limit = 10,
       sortBy = "createdAt",
       sortOrder = "desc",
     } = req.query;
@@ -442,238 +441,264 @@ export const getSchedulesByDateAndDepot = async (req, res) => {
       return res.status(400).json({ success: false, error: "Valid 'depot' is required" });
     }
 
-    let start = normalizeDate(startDate);
-    let end = normalizeDate(endDate);
-
-    if (!start || !end) {
-      const defaults = getDefaultDateRange();
-      start = defaults.startDate;
-      end = defaults.endDate;
+    const targetDate = normalizeDate(startDay);
+    if (!targetDate) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid or missing startDay in query",
+      });
     }
 
+    const startOfTarget = toStartOfDay(targetDate);
+    const endOfTarget = toEndOfDay(targetDate);
+
+    // Overlap window like getSchedulesByDate
     const filter = {
       depot,
-      startDate: { $lte: end },
-      endDate: { $gte: start },
+      startDate: { $lte: endOfTarget },
+      endDate: { $gte: startOfTarget },
     };
 
+    // Pagination + sort inputs
     const pageNum = Math.max(parseInt(page, 10), 1);
     const limitNum = Math.max(parseInt(limit, 10), 1);
     const skip = (pageNum - 1) * limitNum;
     const sort = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
 
-    const [items, total] = await Promise.all([
-      ScheduleConfiguration.find(filter)
-        .populate("depot", "depotCustomer depotCode region")
-        .populate("seatLayout", "layoutName totalSeats seatConfiguration")
-        .populate("busService", "name")
-        .populate({
-          path: "trips.trip",
-          select: "tripId origin destination originTime destinationTime cycleDay day status route",
-          populate: [{ path: "route", select: "routeName" }],
-        })
-        .sort(sort)
-        .skip(skip)
-        .limit(limitNum),
-      ScheduleConfiguration.countDocuments(filter),
-    ]);
+    // Fetch candidates with same populate graph as getSchedulesByDate.
+    // Important: defer pagination until after cycle filtering.
+    const candidates = await ScheduleConfiguration.find(filter)
+      .populate("depot", "depotCustomer depotCode region")
+      .populate("seatLayout", "layoutName totalSeats seatConfiguration")
+      .populate("busService", "name serviceType fare")
+      .populate({
+        path: "trips.trip",
+        select: "tripId origin destination originTime destinationTime cycleDay day status route",
+        populate: [{ path: "route", select: "routeName routeLength" }],
+      })
+      .sort(sort)    // will re-apply after filtering to ensure correct order
+      .lean();
+
+    // Determine target day name
+    const jsDay = targetDate.getDay(); // 0..6
+    const targetDayName = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'][jsDay];
+
+    // Apply cycle logic like getSchedulesByDate
+    const eligibleSchedules = candidates.filter((sch) => {
+      const schStart = toStartOfDay(sch.startDate);
+      const schEnd = toEndOfDay(sch.endDate);
+
+      if (targetDate < schStart || targetDate > schEnd) return false;
+
+      const cycle = sch.cycleDay || "Daily";
+
+      switch (cycle) {
+        case "Daily":
+          return true;
+
+        case "Alternative": {
+          const diff = daysBetween(schStart, targetDate);
+          return diff % 2 === 0;
+        }
+
+        case "Weekly": {
+          if (!Array.isArray(sch.trips) || sch.trips.length === 0) return false;
+
+          const hasMatch = sch.trips.some((tripObj) => {
+            const tripDays = tripObj.trip?.day;
+            if (!Array.isArray(tripDays) || tripDays.length === 0) return false;
+            return tripDays.includes(targetDayName);
+          });
+
+          return hasMatch;
+        }
+
+        default:
+          return false;
+      }
+    });
+
+    // Re-apply sorting on filtered array to preserve requested order
+    const sorted = eligibleSchedules.sort((a, b) => {
+      const av = a[sortBy];
+      const bv = b[sortBy];
+      const dir = sortOrder === "desc" ? -1 : 1;
+      if (av === bv) return 0;
+      return av > bv ? dir : -dir;
+    });
+
+    // Paginate after filtering
+    const totalItems = sorted.length;
+    const totalPages = Math.ceil(totalItems / limitNum);
+    const paged = sorted.slice(skip, skip + limitNum);
 
     return res.status(200).json({
       success: true,
-      data: items,
+      data: paged,
       pagination: {
         currentPage: pageNum,
-        totalPages: Math.ceil(total / limitNum),
-        totalItems: total,
+        totalPages,
+        totalItems,
         itemsPerPage: limitNum,
-        hasNextPage: pageNum * limitNum < total,
+        hasNextPage: pageNum < totalPages,
         hasPrevPage: pageNum > 1,
       },
-      filters: { startDate: start, endDate: end, depot },
+      filters: {
+        checkedDate: targetDate,
+        targetDayName,
+        depot,
+      },
     });
   } catch (error) {
     console.error("Error fetching schedules by date+depot:", error);
-    return res.status(500).json({ success: false, error: "Failed to fetch schedules" });
+    return res.status(500).json({ success: false, error: "Failed to fetch schedules", message: error.message });
   }
 };
 
 export const getSchedulesByDateAndRegion = async (req, res) => {
   try {
     const {
-      startDate,
-      endDate,
-      page = "1",
-      limit = "10",
+      startDay,            // single date like getSchedulesByDate
+      depot,               // optional depot filter (ObjectId string)
+      page = 1,
+      limit = 10,
       sortBy = "createdAt",
       sortOrder = "desc",
     } = req.query;
 
-    const regionId = req.params.regionId;
+    const { regionId } = req.params;
 
     if (!regionId || !isValidObjectId(regionId)) {
       return res.status(400).json({ success: false, error: "Valid 'regionId' is required" });
     }
 
-    let start = normalizeDate(startDate);
-    let end = normalizeDate(endDate);
-
-    if (!start || !end) {
-      const defaults = getDefaultDateRange();
-      start = defaults.startDate;
-      end = defaults.endDate;
+    const targetDate = normalizeDate(startDay);
+    if (!targetDate) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid or missing startDay in query",
+      });
     }
 
-    const baseMatch = {
-      startDate: { $lte: end },
-      endDate: { $gte: start },
-    };
+    const startOfTarget = toStartOfDay(targetDate);
+    const endOfTarget = toEndOfDay(targetDate);
 
+    // Base overlap filter (same as getSchedulesByDate)
+    const filter = {
+      startDate: { $lte: endOfTarget },
+      endDate: { $gte: startOfTarget },
+    };
+    if (depot) filter.depot = depot;
+
+    // Pagination + sort
     const pageNum = Math.max(parseInt(page, 10), 1);
     const limitNum = Math.max(parseInt(limit, 10), 1);
     const skip = (pageNum - 1) * limitNum;
-    const sortStage = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
+    const sort = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
 
-    const pipeline = [
-      { $match: baseMatch },
-      {
-        $lookup: {
-          from: "depotcustomers",
-          localField: "depot",
-          foreignField: "_id",
-          as: "depot",
-          pipeline: [
-            { $match: { region: new mongoose.Types.ObjectId(regionId) } },
-            { $project: { depotCustomer: 1, depotCode: 1, region: 1 } },
-          ],
-        },
-      },
-      { $match: { depot: { $ne: [] } } },
-      {
-        $lookup: {
-          from: "seatlayouts",
-          localField: "seatLayout",
-          foreignField: "_id",
-          as: "seatLayout",
-          pipeline: [{ $project: { layoutName: 1, totalSeats: 1, seatConfiguration: 1 } }],
-        },
-      },
-      { $unwind: { path: "$seatLayout", preserveNullAndEmptyArrays: true } },
-      {
-        $lookup: {
-          from: "servicetypes",
-          localField: "busService",
-          foreignField: "_id",
-          as: "busService",
-          pipeline: [{ $project: { name: 1 } }],
-        },
-      },
-      { $unwind: { path: "$busService", preserveNullAndEmptyArrays: true } },
-      {
-        $lookup: {
-          from: "tripconfigs",
-          localField: "trips.trip",
-          foreignField: "_id",
-          as: "tripDocs",
-          pipeline: [
-            {
-              $lookup: {
-                from: "routes",
-                localField: "route",
-                foreignField: "_id",
-                as: "route",
-                pipeline: [{ $project: { routeName: 1 } }],
-              },
-            },
-            { $unwind: { path: "$route", preserveNullAndEmptyArrays: true } },
-            {
-              $project: {
-                tripId: 1,
-                origin: 1,
-                destination: 1,
-                originTime: 1,
-                destinationTime: 1,
-                cycleDay: 1,
-                day: 1,
-                status: 1,
-                route: 1,
-              },
-            },
-          ],
-        },
-      },
-      {
-        $addFields: {
-          trips: {
-            $map: {
-              input: "$trips",
-              as: "t",
-              in: {
-                $mergeObjects: [
-                  "$$t",
-                  {
-                    trip: {
-                      $arrayElemAt: [
-                        {
-                          $filter: {
-                            input: "$tripDocs",
-                            as: "td",
-                            cond: { $eq: ["$$td._id", "$$t.trip"] },
-                          },
-                        },
-                        0,
-                      ],
-                    },
-                  },
-                ],
-              },
-            },
-          },
-        },
-      },
-      { $unset: "tripDocs" },
-      { $sort: sortStage },
-      { $skip: skip },
-      { $limit: limitNum },
-    ];
-
-    const countPipeline = [
-      { $match: baseMatch },
-      {
-        $lookup: {
-          from: "depotcustomers",
-          localField: "depot",
-          foreignField: "_id",
-          as: "depot",
-          pipeline: [{ $match: { region: new mongoose.Types.ObjectId(regionId) } }],
-        },
-      },
-      { $match: { depot: { $ne: [] } } },
-      { $count: "total" },
-    ];
-
-    const [items, countAgg] = await Promise.all([
-      ScheduleConfiguration.aggregate(pipeline),
-      ScheduleConfiguration.aggregate(countPipeline),
+    // Fetch region-scoped schedules with same populate graph as getSchedulesByDate
+    const [allSchedules, totalCount] = await Promise.all([
+      ScheduleConfiguration.find(filter)
+        .populate({
+          path: "depot",
+          select: "depotCustomer depotCode region",
+          match: { region: new mongoose.Types.ObjectId(regionId) },
+        })
+        .populate("seatLayout", "layoutName totalSeats seatConfiguration")
+        .populate("busService", "name serviceType fare")
+        .populate({
+          path: "trips.trip",
+          select: "tripId origin destination originTime destinationTime cycleDay day status route",
+          populate: [{ path: "route", select: "routeName routeLength" }],
+        })
+        .sort(sort)
+        .skip(0) // defer skip/limit until after cycle filtering
+        .limit(0) // fetch all candidates, then paginate after filtering
+        .lean(),
+      ScheduleConfiguration.countDocuments(filter),
     ]);
 
-    const total = countAgg[0]?.total || 0;
+    // Filter out schedules whose depot doesn't belong to region
+    const regionScoped = allSchedules.filter((s) => !!s.depot); // since match removes non-matching depots
+
+    // Day name like getSchedulesByDate
+    const jsDay = targetDate.getDay(); // 0..6
+    const targetDayName = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'][jsDay];
+
+    // Apply cycleDay logic identical to getSchedulesByDate
+    const eligibleSchedules = regionScoped.filter((sch) => {
+      const schStart = toStartOfDay(sch.startDate);
+      const schEnd = toEndOfDay(sch.endDate);
+
+      if (targetDate < schStart || targetDate > schEnd) return false;
+
+      const cycle = sch.cycleDay || "Daily";
+
+      switch (cycle) {
+        case "Daily":
+          return true;
+
+        case "Alternative": {
+          const diff = daysBetween(schStart, targetDate);
+          return diff % 2 === 0;
+        }
+
+        case "Weekly": {
+          if (!Array.isArray(sch.trips) || sch.trips.length === 0) {
+            return false;
+          }
+
+          const hasMatch = sch.trips.some((tripObj) => {
+            const tripDays = tripObj.trip?.day;
+            if (!Array.isArray(tripDays) || tripDays.length === 0) {
+              return false;
+            }
+            return tripDays.includes(targetDayName);
+          });
+
+          return hasMatch;
+        }
+
+        default:
+          return false;
+      }
+    });
+
+    // Re-apply sorting on the filtered array (client-side) to keep behavior consistent
+    const sorted = eligibleSchedules.sort((a, b) => {
+      const av = a[sortBy];
+      const bv = b[sortBy];
+      const dir = sortOrder === "desc" ? -1 : 1;
+      if (av === bv) return 0;
+      return av > bv ? dir : -dir;
+    });
+
+    // Paginate after cycle filtering
+    const totalItems = sorted.length;
+    const totalPages = Math.ceil(totalItems / limitNum);
+    const paged = sorted.slice(skip, skip + limitNum);
 
     return res.status(200).json({
       success: true,
-      data: items,
+      data: paged,
       pagination: {
         currentPage: pageNum,
-        totalPages: Math.ceil(total / limitNum),
-        totalItems: total,
+        totalPages,
+        totalItems,
         itemsPerPage: limitNum,
-        hasNextPage: pageNum * limitNum < total,
+        hasNextPage: pageNum < totalPages,
         hasPrevPage: pageNum > 1,
       },
-      filters: { startDate: start, endDate: end, regionId },
+      filters: {
+        checkedDate: targetDate,
+        targetDayName,
+        depot: depot || null,
+        regionId,
+      },
     });
   } catch (error) {
     console.error("Error fetching schedules by date+region:", error);
-    return res.status(500).json({ success: false, error: "Failed to fetch schedules" });
+    return res.status(500).json({ success: false, error: "Failed to fetch schedules by date+region", message: error.message });
   }
 };
 
