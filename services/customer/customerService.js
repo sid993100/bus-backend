@@ -25,7 +25,8 @@ export const login = async (req, res) => {
                 .json({
                     success: true,
                     message: "Customer Registered Successfully",
-                    token
+                    token,
+                    userId: user._id
                 });
         }
 
@@ -44,7 +45,8 @@ export const login = async (req, res) => {
             .json({
                 success: true,
                 message: "login",
-                token
+                token,
+                userId: user._id
             });
     } catch (error) {
         consoleManager.log(error + " login problem");
