@@ -11,10 +11,9 @@ function parsePaging(req) {
   return { page, limit, skip, sort };
 }
 
-
 export const createComplaint = async (req, res) => {
   try {
-    const {  customer, category, subCategory, description, image, status } = req.body;
+    const {  customer, category, subCategory, description } = req.body;
 
     if ( !customer || !category || !subCategory) {
       return res.status(400).json({ success: false, message: " customer, category, subCategory are required" });
@@ -24,19 +23,12 @@ export const createComplaint = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid customer/category/subCategory id" });
     }
 
-    // Ensure unique complaintId
-    const exists = await Complaint.findOne({ complaintId: String(complaintId).toUpperCase().trim() }).lean();
-    if (exists) {
-      return res.status(409).json({ success: false, message: "complaintId already exists" });
-    }
-
     const doc = await Complaint.create({
       customer,
       category,
       subCategory,
       description: description || undefined,
-      image: Array.isArray(image) ? image : image ? [image] : [],
-      status: status || undefined
+      
     });
 
     const populated = await Complaint.findById(doc._id)
@@ -50,7 +42,6 @@ export const createComplaint = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server error", error: e.message });
   }
 };
-
 
 export const getComplaints = async (req, res) => {
   try {
@@ -125,7 +116,6 @@ export const getComplaints = async (req, res) => {
   }
 };
 
-
 export const getComplaintById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -149,11 +139,10 @@ export const getComplaintById = async (req, res) => {
   }
 };
 
-
 export const updateComplaint = async (req, res) => {
   try {
     const { id } = req.params;
-    const { customer, category, subCategory, description, image, status } = req.body;
+    const { customer, category, subCategory, description ,status } = req.body;
 
     if (!isValidObjectId(id)) {
       return res.status(400).json({ success: false, message: "Invalid complaint id" });
@@ -173,7 +162,7 @@ export const updateComplaint = async (req, res) => {
       update.subCategory = subCategory;
     }
     if (description !== undefined) update.description = description;
-    if (image !== undefined) update.image = Array.isArray(image) ? image : image ? [image] : [];
+   
     if (status) {
       const allowed = ["OPEN", "INPROGRESS", "RESOLVED", "CLOSED"];
       const normalized = status.toUpperCase();

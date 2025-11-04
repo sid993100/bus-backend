@@ -9,5 +9,5 @@ router.post("/logout",logout)
 router.get("/check",isLogin,check)
 
 router.get("/all",isLogin,getAllCustomers)
-router.patch("/update",isLogin,updateCustomer)
+router.put("/update",isLogin,updateCustomer)
 export default router

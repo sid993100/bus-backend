@@ -6,6 +6,7 @@ import { createFAQ, deleteFAQ, getFAQById, getFAQs, updateFAQ } from "../../serv
 import { addComplaintCategory, getComplaintCategories, updateComplaintCategory } from "../../services/helpAndSupport/complaintCategoryService.js";
 import { createSubCategory, getSubCategories, getSubCategoryById, updateSubCategory } from "../../services/helpAndSupport/complaintsubCategoryService.js";
 import { createComplaint, getComplaintById, getComplaints, updateComplaint } from "../../services/helpAndSupport/complaintService.js";
+import { createContactUs, getAllContactUs, getContactUsById, updateContactUs, upsertSingleContactUs } from "../../services/helpAndSupport/contactUsService.js";
 
 const router = Router();
 
@@ -61,5 +62,23 @@ router.get("/complaint/:id", getComplaintById);
 router.post("/complaint/", createComplaint);
 router.put("/complaint/:id", updateComplaint);
 // router.delete("/complaint/:id", deleteComplaint);
+
+
+router.get("/", getAllContactUs);
+
+// Get by id
+router.get("/:id", getContactUsById);
+
+// Create
+router.post("/", createContactUs);
+
+// Update by id
+router.put("/:id", updateContactUs);
+
+// Delete by id
+// router.delete("/:id", deleteContactUs);
+
+
+router.post("/upsert/single", upsertSingleContactUs);
 
 export default router;
