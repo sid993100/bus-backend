@@ -14,10 +14,10 @@ function parsePaging(req) {
 
 export const createComplaint = async (req, res) => {
   try {
-    const { complaintId, customer, category, subCategory, description, image, status } = req.body;
+    const {  customer, category, subCategory, description, image, status } = req.body;
 
-    if (!complaintId || !customer || !category || !subCategory) {
-      return res.status(400).json({ success: false, message: "complaintId, customer, category, subCategory are required" });
+    if ( !customer || !category || !subCategory) {
+      return res.status(400).json({ success: false, message: " customer, category, subCategory are required" });
     }
 
     if (!isValidObjectId(customer) || !isValidObjectId(category) || !isValidObjectId(subCategory)) {
@@ -31,7 +31,6 @@ export const createComplaint = async (req, res) => {
     }
 
     const doc = await Complaint.create({
-      complaintId: String(complaintId).toUpperCase().trim(),
       customer,
       category,
       subCategory,
@@ -154,14 +153,13 @@ export const getComplaintById = async (req, res) => {
 export const updateComplaint = async (req, res) => {
   try {
     const { id } = req.params;
-    const { complaintId, customer, category, subCategory, description, image, status } = req.body;
+    const { customer, category, subCategory, description, image, status } = req.body;
 
     if (!isValidObjectId(id)) {
       return res.status(400).json({ success: false, message: "Invalid complaint id" });
     }
 
     const update = {};
-    if (complaintId) update.complaintId = String(complaintId).toUpperCase().trim();
     if (customer) {
       if (!isValidObjectId(customer)) return res.status(400).json({ success: false, message: "Invalid customer id" });
       update.customer = customer;
