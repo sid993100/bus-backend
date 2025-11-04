@@ -64,21 +64,21 @@ router.put("/complaint/:id", updateComplaint);
 // router.delete("/complaint/:id", deleteComplaint);
 
 
-router.get("/", getAllContactUs);
+router.get("/contactus", getAllContactUs);
 
 // Get by id
-router.get("/:id", getContactUsById);
+router.get("/contactus/:id", getContactUsById);
 
 // Create
-router.post("/", createContactUs);
+router.post("/contactus/", createContactUs);
 
 // Update by id
-router.put("/:id", updateContactUs);
+router.put("/contactus/:id", updateContactUs);
 
 // Delete by id
 // router.delete("/:id", deleteContactUs);
 
 
-router.post("/upsert/single", upsertSingleContactUs);
+router.post("/contactus/upsert/single", upsertSingleContactUs);
 
 export default router;

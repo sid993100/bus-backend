@@ -116,7 +116,7 @@ export const updateCustomer = async (req, res) => {
         consoleManager.log("Update customer problem");
         res.status(500).json({
             success: false,
-            message: "server error"
+            message:error.message
         })
     }
 }
