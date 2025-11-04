@@ -3,6 +3,8 @@ import { Router } from "express";
 import { createContact, getContactById, getContacts, updateContact } from "../../services/helpAndSupport/contactServer.js";
 import { createFAQCategory, deleteFAQCategory, getFAQCategories, getFAQCategoryById, updateFAQCategory } from "../../services/helpAndSupport/faqCategoryServer.js";
 import { createFAQ, deleteFAQ, getFAQById, getFAQs, updateFAQ } from "../../services/helpAndSupport/faqsServers.js";
+import { addComplaintCategory, getComplaintCategories, updateComplaintCategory } from "../../services/helpAndSupport/complaintCategoryService.js";
+import { createSubCategory, getSubCategories, getSubCategoryById, updateSubCategory } from "../../services/helpAndSupport/complaintsubCategoryService.js";
 
 const router = Router();
 
@@ -39,5 +41,17 @@ router.put("/faqs/:id", updateFAQ);
 router.delete("/faqs/:id", deleteFAQ);
 
 
+
+router.get("/complaintcategory/",getComplaintCategories)
+router.post("/complaintcategory/",addComplaintCategory)
+router.put("/complaintcategory/:id",updateComplaintCategory)
+
+router.get('/complaintsubcategory/', getSubCategories);
+router.get('/complaintsubcategory/:id', getSubCategoryById);
+router.post('/complaintsubcategory/', createSubCategory);
+router.put('/complaintsubcategory/:id', updateSubCategory);
+
+
+// router.delete('/complaintsubcategory/:id', deleteSubCategory);
 
 export default router;

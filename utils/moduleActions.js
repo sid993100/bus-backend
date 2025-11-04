@@ -92,4 +92,8 @@ export const MODULE_ACTIONS = {
 
   eventCategory: ["create", "read", "update", "delete"],
 
+  customers: ["create", "read", "update"],
+  complaintCategory: ["create", "read", "update"],
+  complaintSubCategory: ["create", "read", "update"],
+
 };

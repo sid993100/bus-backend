@@ -704,19 +704,38 @@ export const getSchedulesByDateAndRegion = async (req, res) => {
 
 export const getSchedulesByDate = async (req, res) => {
   try {
-    const { startDay, depot, page = 1, limit = 10, sortBy = "createdAt", sortOrder = "desc" } = req.query;
+    const {
+      startDay,
+      depot,
+      page = 1,
+      limit = 10,
+      sortBy = "createdAt",
+      sortOrder = "desc",
+    } = req.query;
 
     const targetDate = normalizeDate(startDay);
     if (!targetDate) {
       return res.status(400).json({
         success: false,
-        error: "Invalid or missing startDate in query",
+        error: "Invalid or missing startDay in query",
+      });
+    }
+
+    // ✅ Restrict lookup to 30 days from today
+    const today = toStartOfDay(new Date());
+    const maxAllowed = new Date(today);
+    maxAllowed.setDate(today.getDate() + 30);
+    if (targetDate > maxAllowed) {
+      return res.status(400).json({
+        success: true,
+       data:[]
       });
     }
 
     const startOfTarget = toStartOfDay(targetDate);
     const endOfTarget = toEndOfDay(targetDate);
 
+    // ✅ Base filter
     const filter = {
       startDate: { $lte: endOfTarget },
       endDate: { $gte: startOfTarget },
@@ -726,35 +745,32 @@ export const getSchedulesByDate = async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const sort = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
 
-    const [allSchedules, totalCount] = await Promise.all([
-      ScheduleConfiguration.find(filter)
-        .populate("depot", "depotCustomer depotCode region")
-        .populate("seatLayout", "layoutName totalSeats seatConfiguration")
-        .populate("busService", "name serviceType fare")
-        .populate({
-          path: "trips.trip",
-          select: "tripId origin destination originTime destinationTime cycleDay day status route",
-          populate: [{ path: "route", select: "routeName routeLength" }],
-        })
-        .sort(sort)
-        .skip(skip)
-        .limit(parseInt(limit))
-        .lean(),
-      ScheduleConfiguration.countDocuments(filter),
-    ]);
+    const allSchedules = await ScheduleConfiguration.find(filter)
+      .populate("depot", "depotCustomer depotCode region")
+      .populate("seatLayout", "layoutName totalSeats seatConfiguration")
+      .populate("busService", "name serviceType fare")
+      .populate({
+        path: "trips.trip",
+        select:
+          "tripId origin destination originTime destinationTime cycleDay day status route",
+        populate: [{ path: "route", select: "routeName routeLength" }],
+      })
+      .sort(sort)
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
 
-    // Get target day name
-    const jsDay = targetDate.getDay(); // 0=Sunday, 1=Monday, ..., 6=Saturday
-    const targetDayName = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'][jsDay];
+    const targetDayName = WEEKDAYS[targetDate.getDay()]; // e.g., 'Monday'
+    const upperDay = targetDayName.toUpperCase(); // for trip.day (uppercase)
 
+    // ✅ Filter schedules by cycle logic
     const eligibleSchedules = allSchedules.filter((sch) => {
       const schStart = toStartOfDay(sch.startDate);
       const schEnd = toEndOfDay(sch.endDate);
-
       if (targetDate < schStart || targetDate > schEnd) return false;
 
       const cycle = sch.cycleDay || "Daily";
-      
+
       switch (cycle) {
         case "Daily":
           return true;
@@ -765,33 +781,21 @@ export const getSchedulesByDate = async (req, res) => {
         }
 
         case "Weekly": {
-          if (!Array.isArray(sch.trips) || sch.trips.length === 0) {
-           
-            return false;
-          }
+          // ✅ 1️⃣ Check top-level schedule days (if exists)
+          const hasScheduleDay =
+            Array.isArray(sch.days) &&
+            sch.days.some((d) => d.toLowerCase() === targetDayName.toLowerCase());
 
-        
+          // ✅ 2️⃣ Check inside trips.trip.day (uppercase)
+          const hasTripDay =
+            Array.isArray(sch.trips) &&
+            sch.trips.some(
+              (t) =>
+                Array.isArray(t.trip?.day) &&
+                t.trip.day.includes(upperDay)
+            );
 
-          const hasMatch = sch.trips.some((tripObj, idx) => {
-            // The day array is in the POPULATED trip object, not in tripObj.day
-            const tripDays = tripObj.trip?.day;
-            
-  
-            
-            // Check if tripDays is an array
-            if (!Array.isArray(tripDays) || tripDays.length === 0) {
-          
-              return false;
-            }
-
-            // Check if target day is in the array
-            const matches = tripDays.includes(targetDayName);
-         
-            return matches;
-          });
-
-        
-          return hasMatch;
+          return hasScheduleDay || hasTripDay;
         }
 
         default:
@@ -816,18 +820,21 @@ export const getSchedulesByDate = async (req, res) => {
         checkedDate: targetDate,
         targetDayName,
         depot: depot || null,
+        rangeLimit: {
+          from: today,
+          to: maxAllowed,
+        },
       },
     });
   } catch (error) {
-    console.error("❌ Error:", error);
+    console.error("❌ Error in getSchedulesByDate:", error);
     return res.status(500).json({
       success: false,
       error: "Failed to fetch schedules by date",
-      message: error.message
+      message: error.message,
     });
   }
 };
-
 
 export const updateCancel = async (req, res) => {
   try {
@@ -922,3 +929,4 @@ function daysBetween(date1, date2) {
   const d2 = toStartOfDay(date2);
   return Math.floor((d2 - d1) / MS_PER_DAY);
 }
+const WEEKDAYS = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];

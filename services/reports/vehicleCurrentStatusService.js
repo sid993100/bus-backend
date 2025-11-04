@@ -141,9 +141,6 @@ console.log(vehicleNumber);
       return res.status(400).json({ success: false, message: "vehicleNumber is required in params or query" });
     }
 
-  
-
-    // Fetch latest tracking packet for this vehicle with packet_status 'L'
     const vehicle = await TrackingPacket.findOne(
       { packet_type: "tracking", packet_status: "L", vehicle_reg_no: vehicleNumber },
       {
@@ -170,7 +167,6 @@ console.log(vehicleNumber);
       return res.status(404).json({ success: false, message: "Vehicle not found", data: null });
     }
 
-    // resolve address
     const getAddressFromCoordinates = async (lat, lng) => {
       try {
         if (!lat || !lng || lat === 0 || lng === 0) return "Location not available";
@@ -239,4 +235,3 @@ console.log(vehicleNumber);
       .json({ success: false, message: "Failed to fetch vehicle", error: error.message });
   }
 };
-
