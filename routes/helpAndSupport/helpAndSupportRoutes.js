@@ -5,6 +5,7 @@ import { createFAQCategory, deleteFAQCategory, getFAQCategories, getFAQCategoryB
 import { createFAQ, deleteFAQ, getFAQById, getFAQs, updateFAQ } from "../../services/helpAndSupport/faqsServers.js";
 import { addComplaintCategory, getComplaintCategories, updateComplaintCategory } from "../../services/helpAndSupport/complaintCategoryService.js";
 import { createSubCategory, getSubCategories, getSubCategoryById, updateSubCategory } from "../../services/helpAndSupport/complaintsubCategoryService.js";
+import { createComplaint, getComplaintById, getComplaints, updateComplaint } from "../../services/helpAndSupport/complaintService.js";
 
 const router = Router();
 
@@ -53,5 +54,12 @@ router.put('/complaintsubcategory/:id', updateSubCategory);
 
 
 // router.delete('/complaintsubcategory/:id', deleteSubCategory);
+
+
+router.get("/complaint/", getComplaints);
+router.get("/complaint/:id", getComplaintById);
+router.post("/complaint/", createComplaint);
+router.put("/complaint/:id", updateComplaint);
+// router.delete("/complaint/:id", deleteComplaint);
 
 export default router;

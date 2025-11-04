@@ -87,14 +87,14 @@ export const check = async (req, res) => {
 export const getAllCustomers = async (req, res) => {
     try {
         const {page=1,limit=10}=req.query;
-        skip= (page-1)*limit
+        const skip= (page-1)*limit
         const customers = await Customer.find().skip(skip).limit(limit);
         res.status(200).json({
             success: true,
             data: customers
         })
     } catch (error) {
-        consoleManager.log("Get all customers problem");
+        consoleManager.log(error);
         res.status(500).json({
             success: false,
             message: "server error"

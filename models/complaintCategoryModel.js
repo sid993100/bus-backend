@@ -7,7 +7,7 @@ const complaintCategorySchema = new Schema({
         uppercase:true,
         unique:true
     },
-    discription:{
+    description:{
         type:String,
     }
 })

@@ -3,7 +3,7 @@ import ComplaintCategory from "../../models/complaintCategoryModel.js";
 
 export const addComplaintCategory= async (req,res)=>{
     try {
-        const {name,discription=""}= req.body; 
+        const {name,description=""}= req.body; 
         const existingCategory= await ComplaintCategory.findOne({name:name.toUpperCase()});
         if(existingCategory){
             return res.status(400).json({
@@ -13,7 +13,7 @@ export const addComplaintCategory= async (req,res)=>{
         }
         const category= await ComplaintCategory.create({
             name,
-            discription
+            description
         });
         return  res.status(201).json({
             success:true,
