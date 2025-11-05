@@ -3,31 +3,67 @@ import generateToken from "../../utils/generateToken.js"
 import passwordCheck from "../../utils/passwordCheck.js"
 import consoleManager from "../../utils/consoleManager.js";
 
+export const signup = async (req, res) => {
+    const data = req.body;
+
+    if (!data.email || !data.password) {
+        return res.status(400).json({
+            success: false,
+            message: "Email and Password are required"
+        });
+    }
+
+    try {
+        // Check if user already exists
+        const existingUser = await Customer.findOne({ email: data.email });
+
+        if (existingUser) {
+            return res.status(409).json({
+                success: false,
+                message: "Customer with this email already exists"
+            });
+        }
+
+        // Create new customer
+        const user = new Customer(data);
+        await user.save();
+        
+        const token = generateToken(user._id);
+        return res.status(201)
+            .cookie("token", token, { httpOnly: true })
+            .json({
+                success: true,
+                message: "Customer Registered Successfully",
+                token,
+                userId: user._id
+            });
+    } catch (error) {
+        consoleManager.log(error + " signup problem");
+        return res.status(500).json({
+            success: false,
+            message: "Backend Error"
+        });
+    }
+}
+
 export const login = async (req, res) => {
     const data = req.body;
 
     if (!data.email || !data.password) {
         return res.status(400).json({
             success: false,
-            message: "All Details Required"
+            message: "Email and Password are required"
         });
     }
 
     try {
-        let user = await Customer.findOne({email: data.email });
+        const user = await Customer.findOne({ email: data.email });
 
         if (!user) {
-            user = new Customer(data);
-            await user.save();
-            const token = generateToken(user._id);
-            return res.status(201)
-                .cookie("token", token, { httpOnly: true })
-                .json({
-                    success: true,
-                    message: "Customer Registered Successfully",
-                    token,
-                    userId: user._id
-                });
+            return res.status(404).json({
+                success: false,
+                message: "Customer not found. Please sign up first."
+            });
         }
 
         const checkedPassword = await passwordCheck(data.password, user.password);
@@ -35,7 +71,7 @@ export const login = async (req, res) => {
         if (!checkedPassword) {
             return res.status(401).json({
                 success: false,
-                message: "Detail Wrong"
+                message: "Invalid email or password"
             });
         }
 
@@ -44,7 +80,7 @@ export const login = async (req, res) => {
             .cookie("token", token, { httpOnly: true })
             .json({
                 success: true,
-                message: "login",
+                message: "Login successful",
                 token,
                 userId: user._id
             });
