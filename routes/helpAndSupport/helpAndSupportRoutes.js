@@ -66,16 +66,12 @@ router.put("/complaint/:id", updateComplaint);
 
 router.get("/contactus", getAllContactUs);
 
-// Get by id
 router.get("/contactus/:id", getContactUsById);
 
-// Create
 router.post("/contactus/", createContactUs);
 
-// Update by id
 router.put("/contactus/:id", updateContactUs);
 
-// Delete by id
 // router.delete("/:id", deleteContactUs);
 
 

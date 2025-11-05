@@ -32,7 +32,7 @@ export const createComplaint = async (req, res) => {
     });
 
     const populated = await Complaint.findById(doc._id)
-      .populate("customer", "name email phone")
+      .populate("customer", "fullname email phone")
       .populate("category", "name description")
       .populate("subCategory", "name description");
 
@@ -77,7 +77,7 @@ export const getComplaints = async (req, res) => {
 
     const [items, total] = await Promise.all([
       Complaint.find(filter)
-        .populate("customer", "name email phone")
+        .populate("customer", "fullname email phone")
         .populate("category", "name description")
         .populate("subCategory", "name description")
         .sort(sort)
@@ -184,7 +184,7 @@ export const updateComplaint = async (req, res) => {
     }
 
     const doc = await Complaint.findByIdAndUpdate(id, update, { new: true, runValidators: true })
-      .populate("customer", "name email phone")
+      .populate("customer", "fullname email phone")
       .populate("category", "name description")
       .populate("subCategory", "name description");
 

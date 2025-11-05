@@ -120,3 +120,21 @@ export const updateCustomer = async (req, res) => {
         })
     }
 }
+
+export const updateCustomerById = async (req, res) => {
+    try {
+        const { id} = req.params;
+        const data = req.body
+        const customer = await Customer.findByIdAndUpdate(id, data, { new: true, runValidators: true })
+        res.status(200).json({
+            success: true,
+            data: customer
+        })
+    } catch (error) {
+        consoleManager.log("Update customer problem");
+        res.status(500).json({
+            success: false,
+            message:error.message
+        })
+    }
+}
