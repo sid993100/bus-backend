@@ -2,6 +2,7 @@ import Customer from "../../models/customerModel.js"
 import generateToken from "../../utils/generateToken.js"
 import passwordCheck from "../../utils/passwordCheck.js"
 import consoleManager from "../../utils/consoleManager.js";
+import bcrypt from "bcrypt"
 
 export const login = async (req, res) => {
     const data = req.body;
@@ -107,7 +108,8 @@ export const updateCustomer = async (req, res) => {
     try {
         const id = req.user._id;
         const data = req.body
-        const customer = await Customer.findByIdAndUpdate(id, data, { new: true, runValidators: true, select:"-password" })
+        const customer = await Customer.findByIdAndUpdate(id, data, { new: true, runValidators: true })
+        customer.password= await bcrypt.hash(data.password, 10)
         await customer.save()
         res.status(200).json({
             success: true,
@@ -126,7 +128,8 @@ export const updateCustomerById = async (req, res) => {
     try {
         const { id} = req.params;
         const data = req.body
-        const customer = await Customer.findByIdAndUpdate(id, data, { new: true, runValidators: true , select:"-password" })
+        const customer = await Customer.findByIdAndUpdate(id, data)
+        customer.password= await bcrypt.hash(data.password, 10)
         await customer.save()
         res.status(200).json({
             success: true,
