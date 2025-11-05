@@ -2,7 +2,6 @@ import Customer from "../../models/customerModel.js"
 import generateToken from "../../utils/generateToken.js"
 import passwordCheck from "../../utils/passwordCheck.js"
 import consoleManager from "../../utils/consoleManager.js";
-import bcrypt from "bcrypt"
 
 export const login = async (req, res) => {
     const data = req.body;
@@ -108,38 +107,74 @@ export const updateCustomer = async (req, res) => {
     try {
         const id = req.user._id;
         const data = req.body
-        const customer = await Customer.findByIdAndUpdate(id, data, { new: true, runValidators: true })
-        customer.password= await bcrypt.hash(data.password, 10)
-        await customer.save()
+        
+        // Find customer first
+        const customer = await Customer.findById(id);
+        
+        if (!customer) {
+            return res.status(404).json({
+                success: false,
+                message: "Customer not found"
+            });
+        }
+        
+        // Update all fields - password will be hashed by pre-save hook
+        Object.keys(data).forEach(key => {
+            if (key !== '_id' && data[key] !== undefined) {
+                customer[key] = data[key];
+            }
+        });
+        
+        // Save will trigger pre-save hook to hash password if it was modified
+        await customer.save();
+        
         res.status(200).json({
             success: true,
             data: customer
         })
     } catch (error) {
-        consoleManager.log("Update customer problem");
+        consoleManager.log("Update customer problem: " + error.message);
         res.status(500).json({
             success: false,
-            message:error.message
+            message: error.message
         })
     }
 }
 
 export const updateCustomerById = async (req, res) => {
     try {
-        const { id} = req.params;
+        const { id } = req.params;
         const data = req.body
-        const customer = await Customer.findByIdAndUpdate(id, data)
-        customer.password= await bcrypt.hash(data.password, 10)
-        await customer.save()
+        
+        // Find customer first
+        const customer = await Customer.findById(id);
+        
+        if (!customer) {
+            return res.status(404).json({
+                success: false,
+                message: "Customer not found"
+            });
+        }
+        
+        // Update all fields - password will be hashed by pre-save hook
+        Object.keys(data).forEach(key => {
+            if (key !== '_id' && data[key] !== undefined) {
+                customer[key] = data[key];
+            }
+        });
+        
+        // Save will trigger pre-save hook to hash password if it was modified
+        await customer.save();
+        
         res.status(200).json({
             success: true,
             data: customer
         })
     } catch (error) {
-        consoleManager.log("Update customer problem");
+        consoleManager.log("Update customer problem: " + error.message);
         res.status(500).json({
             success: false,
-            message:error.message
+            message: error.message
         })
     }
 }
