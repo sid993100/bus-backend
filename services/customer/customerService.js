@@ -107,7 +107,8 @@ export const updateCustomer = async (req, res) => {
     try {
         const id = req.user._id;
         const data = req.body
-        const customer = await Customer.findByIdAndUpdate(id, data, { new: true, runValidators: true })
+        const customer = await Customer.findByIdAndUpdate(id, data, { new: true, runValidators: true, select:"-password" })
+        await customer.save()
         res.status(200).json({
             success: true,
             data: customer
@@ -125,7 +126,8 @@ export const updateCustomerById = async (req, res) => {
     try {
         const { id} = req.params;
         const data = req.body
-        const customer = await Customer.findByIdAndUpdate(id, data, { new: true, runValidators: true })
+        const customer = await Customer.findByIdAndUpdate(id, data, { new: true, runValidators: true , select:"-password" })
+        await customer.save()
         res.status(200).json({
             success: true,
             data: customer
