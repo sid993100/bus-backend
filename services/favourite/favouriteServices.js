@@ -90,6 +90,107 @@ export const addFavourite = async (req, res) => {
     }
 };
 
+// Remove multiple favourites for user with array of trip or route IDs, like add
+export const removeFavourite = async (req, res) => {
+    try {
+        const { user, trips, routes } = req.body;
+
+        // User is always required
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: "User is required"
+            });
+        }
+
+        // trips or routes only one, and must be array of IDs
+        if (
+            (!trips && !routes) ||
+            (trips && routes)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Either trips or routes (only one) (array) must be provided"
+            });
+        }
+
+        // Validate user id
+        if (!isValidObjectId(user)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid user ID"
+            });
+        }
+
+        let ids = [];
+        let key;
+        if (trips) {
+            if (!Array.isArray(trips) || trips.length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Trips must be a non-empty array of IDs"
+                });
+            }
+            for (const tId of trips) {
+                if (!isValidObjectId(tId)) {
+                    return res.status(400).json({
+                        success: false,
+                        message: `Invalid trip ID: ${tId}`
+                    });
+                }
+            }
+            ids = trips;
+            key = "trips";
+        } else if (routes) {
+            if (!Array.isArray(routes) || routes.length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Routes must be a non-empty array of IDs"
+                });
+            }
+            for (const rId of routes) {
+                if (!isValidObjectId(rId)) {
+                    return res.status(400).json({
+                        success: false,
+                        message: `Invalid route ID: ${rId}`
+                    });
+                }
+            }
+            ids = routes;
+            key = "routes";
+        }
+
+        // Remove all matching favourites for user+each trip/route id
+        const deleteQuery = {
+            user,
+            [key]: { $in: ids }
+        };
+
+        const result = await Favourite.deleteMany(deleteQuery);
+
+        // If nothing deleted, might want to mention
+        if (result.deletedCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "No favourites found for removal"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Favourites removed successfully",
+            deletedCount: result.deletedCount
+        });
+    } catch (error) {
+        consoleManager.log("Remove favourite error: " + error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Server error",
+            error: error.message
+        });
+    }
+};
+
 // Get all favourites (with optional user filter)
 export const getFavourites = async (req, res) => {
     try {

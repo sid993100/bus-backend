@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
     addFavourite,
+    removeFavourite,
     getFavourites,
     getFavouriteById,
     updateFavourite,
@@ -25,6 +26,9 @@ router.get("/:id", isLogin, getFavouriteById);
 
 // PUT /api/favourite/:id - Update favourite
 router.put("/:id", isLogin, updateFavourite);
+
+// DELETE /api/favourite - Remove multiple favourites for user with array of trip or route IDs, like add
+router.delete("/", isLogin, removeFavourite);
 
 // DELETE /api/favourite/:id - Delete favourite
 router.delete("/:id", isLogin, deleteFavourite);
