@@ -74,8 +74,8 @@ const complaintSchema = new Schema(
     image: [{ type: String }],
     status: {
       type: String,
-      enum: ["OPEN", "INPROGRESS", "RESOLVED", "CLOSED"],
-      default: "OPEN"
+      enum: [ "INPROGRESS", "CLOSED"],
+      default: "INPROGRESS"
     }
   },
   { timestamps: true }

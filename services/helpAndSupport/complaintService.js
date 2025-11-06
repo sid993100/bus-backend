@@ -56,7 +56,7 @@ export const getComplaints = async (req, res) => {
       filter.$or = [{ complaintId: regex }, { description: regex }];
     }
 
-    if (status && ["OPEN", "INPROGRESS", "RESOLVED", "CLOSED"].includes(status.toUpperCase())) {
+    if (status && ["INPROGRESS", "CLOSED"].includes(status.toUpperCase())) {
       filter.status = status.toUpperCase();
     }
 
@@ -164,7 +164,7 @@ export const updateComplaint = async (req, res) => {
     if (description !== undefined) update.description = description;
    
     if (status) {
-      const allowed = ["OPEN", "INPROGRESS", "RESOLVED", "CLOSED"];
+      const allowed = ["INPROGRESS", "CLOSED"];
       const normalized = status.toUpperCase();
       if (!allowed.includes(normalized)) {
         return res.status(400).json({ success: false, message: "Invalid status value" });
