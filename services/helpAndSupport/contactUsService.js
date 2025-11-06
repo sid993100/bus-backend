@@ -15,9 +15,9 @@ function normalizeArray(a) {
 
 export const createContactUs = async (req, res) => {
   try {
-    const { headquarter, phone, email, long, lat } = req.body;
+    const { organization, headquarter, phone, email, long, lat } = req.body;
 
-    if (!headquarter || long === undefined || lat === undefined) {
+    if (!organization || !headquarter || long === undefined || lat === undefined) {
       return res.status(400).json({ success: false, message: "headquarter, long and lat are required" });
     }
 
@@ -37,6 +37,7 @@ export const createContactUs = async (req, res) => {
     }
 
     const doc = await ContactUs.create({
+      organization,
       headquarter,
       phone: phoneArr.map(p => Number(p)),
       email: emailArr.map(String),
@@ -83,9 +84,10 @@ export const updateContactUs = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid id" });
     }
 
-    const { headquarter, phone, email, long, lat } = req.body;
+    const { organization, headquarter, phone, email, long, lat } = req.body;
 
     const update = {};
+    if (organization !== undefined) update.organization = organization;
     if (headquarter !== undefined) update.headquarter = headquarter;
     if (long !== undefined) update.long = Number(long);
     if (lat !== undefined) update.lat = Number(lat);
@@ -133,9 +135,9 @@ export const deleteContactUs = async (req, res) => {
 
 export const upsertSingleContactUs = async (req, res) => {
   try {
-    const { headquarter, phone, email, long, lat } = req.body;
+    const { organization, headquarter, phone, email, long, lat } = req.body;
 
-    if (!headquarter || long === undefined || lat === undefined) {
+    if (!organization || !headquarter || long === undefined || lat === undefined) {
       return res.status(400).json({ success: false, message: "headquarter, long and lat are required" });
     }
 
@@ -150,6 +152,7 @@ export const upsertSingleContactUs = async (req, res) => {
     }
 
     const update = {
+      organization,
       headquarter,
       phone: phoneArr.map(p => Number(p)),
       email: emailArr.map(String),

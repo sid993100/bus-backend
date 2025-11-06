@@ -1,6 +1,10 @@
 import { model, Schema } from "mongoose";
 
 const contactUsSchema = new Schema({
+    organization:{
+        type:String,
+        required:true
+    },
     headquarter:{
         type:String,
         required:true
