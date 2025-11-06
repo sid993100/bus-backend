@@ -7,28 +7,54 @@ export const addFavourite = async (req, res) => {
     try {
         const { user, trips, routes } = req.body;
 
-        // Validation
-        if (!user || !trips || !routes) {
+        // Validation: user is always required
+        if (!user) {
             return res.status(400).json({
                 success: false,
-                message: "All fields are required (user, trips, routes)"
+                message: "User is required"
             });
         }
 
-        // Validate ObjectIds
-        if (!isValidObjectId(user) || !isValidObjectId(trips) || !isValidObjectId(routes)) {
+        // Check both: at least one of trips or routes must be provided, not both, not none
+        if (
+            (!trips && !routes) ||
+            (trips && routes) // Both are set, that's invalid
+        ) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid user, trips, or routes ID"
+                message: "Either trips or routes (only one) must be provided"
             });
         }
 
-        // Check if favourite already exists (same user, trip, and route combination)
-        const existingFavourite = await Favourite.findOne({
-            user,
-            trips,
-            routes
-        });
+        // Validate ObjectIds for user
+        if (!isValidObjectId(user)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid user ID"
+            });
+        }
+        // Validate ObjectId for trips if provided
+        if (trips && !isValidObjectId(trips)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid trip ID"
+            });
+        }
+        // Validate ObjectId for routes if provided
+        if (routes && !isValidObjectId(routes)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid route ID"
+            });
+        }
+
+        // Check if favourite already exists:
+        // User and (trips or routes); only one of trips or routes can exist per favourite
+        let findQuery = { user };
+        if (trips) findQuery.trips = trips;
+        if (routes) findQuery.routes = routes;
+
+        const existingFavourite = await Favourite.findOne(findQuery);
 
         if (existingFavourite) {
             return res.status(409).json({
@@ -37,11 +63,12 @@ export const addFavourite = async (req, res) => {
             });
         }
 
-        const favourite = await Favourite.create({
-            user,
-            trips,
-            routes
-        });
+        // Create favourite with only one of trips or routes
+        const favouriteData = { user };
+        if (trips) favouriteData.trips = trips;
+        if (routes) favouriteData.routes = routes;
+
+        const favourite = await Favourite.create(favouriteData);
 
         // Populate references for response
         await favourite.populate('user', 'username email');
