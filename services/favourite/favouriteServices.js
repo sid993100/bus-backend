@@ -206,7 +206,10 @@ export const getFavourites = async (req, res) => {
         const [favourites, total] = await Promise.all([
             Favourite.find(query)
                 .populate('user', 'username email')
-                .populate('trips')
+                .populate({
+                    path: 'trips',
+                    populate: { path: 'route' }
+                })
                 .populate('routes')
                 .sort({ createdAt: -1 })
                 .skip(skip)
