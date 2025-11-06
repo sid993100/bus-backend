@@ -21,6 +21,7 @@ import eventCategoryRoute from "./routes/otc/eventCategoryRoute.js";
 import deleteRoute from "./routes/delete/deleteRoute.js";
 import geoFenceRouter from "./routes/geoFenceRputer.js";
 import customerRoutes from "./routes/customerRoute.js";
+import favouriteRoutes from "./routes/favourite/favouriteRoute.js";
 
 
 dotenv.config();
@@ -83,6 +84,7 @@ app.use("/api/delete",deleteRoute)
 app.use("/api/geofence",geoFenceRouter)
 app.use("/api/incidenthandling",incident)
 app.use("/api/customer",customerRoutes)
+app.use("/api/favourite",favouriteRoutes)
 
 
 

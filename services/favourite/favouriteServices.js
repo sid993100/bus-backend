@@ -1,0 +1,310 @@
+import Favourite from "../../models/favouriteModel.js";
+import { isValidObjectId } from "mongoose";
+import consoleManager from "../../utils/consoleManager.js";
+
+// Add a favourite
+export const addFavourite = async (req, res) => {
+    try {
+        const { user, trips, routes } = req.body;
+
+        // Validation
+        if (!user || !trips || !routes) {
+            return res.status(400).json({
+                success: false,
+                message: "All fields are required (user, trips, routes)"
+            });
+        }
+
+        // Validate ObjectIds
+        if (!isValidObjectId(user) || !isValidObjectId(trips) || !isValidObjectId(routes)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid user, trips, or routes ID"
+            });
+        }
+
+        // Check if favourite already exists (same user, trip, and route combination)
+        const existingFavourite = await Favourite.findOne({
+            user,
+            trips,
+            routes
+        });
+
+        if (existingFavourite) {
+            return res.status(409).json({
+                success: false,
+                message: "This favourite already exists"
+            });
+        }
+
+        const favourite = await Favourite.create({
+            user,
+            trips,
+            routes
+        });
+
+        // Populate references for response
+        await favourite.populate('user', 'username email');
+        await favourite.populate('trips');
+        await favourite.populate('routes');
+
+        return res.status(201).json({
+            success: true,
+            message: "Favourite added successfully",
+            data: favourite
+        });
+    } catch (error) {
+        consoleManager.log("Add favourite error: " + error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Server error",
+            error: error.message
+        });
+    }
+};
+
+// Get all favourites (with optional user filter)
+export const getFavourites = async (req, res) => {
+    try {
+        const { user, page = 1, limit = 10 } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        // Build query
+        const query = {};
+        if (user && isValidObjectId(user)) {
+            query.user = user;
+        }
+
+        const [favourites, total] = await Promise.all([
+            Favourite.find(query)
+                .populate('user', 'username email')
+                .populate('trips')
+                .populate('routes')
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            Favourite.countDocuments(query)
+        ]);
+
+        return res.status(200).json({
+            success: true,
+            data: favourites,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        consoleManager.log("Get favourites error: " + error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Server error",
+            error: error.message
+        });
+    }
+};
+
+// Get favourite by ID
+export const getFavouriteById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!id || !isValidObjectId(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid favourite ID"
+            });
+        }
+
+        const favourite = await Favourite.findById(id)
+            .populate('user', 'username email')
+            .populate('trips')
+            .populate('routes');
+
+        if (!favourite) {
+            return res.status(404).json({
+                success: false,
+                message: "Favourite not found"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: favourite
+        });
+    } catch (error) {
+        consoleManager.log("Get favourite by ID error: " + error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Server error",
+            error: error.message
+        });
+    }
+};
+
+// Update favourite
+export const updateFavourite = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { user, trips, routes } = req.body;
+
+        if (!id || !isValidObjectId(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid favourite ID"
+            });
+        }
+
+        // Check if favourite exists
+        const existingFavourite = await Favourite.findById(id);
+        if (!existingFavourite) {
+            return res.status(404).json({
+                success: false,
+                message: "Favourite not found"
+            });
+        }
+
+        // Build update object
+        const updateData = {};
+        if (user !== undefined) {
+            if (!isValidObjectId(user)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid user ID"
+                });
+            }
+            updateData.user = user;
+        }
+        if (trips !== undefined) {
+            if (!isValidObjectId(trips)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid trips ID"
+                });
+            }
+            updateData.trips = trips;
+        }
+        if (routes !== undefined) {
+            if (!isValidObjectId(routes)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid routes ID"
+                });
+            }
+            updateData.routes = routes;
+        }
+
+        // Check for duplicate if updating
+        if (Object.keys(updateData).length > 0) {
+            const checkData = {
+                user: updateData.user || existingFavourite.user,
+                trips: updateData.trips || existingFavourite.trips,
+                routes: updateData.routes || existingFavourite.routes
+            };
+
+            const duplicate = await Favourite.findOne({
+                _id: { $ne: id },
+                ...checkData
+            });
+
+            if (duplicate) {
+                return res.status(409).json({
+                    success: false,
+                    message: "This favourite combination already exists"
+                });
+            }
+        }
+
+        const updatedFavourite = await Favourite.findByIdAndUpdate(
+            id,
+            updateData,
+            { new: true, runValidators: true }
+        )
+            .populate('user', 'username email')
+            .populate('trips')
+            .populate('routes');
+
+        return res.status(200).json({
+            success: true,
+            message: "Favourite updated successfully",
+            data: updatedFavourite
+        });
+    } catch (error) {
+        consoleManager.log("Update favourite error: " + error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Server error",
+            error: error.message
+        });
+    }
+};
+
+// Delete favourite
+export const deleteFavourite = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!id || !isValidObjectId(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid favourite ID"
+            });
+        }
+
+        const favourite = await Favourite.findByIdAndDelete(id);
+
+        if (!favourite) {
+            return res.status(404).json({
+                success: false,
+                message: "Favourite not found"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Favourite deleted successfully",
+            data: favourite
+        });
+    } catch (error) {
+        consoleManager.log("Delete favourite error: " + error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Server error",
+            error: error.message
+        });
+    }
+};
+
+// Get favourites by user (convenience method)
+export const getFavouritesByUser = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        if (!userId || !isValidObjectId(userId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid user ID"
+            });
+        }
+
+        const favourites = await Favourite.find({ user: userId })
+            .populate('user', 'username email')
+            .populate('trips')
+            .populate('routes')
+            .sort({ createdAt: -1 });
+
+        return res.status(200).json({
+            success: true,
+            data: favourites
+        });
+    } catch (error) {
+        consoleManager.log("Get favourites by user error: " + error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Server error",
+            error: error.message
+        });
+    }
+};
