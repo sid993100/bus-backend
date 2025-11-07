@@ -39,9 +39,9 @@ router.get("/tolltypes", isLogin,  getTollType);
 router.get("/toll",isLogin,  getToll);
 router.get("/servicecategory", isLogin,  getServiceCategory);
 router.get("/state", isLogin,  getState);
-router.get("/busstop", isLogin, getBusStop);
+router.get("/busstop", getBusStop);
 router.get("/country", isLogin, getCountry);
-router.get("/servicetype", isLogin,  getServiceType);
+router.get("/servicetype",  getServiceType);
 router.get("/stoparea",isLogin, getArea)
 router.get("/stopgrade",isLogin, getStopGrade)
 router.get("/vehicle/region/:regionId",isLogin,getVehiclesByRegion)

@@ -11,18 +11,18 @@ import { addSim, getAllSims, updateSim } from "../../services/master/sim/simServ
 
 const router = Router();
 
-router.get("/route",isLogin ,getRoutes)
+router.get("/route",getRoutes)
 router.get("/route/region/:regionId",isLogin ,getRoutesByRegion)
 router.get("/route/depot/:depotId",isLogin ,getRoutesByDepot)
 router.get("/seatlayout",isLogin ,getSeatLayout)
-router.get("/trip",isLogin ,getTrips)
+router.get("/trip" ,getTrips)
 router.get("/todaytrip",isLogin,getTodayTrips)
 router.get("/trip/region/:regionId",isLogin ,getTripsByRegion)
 router.get("/trip/depot/:depotId",isLogin ,getTripsByDepot)
 router.get("/duty", isLogin ,getDuty);
 router.get("/duty/region/:regionId", isLogin ,getDutyByRegion);
 router.get("/duty/depot/:depotId", isLogin ,getDutyByDepot);
-router.get("/scheduleconfig", isLogin ,getAllScheduleConfigurations);
+router.get("/scheduleconfig" ,getAllScheduleConfigurations);
 router.get("/scheduleconfig/depot/:depotId", isLogin ,getSchedulesByDepotAndDate);
 router.get("/scheduleconfig/region/:regionId", isLogin ,getByRegion);
 // router.get("/scheduleconfig/region/:regionId", isLogin ,checkPermission("scheduleConfig","read"), get);
