@@ -4,7 +4,7 @@ import EventCategory from "../../models/eventCategoryModel.js";
 import Vehicle from "../../models/vehicleModel.js";
 
 
-export async function createIncident(req, res) {
+export async function createIncident(req, res){
     try {
         const { vehicle, messageid, long, lat } = req.body;
 
