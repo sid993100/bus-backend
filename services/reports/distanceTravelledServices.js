@@ -216,7 +216,7 @@ async function getLocationName(lat, lon) {
   }
   
   try {
-    const url = `http://nominatim.locationtrack.in/reverse?format=json&lat=${lat}&lon=${lon}`;
+    const url = `https://nominatim.anantdrishti.com/reverse?format=json&lat=${lat}&lon=${lon}`;
     const response = await axios.get(url, { 
       timeout: 5000,
       headers: {

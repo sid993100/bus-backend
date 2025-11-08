@@ -56,7 +56,7 @@ export const getVehicleCurrentStatusWithLocation = async (req, res) => {
         }
 
         const response = await fetch(
-          `http://nominatim.locationtrack.in/reverse?format=geocodejson&lat=${lat}&lon=${lng}`
+          `https://nominatim.anantdrishti.com/reverse?format=geocodejson&lat=${lat}&lon=${lng}`
         );
 
         if (!response.ok) throw new Error("Failed to fetch address");
@@ -171,7 +171,7 @@ console.log(vehicleNumber);
       try {
         if (!lat || !lng || lat === 0 || lng === 0) return "Location not available";
         const response = await fetch(
-          `http://nominatim.locationtrack.in/reverse?format=geocodejson&lat=${lat}&lon=${lng}`
+          `https://nominatim.anantdrishti.com/reverse?format=geocodejson&lat=${lat}&lon=${lng}`
         );
         if (!response.ok) throw new Error("Failed to fetch address");
         const data = await response.json();

@@ -32,5 +32,4 @@ router.post("/track",addTrackingPacket)
 router.post("/health",addHealthPacket)
 router.post("/emergency",addEmergencyPacket)
 
-
 export default router;
