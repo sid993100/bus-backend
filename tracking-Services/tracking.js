@@ -63,10 +63,11 @@ async function connectKafka() {
 
       try {
         if (parsed.packet_type === "tracking") {
-          const response = await axios.post(`${axiosApi}/api/tracking/track`, { data: parsed });
-          console.log("response of tracking packet", response);
-          await axios.post(`${axiosApi}/api/incidenthandling`,{vehicle:parsed.vehicle_reg_no,messageid:parsed.message_id,long:parsed.longitude,lat:parsed.latitude})
-          await axios.post(`${axiosApi}/api/tracking/event`,{vehicleNo:parsed.vehicle_reg_no,eventName:parsed.message_id,longitude:parsed.longitude,latitude:parsed.latitude,imei:parsed.imei,vendor_id:parsed.vendor_id, dateAndTime:parsed.dateAndTime})
+          await axios.post(`${axiosApi}/api/tracking/track`, { data: parsed });
+          const response = await axios.post(`${axiosApi}/api/incidenthandling`,{vehicle:parsed.vehicle_reg_no,messageid:parsed.message_id,long:parsed.longitude,lat:parsed.latitude})
+          console.log("response of incident handling", response);
+          const response1 = await axios.post(`${axiosApi}/api/tracking/event`,{vehicleNo:parsed.vehicle_reg_no,eventName:parsed.message_id,longitude:parsed.longitude,latitude:parsed.latitude,imei:parsed.imei,vendor_id:parsed.vendor_id, dateAndTime:parsed.dateAndTime})
+          console.log("response of event", response1);
           consoleManager.log("✅ Data saved to API successfully");
         } else if (parsed.packet_type === "login") {
           await axios.post(`${axiosApi}/api/tracking/login`, { data: parsed });
