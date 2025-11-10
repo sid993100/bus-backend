@@ -29,9 +29,9 @@ const reverseGeocode = async (lat, lon) => {
     return 'Invalid Coordinates';
   }
   try {
-    const url = `https://nominatim.anantdrishti.com/reverse?format=geocodejson&lat=${lat}&lon=${lon}`;
+    const url = `https://nominatim.locationtrack.in/reverse.php?lat=${lat}&lon=${lon}&format=json`;
     const response = await axios.get(url, { timeout: 3000 });
-    return response.data?.features?.[0]?.properties?.display_name || `${lat}, ${lon}`;
+    return response.data?.display_name || `${lat}, ${lon}`;
   } catch (error) {
     console.error('Geocoding error:', error.message);
     return `${lat}, ${lon}`;

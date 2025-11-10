@@ -50,23 +50,26 @@ export const getVehicleCurrentStatusWithLocation = async (req, res) => {
 
     // Helper: reverse geocode
     const getAddressFromCoordinates = async (lat, lng) => {
-      try {
-        if (!lat || !lng || lat === 0 || lng === 0) {
-          return "Location not available";
-        }
+  try {
+    if (!lat || !lng || lat === 0 || lng === 0) {
+      return "Location not available";
+    }
 
-        const response = await fetch(
-          `https://nominatim.anantdrishti.com/reverse?format=geocodejson&lat=${lat}&lon=${lng}`
-        );
+    const response = await fetch(
+      `https://nominatim.locationtrack.in/reverse.php?lat=${lat}&lon=${lng}&format=json`
+    );
 
-        if (!response.ok) throw new Error("Failed to fetch address");
+    if (!response.ok) throw new Error("Failed to fetch address");
 
-        const data = await response.json();
-        return data.features[0]?.properties?.geocoding?.label || "Address not found";
-      } catch {
-        return "Could not determine location";
-      }
-    };
+    const data = await response.json();
+
+    // Return a nice readable address
+    return data.display_name || "Address not found";
+  } catch (error) {
+    return "Could not determine location";
+  }
+};
+
 
     // Map + enrich each record
     const formattedVehicleStatus = await Promise.all(
@@ -171,11 +174,11 @@ console.log(vehicleNumber);
       try {
         if (!lat || !lng || lat === 0 || lng === 0) return "Location not available";
         const response = await fetch(
-          `https://nominatim.anantdrishti.com/reverse?format=geocodejson&lat=${lat}&lon=${lng}`
+          `https://nominatim.locationtrack.in/reverse.php?lat=${lat}&lon=${lon}&format=json`
         );
         if (!response.ok) throw new Error("Failed to fetch address");
         const data = await response.json();
-        return data.features?.[0]?.properties?.geocoding?.label || "Address not found";
+        return data?.display_name || "Address not found";
       } catch (err) {
         console.error("Address fetch error:", err);
         return "Could not determine location";

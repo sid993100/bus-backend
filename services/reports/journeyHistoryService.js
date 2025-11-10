@@ -261,7 +261,7 @@ function formatDateTime(date) {
 
 async function reverseGeocode(lat, lon) {
   try {
-    const url = `https://nominatim.anantdrishti.com/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
+    const url = `https://nominatim.locationtrack.in/reverse.php?lat=${lat}&lon=${lon}&format=json&zoom=18&addressdetails=1`;
     const response = await axios.get(url, { 
       timeout: 5000,
       headers: {

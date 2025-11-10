@@ -28,7 +28,6 @@ export async function createIncident(req, res){
             });
         }
 
-        // Find event by messageId
         const event = await DeviceEvent.findOne({ messageId: messageIdNum });
         if (!event) {
             return res.status(404).json({
