@@ -48,26 +48,26 @@ export async function createIncident(req, res){
             });
         }
 
-        // Find the latest incident for this vehicle
-        const latestIncident = await Incident.findOne({
-            vehicle: vehicleDoc._id
-        })
-        .sort({ createdAt: -1 })
-        .populate('event', 'messageId');
+        // // Find the latest incident for this vehicle
+        // const latestIncident = await Incident.findOne({
+        //     vehicle: vehicleDoc._id
+        // })
+        // .sort({ createdAt: -1 })
+        // .populate('event', 'messageId');
 
-        // If latest incident has the same messageId, don't create duplicate
-        if (latestIncident && latestIncident.event.messageId === messageIdNum) {
-            const populatedLatest = await Incident.findById(latestIncident._id)
-                .populate('vehicle', 'vehicleNumber registrationNumber model')
-                .populate('event', 'messageId eventType eventName description');
+        // // If latest incident has the same messageId, don't create duplicate
+        // if (latestIncident && latestIncident.event.messageId === messageIdNum) {
+        //     const populatedLatest = await Incident.findById(latestIncident._id)
+        //         .populate('vehicle', 'vehicleNumber registrationNumber model')
+        //         .populate('event', 'messageId eventType eventName description');
 
-            return res.status(200).json({
-                success: true,
-                message: "Incident already exists with the same messageId",
-                data: populatedLatest,
-                isNew: false
-            });
-        }
+        //     return res.status(200).json({
+        //         success: true,
+        //         message: "Incident already exists with the same messageId",
+        //         data: populatedLatest,
+        //         isNew: false
+        //     });
+        // }
 
         // Create new incident (new messageId detected)
         const newIncident = await Incident.create({
