@@ -1,6 +1,8 @@
 import { isValidObjectId } from "mongoose";
 import Duty from "../../../models/dutyModel.js";
-
+import ScheduleConfiguration from "../../../models/scheduleModel.js";
+import Vehicle from "../../../models/vehicleModel.js";
+import { generateDutyNumber } from "../../../utils/generateDutyNumber.js";
 
 export const getDuty = async (req, res) => {
   try {
@@ -220,29 +222,108 @@ export const getDutyByRegion = async (req, res) => {
 
 export const addDuty = async (req, res) => {
   try {
-    const 
-      data
-     = req.body;
+    const data = req.body;
 
-    if (!data.dutyDate || !data.vehicleNumber || !data.conductorName || !data.driverName  ) {
+    if (!data.dutyDate || !data.vehicleNumber || !data.conductorName || !data.driverName) {
       return res.status(400).json({
         message: "All required fields must be provided"
       });
     }
 
-    const newDuty = await Duty.create(
-    data
-    );
+    // Get depot code from scheduleNumber (preferred) or vehicleNumber
+    let depotCode = null;
 
-    if(!newDuty){
+    // Try to get depot code from scheduleNumber first
+    if (data.scheduleNumber) {
+      const scheduleId = Array.isArray(data.scheduleNumber) 
+        ? (data.scheduleNumber.length > 0 ? data.scheduleNumber[0] : null)
+        : data.scheduleNumber;
+      
+      if (scheduleId) {
+        const schedule = await ScheduleConfiguration.findById(scheduleId)
+          .populate('depot', 'code')
+          .select('depot')
+          .lean();
+
+        if (schedule && schedule.depot && schedule.depot.code) {
+          depotCode = schedule.depot.code;
+        }
+      }
+    }
+
+    // If not found in schedule, try vehicleNumber
+    if (!depotCode && data.vehicleNumber) {
+      const vehicle = await Vehicle.findById(data.vehicleNumber)
+        .populate('depotCustomer', 'code')
+        .select('depotCustomer')
+        .lean();
+
+      if (vehicle && vehicle.depotCustomer && vehicle.depotCustomer.code) {
+        depotCode = vehicle.depotCustomer.code;
+      }
+    }
+
+    // If still no depot code found, return error
+    if (!depotCode) {
+      return res.status(400).json({
+        message: "Depot code not found. Please ensure scheduleNumber or vehicleNumber has an associated depot."
+      });
+    }
+
+    // Generate unique duty number with depot code
+    let dutyNumber;
+    let maxRetries = 5;
+    let retryCount = 0;
+    let isUnique = false;
+
+    while (!isUnique && retryCount < maxRetries) {
+      try {
+        dutyNumber = await generateDutyNumber(depotCode);
+        
+        // Double-check uniqueness
+        const existingDuty = await Duty.findOne({ dutyNumber });
+        if (!existingDuty) {
+          isUnique = true;
+        } else {
+          retryCount++;
+          // Wait a bit before retrying (in case of race condition)
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      } catch (error) {
+        console.error("Error generating duty number:", error);
+        retryCount++;
+        if (retryCount >= maxRetries) {
+          throw new Error("Failed to generate unique duty number after multiple attempts");
+        }
+      }
+    }
+
+    if (!isUnique) {
+      return res.status(500).json({
+        message: "Failed to generate unique duty number. Please try again."
+      });
+    }
+
+    data.dutyNumber = dutyNumber;
+    const newDuty = await Duty.create(data);
+
+    if (!newDuty) {
       return res.status(500).json({
         message: "Failed to create duty"
       });
-    } 
+    }
+
+    // Populate the created duty for response
+    const populatedDuty = await Duty.findById(newDuty._id)
+      .populate('conductorName', 'driverName')
+      .populate('driverName', 'driverName')
+      .populate('supportDriver', 'driverName')
+      .populate('vehicleNumber', 'vehicleNumber')
+      .lean();
 
     res.status(201).json({
       message: "Duty created successfully",
-      data: newDuty 
+      data: populatedDuty
     });
 
   } catch (error) {
@@ -257,13 +338,13 @@ export const addDuty = async (req, res) => {
 
     if (error.code === 11000) {
       return res.status(409).json({
-        message: "Duplicate entry for Duty Number"
+        message: "Duplicate entry for Duty Number. Please try again."
       });
     }
 
     return res.status(500).json({
-     success: false,
-     message:error.message
+      success: false,
+      message: error.message || "Server error occurred"
     });
   }
 };
