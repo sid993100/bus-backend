@@ -17,6 +17,10 @@ const contactUsSchema = new Schema({
         type:String,
         required:true
     }],
+    website:[{
+        type:String,
+        required:true
+    }],
     long:{
         type:Number,
         required:true

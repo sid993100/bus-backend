@@ -208,7 +208,7 @@ export const getFavourites = async (req, res) => {
                 .populate('user', 'username email')
                 .populate({
                     path: 'trips',
-                    populate: { path: 'route' }
+                    populate: { path: 'route', populate: { path: 'depot' } }
                 })
                 .populate('routes')
                 .sort({ createdAt: -1 })

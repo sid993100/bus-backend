@@ -12,10 +12,12 @@ function isValidPhone(v) {
 function normalizeArray(a) {
   return Array.isArray(a) ? a : a !== undefined ? [a] : [];
 }
-
+function isValidUrl(v) {
+  return typeof v === "string" && /^https?:\/\/[^\s]+$/.test(v);
+}
 export const createContactUs = async (req, res) => {
   try {
-    const { organization, headquarter, phone, email, long, lat } = req.body;
+    const { organization, headquarter, phone, email, long, lat, website  } = req.body;
 
     if (!organization || !headquarter || long === undefined || lat === undefined) {
       return res.status(400).json({ success: false, message: "headquarter, long and lat are required" });
@@ -23,7 +25,7 @@ export const createContactUs = async (req, res) => {
 
     const phoneArr = normalizeArray(phone);
     const emailArr = normalizeArray(email);
-
+    const websiteArr = normalizeArray(website);
     if (phoneArr.length === 0 || emailArr.length === 0) {
       return res.status(400).json({ success: false, message: "At least one phone and one email are required" });
     }
@@ -42,7 +44,8 @@ export const createContactUs = async (req, res) => {
       phone: phoneArr.map(p => Number(p)),
       email: emailArr.map(String),
       long: Number(long),
-      lat: Number(lat)
+      lat: Number(lat),
+      website: websiteArr.map(String)
     });
 
     return res.status(201).json({ success: true, message: "ContactUs created", data: doc });
@@ -84,7 +87,7 @@ export const updateContactUs = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid id" });
     }
 
-    const { organization, headquarter, phone, email, long, lat } = req.body;
+    const { organization, headquarter, phone, email, long, lat, website } = req.body;
 
     const update = {};
     if (organization !== undefined) update.organization = organization;
@@ -108,6 +111,13 @@ export const updateContactUs = async (req, res) => {
       update.email = emailArr.map(String);
     }
 
+    if (website !== undefined) {
+      const websiteArr = normalizeArray(website);
+      if (!websiteArr.every(isValidUrl)) {
+        return res.status(400).json({ success: false, message: "One or more websites are invalid" });
+      }
+      update.website = websiteArr.map(String);
+    }
     const doc = await ContactUs.findByIdAndUpdate(id, update, { new: true, runValidators: true });
     if (!doc) return res.status(404).json({ success: false, message: "ContactUs not found" });
 

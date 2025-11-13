@@ -5,9 +5,10 @@ const dutySchema = new Schema({
     type: Date,
     required: true,
   },
-  dutyId:{
+  dutyNumber:{
     type: String,
     required: true,
+    uppercase: true,
     unique: true
   },
   vehicleNumber: {
@@ -33,7 +34,7 @@ const dutySchema = new Schema({
     type: String,
     required: true,
     uppercase: true,
-    enum: ['SCHEDULED', 'EXTRA DUTY'],
+    enum: ['SCHEDULED', 'EXTRA_DUTY'],
     default: "SCHEDULED"
   },
   scheduleNumber: [{
