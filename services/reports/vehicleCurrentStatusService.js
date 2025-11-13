@@ -216,7 +216,7 @@ console.log(vehicleNumber);
       imei: vehicle.imei || "N/A",
       status,
       main_power_status: vehicle.main_power ? "Connected" : "Disconnected",
-      speed_kmh: `${vehicle.speed_kmh || 0} km/h`,
+      speed_kmh: vehicle.speed_kmh || 0,
       lastLocation,
       lastUpdate,
       latitude: vehicle.latitude || 0,
