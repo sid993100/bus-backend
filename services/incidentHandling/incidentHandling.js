@@ -161,9 +161,14 @@ export async function getIncidents(req, res) {
         }
         if (eventCategoryId && eventCategoryId.trim() !== '') {
             // Find events under the specified category
-            const events = await DeviceEvent.find({ eventCategory: eventCategoryId.trim() }).select('_id');
+            const events = await DeviceEvent.find({ category: eventCategoryId.trim() }).select('_id');
             const eventIds = events.map(event => event._id);
-            filter.event = { $in: eventIds };
+            if (eventIds.length > 0) {
+                filter.event = { $in: eventIds };
+            } else {
+                // If no events found for this category, return empty results
+                filter.event = { $in: [] };
+            }
         }
 
         // Build sort object
@@ -174,7 +179,7 @@ export async function getIncidents(req, res) {
         const [incidents, total] = await Promise.all([
             Incident.find(filter)
                 .populate('vehicle', 'vehicleNumber registrationNumber model')
-                .populate('event', 'eventType eventName description')
+                .populate('event', 'eventType eventName description category')
                 .sort(sort)
                 .skip(skip)
                 .limit(limitNum)
