@@ -744,6 +744,7 @@ export const getTodayTrips = async (req, res) => {
       })
       .populate('seatLayout', 'layoutName totalSeats')
       .populate('busService', 'serviceName serviceType')
+      .populate('configuredStops.stop', 'stopName')
       .sort({ startDate: -1 })
       .lean();
 
@@ -1252,6 +1253,7 @@ export const getArrivalDeparture  = async (req, res) => {
             }
           })
           .populate('scheduleLabel', 'scheduleLabel scheduleKm')
+          .populate('configuredStops.stop', 'stopName')
           .skip(skip)
           .limit(limitNum)
           .sort({ startDate: -1 })
