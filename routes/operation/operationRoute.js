@@ -16,7 +16,7 @@ router.get("/route/region/:regionId",isLogin ,getRoutesByRegion)
 router.get("/route/depot/:depotId",isLogin ,getRoutesByDepot)
 router.get("/seatlayout",isLogin ,getSeatLayout)
 router.get("/trip" ,getTrips)
-router.get("/todaytrip",isLogin,getTodayTrips)
+router.get("/todaytrip",getTodayTrips)
 router.get("/trip/region/:regionId",isLogin ,getTripsByRegion)
 router.get("/trip/depot/:depotId",isLogin ,getTripsByDepot)
 router.get("/duty", isLogin ,getDuty);
