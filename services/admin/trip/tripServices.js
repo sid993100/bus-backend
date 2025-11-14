@@ -993,7 +993,11 @@ export const breakdownTrip= async (req, res) => {
 export const delayTrip = async (req, res) => {
   try {
     const { id } = req.params;
-    const { delay } = req.body;
+    let { delay } = req.body;
+
+    // Support for delay as array or object
+    // If delay is an array, accept the array directly
+    const delaysArray = Array.isArray(delay) ? delay : [delay];
 
     // Validate trip ID
     if (!id || !isValidObjectId(id)) {
@@ -1003,28 +1007,19 @@ export const delayTrip = async (req, res) => {
       });
     }
 
-    // Validate input
-    if (!delay.date || delay.delayDuration === undefined) {
-      return res.status(400).json({
-        success: false,
-        message: "Both date and delayDuration are required",
-      });
-    }
-
-    // Normalize date to start of day
-    const delayDate = new Date(delay.date);
-    delayDate.setHours(0, 0, 0, 0);
-
-    if (isNaN(delayDate.getTime())) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid date format",
-      });
+    // Validate input for all delay objects
+    for (const d of delaysArray) {
+      if (!d.date || d.delayDuration === undefined) {
+        return res.status(400).json({
+          success: false,
+          message: "Each delay entry must include date and delayDuration",
+        });
+      }
     }
 
     // Find the trip
     const trip = await TripConfig.findById(id);
-    
+
     if (!trip) {
       return res.status(404).json({
         success: false,
@@ -1032,24 +1027,46 @@ export const delayTrip = async (req, res) => {
       });
     }
 
-    // Check if delay for this date already exists
-    const existingDelayIndex = trip.delay.findIndex(d => {
-      const existingDate = new Date(d.date);
-      existingDate.setHours(0, 0, 0, 0);
-      return existingDate.getTime() === delayDate.getTime();
-    });
+    let newOrUpdated = false;
 
-    if (existingDelayIndex !== -1) {
-      // Update existing delay duration
-      trip.delay[existingDelayIndex].delayDuration = delay.delayDuration;
-      
-    } else {
-      // Add new delay entry
-      trip.delay.push({
-        date: delayDate,
-        delayDuration: Number(delay.delayDuration)
+    for (const d of delaysArray) {
+      // Normalize date to start of day
+      const delayDate = new Date(d.date);
+      delayDate.setHours(0, 0, 0, 0);
+      if (isNaN(delayDate.getTime())) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid date format for one of the entries: ${d.date}`,
+        });
+      }
+
+      // Check if delay for this date already exists
+      const existingDelayIndex = trip.delay.findIndex(existing => {
+        const existingDate = new Date(existing.date);
+        existingDate.setHours(0, 0, 0, 0);
+        return existingDate.getTime() === delayDate.getTime();
       });
-     
+
+      if (existingDelayIndex !== -1) {
+        // Update existing delay duration
+        trip.delay[existingDelayIndex].delayDuration = Number(d.delayDuration);
+        newOrUpdated = true;
+      } else {
+        // Add new delay entry
+        trip.delay.push({
+          date: delayDate,
+          delayDuration: Number(d.delayDuration),
+        });
+        newOrUpdated = true;
+      }
+    }
+
+    if (!newOrUpdated) {
+      // No changes made => rare, but handle for completeness
+      return res.status(400).json({
+        success: false,
+        message: "No delays were added or updated",
+      });
     }
 
     // Save the trip
@@ -1057,24 +1074,29 @@ export const delayTrip = async (req, res) => {
 
     // Populate and return
     const updatedTrip = await TripConfig.findById(id)
-      .populate('route', 'routeName routeCode')
-      .populate('depot', 'depotName depotCode')
-      .populate('seatLayout', 'layoutName totalSeats');
+      .populate("route", "routeName routeCode")
+      .populate("depot", "depotName depotCode")
+      .populate("seatLayout", "layoutName totalSeats");
 
     return res.status(200).json({
       success: true,
-      message: existingDelayIndex !== -1 
-        ? "Delay duration updated successfully" 
-        : "Delay added successfully",
+      message:
+        delaysArray.length > 1
+          ? "Trip delays updated successfully"
+          : trip.delay.length === delaysArray.length
+          ? "Delay(s) added successfully"
+          : "Delay duration updated successfully",
       data: updatedTrip,
     });
-
   } catch (error) {
     console.error("Error updating trip delay:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error",
-      error: process.env.NODE_ENV === "development" ? error.message : "Something went wrong",
+      error:
+        process.env.NODE_ENV === "development"
+          ? error.message
+          : "Something went wrong",
     });
   }
 };
