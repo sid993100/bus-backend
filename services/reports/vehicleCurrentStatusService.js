@@ -167,7 +167,7 @@ console.log(vehicleNumber);
       .lean();
 
     if (!vehicle) {
-      return res.status(404).json({ success: false, message: "Vehicle not found", data: null });
+      return res.status(200).json({ success: true, message: "Vehicle not found", data: null });
     }
 
     const getAddressFromCoordinates = async (lat, lng) => {
