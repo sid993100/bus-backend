@@ -113,6 +113,16 @@ const tripConfigSchema = new Schema({
   delay:[{
     date: Date,
     delayDuration: Number
+  }],
+  favorite:[{
+     _id: false,
+    date:[{
+      type: Date,
+    }],
+    user:{
+      type:Schema.Types.ObjectId,
+      ref:'User'
+    }
   }]
 }, {
   timestamps: true

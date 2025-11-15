@@ -33,9 +33,12 @@ const customerSchema = new Schema({
   password: {
     type: String,
     required: true,
-  }
+  },
+    resetCode: { type: String, default: null },
+    resetCodeExpires: { type: Date, default: null },
  
 });
+
 
 customerSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {

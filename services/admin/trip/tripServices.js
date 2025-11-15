@@ -1294,6 +1294,103 @@ export const getArrivalDeparture  = async (req, res) => {
   }
 };
 
+export const addFavoriteTrip = async (req, res) => {
+  try {
+    const { tripId } = req.params;
+    const { date } = req.body; // date optional, can be null
+
+    const userId  = req.user._id;
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "userId is required" });
+    }
+
+    const trip = await TripConfig.findById(tripId);
+    if (!trip) {
+      return res.status(404).json({ success: false, message: "Trip not found" });
+    }
+
+    // Check if already exists
+    const existing = trip.favorite.find(f => f.user == userId);
+
+    if (existing) {
+      // Prevent duplicate dates
+      if (date && !existing.date.some(d => new Date(d).getTime() === new Date(date).getTime())) {
+        existing.date.push(date);
+      }
+
+      await trip.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Favorite updated successfully",
+        data: trip.favorite
+      });
+    }
+
+    // If not exists, add new favorite entry
+    trip.favorite.push({
+      user: userId,
+      date: date ? [date] : []
+    });
+
+    await trip.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Trip added to favorites",
+      data: trip.favorite
+    });
+
+  } catch (error) {
+    console.error("❌ Add Favorite Error:", error);
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
+  }
+};
+
+export const updateFavoriteTrip = async (req, res) => {
+  try {
+    const { tripId } = req.params;
+    const { dates } = req.body; // dates: array of new dates
+    const userId  = req.user._id;
+    console.log(userId);
+    
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "userId is required" });
+    }
+
+    const trip = await TripConfig.findById(tripId);
+    if (!trip) {
+      return res.status(404).json({ success: false, message: "Trip not found" });
+    }
+    console.log(trip);
+    
+    const fav = trip.favorite.find(f => f.user == userId);
+    console.log(fav);
+    
+    if (!fav) {
+      return res.status(404).json({
+        success: false,
+        message: "Favorite record not found for this user"
+      });
+    }
+
+    // Replace dates entirely
+    fav.date = Array.isArray(dates) ? dates : [];
+
+    await trip.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Favorite trip updated successfully",
+      data: trip.favorite
+    });
+
+  } catch (error) {
+    console.error("❌ Update Favorite Error:", error);
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
+  }
+};
+
 
 function buildAggregationPipeline(baseFilter, regionId, depotId, skip, limit) {
   const pipeline = [

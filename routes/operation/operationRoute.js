@@ -2,7 +2,7 @@ import { Router } from "express";
 import { isLogin } from "../../middlewares/isLogin.js";
 import { checkPermission } from "../../middlewares/checkPermission.js";
 import { addSeatLayout, getSeatLayout, updateSeatLayout } from "../../services/admin/seatLayout/seatLayoutServices.js";
-import { addTrip, breakdownTrip, delayTrip, getTodayTrips, getTrips, getTripsByDepot, getTripsByRegion, updateTrip, updateTripStatus } from "../../services/admin/trip/tripServices.js";
+import { addFavoriteTrip, addTrip, breakdownTrip, delayTrip, getTodayTrips, getTrips, getTripsByDepot, getTripsByRegion, updateFavoriteTrip, updateTrip, updateTripStatus } from "../../services/admin/trip/tripServices.js";
 import { addRoute, updateRoute ,getRoutes, getRoutesByDepot, getRoutesByRegion} from "../../services/admin/route/routeService.js";
 import { addDuty, getDuty, getDutyByDepot, getDutyByRegion, updateDuty } from "../../services/admin/duty/dutyServices.js";
 import { createScheduleConfiguration, getAllScheduleConfigurations, getByRegion, getSchedulesByDate, getSchedulesByDateAndDepot, getSchedulesByDateAndRegion, getSchedulesByDepotAndDate, updateCancel, updateScheduleConfiguration } from "../../services/admin/sheduleSercives.js";
@@ -30,6 +30,9 @@ router.get("/todaySchedule", isLogin ,getSchedulesByDate);
 router.get("/todaySchedule/depot/:depotId", isLogin ,getSchedulesByDateAndDepot);
 router.get("/todaySchedule/region/:regionId", isLogin ,getSchedulesByDateAndRegion);
 router.get("/vltsim", isLogin ,getAllSims);
+
+router.post("/trip/:tripId/favorite",isLogin, addFavoriteTrip);
+router.put("/trip/:tripId/favorite",isLogin, updateFavoriteTrip);
 
 
 router.post("/seatlayout",isLogin ,checkPermission("seatLayout","create"),addSeatLayout);
