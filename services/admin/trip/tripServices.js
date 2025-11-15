@@ -1391,7 +1391,6 @@ export const updateFavoriteTrip = async (req, res) => {
   }
 };
 
-
 function buildAggregationPipeline(baseFilter, regionId, depotId, skip, limit) {
   const pipeline = [
     { $match: baseFilter }
