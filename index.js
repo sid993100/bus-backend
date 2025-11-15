@@ -86,8 +86,6 @@ app.use("/api/incidenthandling",incident)
 app.use("/api/customer",customerRoutes)
 app.use("/api/favourite",favouriteRoutes)
 
-
-
 // ✅ Start Server
 server.listen(port, () => {
   consoleManager.log(`Server Running On Port ${port}`);
