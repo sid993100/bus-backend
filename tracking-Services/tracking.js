@@ -96,13 +96,25 @@ async function connectKafka() {
               message: parsed.message_id,
               axiosApi,
             });
-            await axios.post(`${axiosApi}/api/incidenthandling`, {
-              vehicle: parsed.vehicle_reg_no,
-              messageid: parsed.message_id,
-              long: parsed.longitude,
-              lat: parsed.latitude,
-            });
-            lastIncidentPackets.set(parsed.vehicle_reg_no, incidentKey);
+            try {
+              await axios.post(`${axiosApi}/api/incidenthandling`, {
+                vehicle: parsed.vehicle_reg_no,
+                messageid: parsed.message_id,
+                long: parsed.longitude,
+                lat: parsed.latitude,
+              });
+              lastIncidentPackets.set(parsed.vehicle_reg_no, incidentKey);
+            } catch (incidentError) {
+              if (incidentError.response?.status === 404) {
+                console.log("[TrackingService] ℹ️ Incident skipped (404)", {
+                  vehicle: parsed.vehicle_reg_no,
+                  message: incidentError.response?.data?.message,
+                });
+                lastIncidentPackets.set(parsed.vehicle_reg_no, incidentKey);
+              } else {
+                throw incidentError;
+              }
+            }
           } else {
             console.log("[TrackingService] ⏭️ Skipped duplicate incident", {
               vehicle: parsed.vehicle_reg_no,
