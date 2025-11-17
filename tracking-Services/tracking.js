@@ -13,6 +13,7 @@ dotenv.config();
 
 const axiosApi = process.env.MY_AXIOS_URL || "http://localhost:5000";
 const parser = new BharatDeviceParser();
+const lastIncidentPackets = new Map();
 
 const app = express();
 const server = http.createServer(app);
@@ -64,7 +65,20 @@ async function connectKafka() {
       try {
         if (parsed.packet_type === "tracking") {
           await axios.post(`${axiosApi}/api/tracking/track`, { data: parsed });
-          await axios.post(`${axiosApi}/api/incidenthandling`,{vehicle:parsed.vehicle_reg_no,messageid:parsed.message_id,long:parsed.longitude,lat:parsed.latitude})
+          const incidentKey = `${parsed.vehicle_reg_no}-${parsed.message_id}-${parsed.dateAndTime}`;
+          if (lastIncidentPackets.get(parsed.vehicle_reg_no) !== incidentKey) {
+            await axios.post(`${axiosApi}/api/incidenthandling`, {
+              vehicle: parsed.vehicle_reg_no,
+              messageid: parsed.message_id,
+              long: parsed.longitude,
+              lat: parsed.latitude,
+            });
+            lastIncidentPackets.set(parsed.vehicle_reg_no, incidentKey);
+          } else {
+            consoleManager.log(
+              `⏭️ Skipped duplicate incident for ${parsed.vehicle_reg_no}`
+            );
+          }
           await axios.post(`${axiosApi}/api/tracking/event`,{vehicleNo:parsed.vehicle_reg_no,eventName:parsed.message_id,longitude:parsed.longitude,latitude:parsed.latitude,imei:parsed.imei,vendor_id:parsed.vendor_id, dateAndTime:parsed.dateAndTime})
           consoleManager.log("✅ Data saved to API successfully");
         } else if (parsed.packet_type === "login") {
