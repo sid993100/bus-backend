@@ -121,12 +121,45 @@ async function connectKafka() {
               incidentKey,
             });
           }
-          console.log("[TrackingService] ➡️ Posting tracking event", {
-            vehicle: parsed.vehicle_reg_no,
-            message: parsed.message_id,
-            axiosApi,
-          });
-          await axios.post(`${axiosApi}/api/tracking/event`,{vehicleNo:parsed.vehicle_reg_no,eventName:parsed.message_id,longitude:parsed.longitude,latitude:parsed.latitude,imei:parsed.imei,vendor_id:parsed.vendor_id, dateAndTime:parsed.dateAndTime})
+          const eventPayload = {
+            vehicleNo: parsed.vehicle_reg_no,
+            eventName: parsed.message_id,
+            longitude: parsed.longitude,
+            latitude: parsed.latitude,
+            imei: parsed.imei,
+            vendor_id: parsed.vendor_id,
+            dateAndTime: parsed.dateAndTime,
+          };
+          const hasAllEventFields = Object.values(eventPayload).every(
+            (value) => value !== undefined && value !== null && value !== ""
+          );
+          if (hasAllEventFields) {
+            console.log("[TrackingService] ➡️ Posting tracking event", {
+              vehicle: parsed.vehicle_reg_no,
+              message: parsed.message_id,
+              axiosApi,
+            });
+            try {
+              await axios.post(`${axiosApi}/api/tracking/event`, eventPayload);
+              console.log("[TrackingService] ✅ Tracking event saved");
+            } catch (eventError) {
+              if (eventError.response?.status === 400) {
+                console.log("[TrackingService] ℹ️ Event skipped (400)", {
+                  vehicle: parsed.vehicle_reg_no,
+                  message: eventError.response?.data?.message,
+                });
+              } else {
+                throw eventError;
+              }
+            }
+          } else {
+            console.log("[TrackingService] ℹ️ Event skipped (missing fields)", {
+              vehicle: parsed.vehicle_reg_no,
+              missingFields: Object.entries(eventPayload)
+                .filter(([_, value]) => value === undefined || value === null || value === "")
+                .map(([key]) => key),
+            });
+          }
           console.log("[TrackingService] ✅ Tracking data pipeline complete", {
             vehicle: parsed.vehicle_reg_no,
             message: parsed.message_id,
