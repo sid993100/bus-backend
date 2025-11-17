@@ -138,7 +138,7 @@ export const getVehicleCurrentStatusWithLocation = async (req, res) => {
 export const getVehicleByVehicleNumber = async (req, res) => {
   try {
     const vehicleNumber = (req.params.vehicleNumber || req.query.vehicleNumber || "").toString().trim();
-console.log(vehicleNumber);
+
 
     if (!vehicleNumber) {
       return res.status(400).json({ success: false, message: "vehicleNumber is required in params or query" });
@@ -165,6 +165,7 @@ console.log(vehicleNumber);
     )
       .sort({ timestamp: -1 })
       .lean();
+console.log(vehicle);
 
     if (!vehicle) {
       return res.status(200).json({ success: true, message: "Vehicle not found", data: null });
@@ -174,7 +175,7 @@ console.log(vehicleNumber);
       try {
         if (!lat || !lng || lat === 0 || lng === 0) return "Location not available";
         const response = await fetch(
-          `https://nominatim.locationtrack.in/reverse.php?lat=${lat}&lon=${lon}&format=json`
+          `https://nominatim.locationtrack.in/reverse.php?lat=${lat}&lon=${lng}&format=json`
         );
         if (!response.ok) throw new Error("Failed to fetch address");
         const data = await response.json();

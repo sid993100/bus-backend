@@ -230,7 +230,7 @@ export const forgotPassword = async (req, res) => {
 
     const user = await Customer.findOne({ email });
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(400).json({ message: "User not found" });
     }
 
     // Generate 6-digit code
@@ -253,8 +253,8 @@ export const forgotPassword = async (req, res) => {
     res.status(200).json({ message: "Reset code sent to your email" });
 
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Server error" });
+    
+    res.status(500).json({ message: error.message || "Server error" });
   }
 };
 
@@ -286,8 +286,8 @@ export const resetPassword = async (req, res) => {
     res.status(200).json({ message: "Password reset successful" });
 
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Server error" });
+    
+    res.status(500).json({ message: error.message || "Server error" });
   }
 };
 
@@ -322,6 +322,6 @@ export const changePassword = async (req, res) => {
 
     res.status(200).json({ message: "Password changed successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: error.message || "Server error" });
   }
 }
