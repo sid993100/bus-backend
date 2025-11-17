@@ -24,6 +24,7 @@ const io = new Server(server, {
   },
 });
 consoleManager.log("socket.io server running on port 5000");
+consoleManager.log(`tracking.js using axios base URL -> ${axiosApi}`);
 
 const KAFKA_BROKER = process.env.KAFKA_BROKER;
 const BHARAT_TCP_PORT = process.env.BHARAT_TCP_PORT || 5055;
@@ -64,9 +65,20 @@ async function connectKafka() {
 
       try {
         if (parsed.packet_type === "tracking") {
+          consoleManager.log("➡️ Posting tracking packet", {
+            vehicle: parsed.vehicle_reg_no,
+            imei: parsed.imei,
+            timestamp: parsed.dateAndTime,
+            axiosApi,
+          });
           await axios.post(`${axiosApi}/api/tracking/track`, { data: parsed });
           const incidentKey = `${parsed.vehicle_reg_no}-${parsed.message_id}-${parsed.dateAndTime}`;
           if (lastIncidentPackets.get(parsed.vehicle_reg_no) !== incidentKey) {
+            consoleManager.log("➡️ Posting incident packet", {
+              vehicle: parsed.vehicle_reg_no,
+              message: parsed.message_id,
+              axiosApi,
+            });
             await axios.post(`${axiosApi}/api/incidenthandling`, {
               vehicle: parsed.vehicle_reg_no,
               messageid: parsed.message_id,
@@ -79,15 +91,35 @@ async function connectKafka() {
               `⏭️ Skipped duplicate incident for ${parsed.vehicle_reg_no}`
             );
           }
+          consoleManager.log("➡️ Posting tracking event", {
+            vehicle: parsed.vehicle_reg_no,
+            message: parsed.message_id,
+            axiosApi,
+          });
           await axios.post(`${axiosApi}/api/tracking/event`,{vehicleNo:parsed.vehicle_reg_no,eventName:parsed.message_id,longitude:parsed.longitude,latitude:parsed.latitude,imei:parsed.imei,vendor_id:parsed.vendor_id, dateAndTime:parsed.dateAndTime})
           consoleManager.log("✅ Data saved to API successfully");
         } else if (parsed.packet_type === "login") {
+          consoleManager.log("➡️ Posting login packet", {
+            vehicle: parsed.vehicle_reg_no,
+            imei: parsed.imei,
+            axiosApi,
+          });
           await axios.post(`${axiosApi}/api/tracking/login`, { data: parsed });
           consoleManager.log("✅ Login Data saved to API successfully");
         } else if (parsed.packet_type === "health") {
+          consoleManager.log("➡️ Posting health packet", {
+            vehicle: parsed.vehicle_reg_no,
+            imei: parsed.imei,
+            axiosApi,
+          });
           await axios.post(`${axiosApi}/api/tracking/health`, { data: parsed });
           consoleManager.log("✅ Health Data saved to API successfully");
         } else if (parsed.packet_type === "emergency") {
+          consoleManager.log("➡️ Posting emergency packet", {
+            vehicle: parsed.vehicle_reg_no,
+            imei: parsed.imei,
+            axiosApi,
+          });
           await axios.post(`${axiosApi}/api/tracking/emergency`, {
             data: parsed,
           });
@@ -123,7 +155,12 @@ io.on("connection", async (socket) => {
     socket.join(room);
     socket.emit("join", busIdOrReg);
       
-      const res = await axios.get(`${axiosApi}/api/tracking/tracking/${busIdOrReg.trim()}`);
+      const trackingUrl = `${axiosApi}/api/tracking/tracking/${busIdOrReg.trim()}`;
+      consoleManager.log("➡️ Prefetch latest tracking", {
+        busIdOrReg,
+        trackingUrl,
+      });
+      const res = await axios.get(trackingUrl);
       if (res?.data?.success && res?.data?.data) {
         res.data.data.new=true; // mark as new data
         socket.emit("track", res.data.data);
