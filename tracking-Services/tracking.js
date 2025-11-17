@@ -4,7 +4,6 @@ import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import { Kafka } from "kafkajs";
-import consoleManager from "../utils/consoleManager.js";
 import net from "net";
 import BharatDeviceParser from "../utils/BharatDeviceParser.js";
 import axios from "axios";
@@ -23,8 +22,8 @@ const io = new Server(server, {
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   },
 });
-consoleManager.log("socket.io server running on port 5000");
-consoleManager.log(`tracking.js using axios base URL -> ${axiosApi}`);
+console.log("[TrackingService] socket.io server running on port 5000");
+console.log(`[TrackingService] axios base URL -> ${axiosApi}`);
 
 const KAFKA_BROKER = process.env.KAFKA_BROKER;
 const BHARAT_TCP_PORT = process.env.BHARAT_TCP_PORT || 5055;
@@ -45,27 +44,45 @@ app.use(express.json());
 
 // Connect Kafka Producer & Consumer
 async function connectKafka() {
+  console.log("[TrackingService] Connecting Kafka producer/consumer", {
+    broker: KAFKA_BROKER,
+  });
   await producer.connect();
+  console.log("[TrackingService] Kafka producer connected");
   await consumer.connect();
+  console.log("[TrackingService] Kafka consumer connected");
 
   await consumer.subscribe({ topic: "busTrack", fromBeginning: false });
   await consumer.subscribe({ topic: "acuteBusTrack", fromBeginning: false });
   await consumer.subscribe({ topic: "bharatBusTrack", fromBeginning: false });
+  console.log("[TrackingService] Kafka topics subscribed", {
+    topics: ["busTrack", "acuteBusTrack", "bharatBusTrack"],
+  });
 
   await consumer.run({
     eachMessage: async ({ topic, message }) => {
       const data = message.value.toString();
+      console.log("[TrackingService] Kafka message received", {
+        topic,
+        size: data.length,
+      });
 
       // Parse the data
       const parsed = await parser.parseDeviceData(data);
       if (!parsed) {
-        consoleManager.log("⚠️ Could not parse GPS data:", parsed);
+        console.warn("[TrackingService] ⚠️ Could not parse GPS data", { raw: data });
         return;
       }
+      console.log("[TrackingService] Parsed packet", {
+        vehicle: parsed.vehicle_reg_no,
+        imei: parsed.imei,
+        packetType: parsed.packet_type,
+        packetStatus: parsed.packet_status,
+      });
 
       try {
         if (parsed.packet_type === "tracking") {
-          consoleManager.log("➡️ Posting tracking packet", {
+          console.log("[TrackingService] ➡️ Posting tracking packet", {
             vehicle: parsed.vehicle_reg_no,
             imei: parsed.imei,
             timestamp: parsed.dateAndTime,
@@ -74,7 +91,7 @@ async function connectKafka() {
           await axios.post(`${axiosApi}/api/tracking/track`, { data: parsed });
           const incidentKey = `${parsed.vehicle_reg_no}-${parsed.message_id}-${parsed.dateAndTime}`;
           if (lastIncidentPackets.get(parsed.vehicle_reg_no) !== incidentKey) {
-            consoleManager.log("➡️ Posting incident packet", {
+            console.log("[TrackingService] ➡️ Posting incident packet", {
               vehicle: parsed.vehicle_reg_no,
               message: parsed.message_id,
               axiosApi,
@@ -87,35 +104,39 @@ async function connectKafka() {
             });
             lastIncidentPackets.set(parsed.vehicle_reg_no, incidentKey);
           } else {
-            consoleManager.log(
-              `⏭️ Skipped duplicate incident for ${parsed.vehicle_reg_no}`
-            );
+            console.log("[TrackingService] ⏭️ Skipped duplicate incident", {
+              vehicle: parsed.vehicle_reg_no,
+              incidentKey,
+            });
           }
-          consoleManager.log("➡️ Posting tracking event", {
+          console.log("[TrackingService] ➡️ Posting tracking event", {
             vehicle: parsed.vehicle_reg_no,
             message: parsed.message_id,
             axiosApi,
           });
           await axios.post(`${axiosApi}/api/tracking/event`,{vehicleNo:parsed.vehicle_reg_no,eventName:parsed.message_id,longitude:parsed.longitude,latitude:parsed.latitude,imei:parsed.imei,vendor_id:parsed.vendor_id, dateAndTime:parsed.dateAndTime})
-          consoleManager.log("✅ Data saved to API successfully");
+          console.log("[TrackingService] ✅ Tracking data pipeline complete", {
+            vehicle: parsed.vehicle_reg_no,
+            message: parsed.message_id,
+          });
         } else if (parsed.packet_type === "login") {
-          consoleManager.log("➡️ Posting login packet", {
+          console.log("[TrackingService] ➡️ Posting login packet", {
             vehicle: parsed.vehicle_reg_no,
             imei: parsed.imei,
             axiosApi,
           });
           await axios.post(`${axiosApi}/api/tracking/login`, { data: parsed });
-          consoleManager.log("✅ Login Data saved to API successfully");
+          console.log("[TrackingService] ✅ Login data saved");
         } else if (parsed.packet_type === "health") {
-          consoleManager.log("➡️ Posting health packet", {
+          console.log("[TrackingService] ➡️ Posting health packet", {
             vehicle: parsed.vehicle_reg_no,
             imei: parsed.imei,
             axiosApi,
           });
           await axios.post(`${axiosApi}/api/tracking/health`, { data: parsed });
-          consoleManager.log("✅ Health Data saved to API successfully");
+          console.log("[TrackingService] ✅ Health data saved");
         } else if (parsed.packet_type === "emergency") {
-          consoleManager.log("➡️ Posting emergency packet", {
+          console.log("[TrackingService] ➡️ Posting emergency packet", {
             vehicle: parsed.vehicle_reg_no,
             imei: parsed.imei,
             axiosApi,
@@ -123,20 +144,32 @@ async function connectKafka() {
           await axios.post(`${axiosApi}/api/tracking/emergency`, {
             data: parsed,
           });
-          consoleManager.log("✅ Emergency Data saved to API successfully");
+          console.log("[TrackingService] ✅ Emergency data saved");
         }
       } catch (error) {
-        console.error("❌ Failed to save to API:", error.message);
+        console.error("[TrackingService] ❌ Failed to save to API", {
+          message: error.message,
+          stack: error.stack,
+          endpoint: error.config?.url,
+          status: error.response?.status,
+          data: error.response?.data,
+        });
       }
 
       // Emit to WebSocket
       if (topic === "bharatBusTrack") {
          if (parsed.packet_status==="L") {
            io.to(`bus_${parsed.vehicle_reg_no}`).emit("track",parsed)
+           console.log("[TrackingService] 📡 Emitted bharat tracking update", {
+             vehicle: parsed.vehicle_reg_no,
+           });
          }
       } else if (topic === "acuteBusTrack") {
         if (parsed.packet_status==="L") {
            io.to(`bus_${parsed.vehicle_reg_no}`).emit("track",parsed)
+           console.log("[TrackingService] 📡 Emitted acute tracking update", {
+             vehicle: parsed.vehicle_reg_no,
+           });
          }
       }
     },
@@ -147,6 +180,9 @@ connectKafka().catch(console.error);
 
 // WebSocket events
 io.on("connection", async (socket) => {
+  console.log("[TrackingService] 🔌 WebSocket client connected", {
+    socketId: socket.id,
+  });
 
   socket.on("trackBus", async (busIdOrReg) => {
     try {
@@ -154,9 +190,13 @@ io.on("connection", async (socket) => {
        
     socket.join(room);
     socket.emit("join", busIdOrReg);
+    console.log("[TrackingService] 👥 Client joined room", {
+      socketId: socket.id,
+      room,
+    });
       
       const trackingUrl = `${axiosApi}/api/tracking/tracking/${busIdOrReg.trim()}`;
-      consoleManager.log("➡️ Prefetch latest tracking", {
+      console.log("[TrackingService] ➡️ Prefetch latest tracking", {
         busIdOrReg,
         trackingUrl,
       });
@@ -164,9 +204,15 @@ io.on("connection", async (socket) => {
       if (res?.data?.success && res?.data?.data) {
         res.data.data.new=true; // mark as new data
         socket.emit("track", res.data.data);
+        console.log("[TrackingService] 📦 Prefetch data emitted", {
+          busIdOrReg,
+        });
       }
     } catch (e) {
-      consoleManager.log("prefetch error",  e.message);
+      console.error("[TrackingService] Prefetch error", {
+        message: e.message,
+        stack: e.stack,
+      });
     }
 
     // confirm to requester only
@@ -176,7 +222,17 @@ io.on("connection", async (socket) => {
     const room = `bus_${busIdOrReg}`;
     socket.leave(room);
     socket.emit("stopped", { message: `Stopped tracking bus ${busIdOrReg}` });
-    consoleManager.log(`Client ${socket.id} stopped tracking ${busIdOrReg}`);
+    console.log("[TrackingService] ⏹️ Client stopped tracking", {
+      socketId: socket.id,
+      busIdOrReg,
+    });
+  });
+
+  socket.on("disconnect", (reason) => {
+    console.log("[TrackingService] 🔌 WebSocket client disconnected", {
+      socketId: socket.id,
+      reason,
+    });
   });
 });
 
@@ -184,11 +240,14 @@ io.on("connection", async (socket) => {
 ///////////////////////////bharat-Tcp////////////////////////////////
 
 const bharatTcp = net.createServer((socket) => {
-  consoleManager.log("📲 New GPS device connected");
+  console.log("[TrackingService] 📲 Bharat device connected", {
+    remoteAddress: socket.remoteAddress,
+    remotePort: socket.remotePort,
+  });
 
   socket.on("data", async (data) => {
     const raw = data.toString().trim();
-    consoleManager.log("📡 Raw GPS Data:", raw);
+    console.log("[TrackingService] 📡 Bharat raw GPS data", { raw });
 
     // 🔹 Push parsed JSON to Kafka
     try {
@@ -196,18 +255,26 @@ const bharatTcp = net.createServer((socket) => {
         topic: "bharatBusTrack",
         messages: [{ value: raw }],
       });
-      consoleManager.log("🚀 Published parsed data to Kafka");
+      console.log("[TrackingService] 🚀 Bharat data published to Kafka");
     } catch (err) {
-      console.error("❌ Kafka error:", err);
+      console.error("[TrackingService] ❌ Bharat Kafka error", {
+        message: err.message,
+        stack: err.stack,
+      });
     }
   });
 
-  socket.on("end", () => consoleManager.log("❌ GPS connection closed"));
-  socket.on("error", (err) => console.error("⚠️ GPS socket error:", err));
+  socket.on("end", () => console.log("[TrackingService] ❌ Bharat GPS connection closed"));
+  socket.on("error", (err) =>
+    console.error("[TrackingService] ⚠️ Bharat GPS socket error", {
+      message: err.message,
+      stack: err.stack,
+    })
+  );
 });
 
 bharatTcp.listen(BHARAT_TCP_PORT, () => {
-  consoleManager.log(`🚀 GPS TCP server listening on port ${BHARAT_TCP_PORT}`);
+  console.log(`[TrackingService] 🚀 Bharat GPS TCP server listening on port ${BHARAT_TCP_PORT}`);
 });
 
 ///////////////////////////////////////////////////////////
@@ -215,29 +282,40 @@ bharatTcp.listen(BHARAT_TCP_PORT, () => {
 ////////////////////////////acute-Tcp////////////////////////////////
 
 const acuteTcp = net.createServer((socket) => {
-  consoleManager.log("📲 New GPS device connected");
+  console.log("[TrackingService] 📲 Acute device connected", {
+    remoteAddress: socket.remoteAddress,
+    remotePort: socket.remotePort,
+  });
 
   socket.on("data", async (data) => {
     const raw = data.toString().trim();
-    consoleManager.log("📡 Raw GPS Data:", raw);
+    console.log("[TrackingService] 📡 Acute raw GPS data", { raw });
 
     try {
       await producer.send({
         topic: "acuteBusTrack",
         messages: [{ value: raw }],
       });
-      consoleManager.log("🚀 Published parsed data to Kafka");
+      console.log("[TrackingService] 🚀 Acute data published to Kafka");
     } catch (err) {
-      console.error("❌ Kafka error:", err);
+      console.error("[TrackingService] ❌ Acute Kafka error", {
+        message: err.message,
+        stack: err.stack,
+      });
     }
   });
 
-  socket.on("end", () => consoleManager.log("❌ GPS connection closed"));
-  socket.on("error", (err) => console.error("⚠️ GPS socket error:", err));
+  socket.on("end", () => console.log("[TrackingService] ❌ Acute GPS connection closed"));
+  socket.on("error", (err) =>
+    console.error("[TrackingService] ⚠️ Acute GPS socket error", {
+      message: err.message,
+      stack: err.stack,
+    })
+  );
 });
 
 acuteTcp.listen(ACUTE_TCP_PORT, () => {
-  consoleManager.log(`🚀 GPS TCP server listening on port ${ACUTE_TCP_PORT}`);
+  console.log(`[TrackingService] 🚀 Acute GPS TCP server listening on port ${ACUTE_TCP_PORT}`);
 });
 
 ///////////////////////////////////////////////////////////
